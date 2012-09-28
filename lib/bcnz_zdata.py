@@ -12,6 +12,9 @@ def find_zdata(conf):
 
     zdata = bcnz_filters.filter_and_so()(conf, zdata)
 
-    zdata['texp'] = bcnz_exposure.texp(conf, zdata)
+    # To not require tray configurations to always be
+    # present.
+    if conf['add_noise']:
+        zdata['texp'] = bcnz_exposure.texp(conf, zdata)
 
     return zdata
