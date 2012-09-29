@@ -66,17 +66,24 @@ class model_mag:
         dz_ab = self.conf['dz_ab']
 
         z_ab = np.arange(0., zmax_ab, dz_ab)
-        d = self.conf['ab_tmp']
+        d = self.conf['ab_dir']
         for filter_name in filters:
             self.proj_filter(d, z_ab, filter_name)
 
 #            pdb.set_trace()
 
     def f_mod(self):
-        d = self.conf['ab_tmp']
+        """Model frequencies."""
+        
+
+        d = self.conf['ab_dir']
         spectra = self.zdata['spectra']
         filters = self.zdata['filters']
         z = self.zdata['z']
+
+        # HACK. Does not handle new filters added..
+        if not os.listdir(d):
+            self.all_proj()
 
         # This method is not the fastest, but works slightly faster
         # than the linear interpolation in BPZ!

@@ -59,9 +59,9 @@ class filter_and_so:
             zdata = sed_filt_inst(conf, zdata)
 
             t3 = time.time()
-            inst = bcnz_model.model_mag(conf, zdata)
-            f_mod2 = inst.f_mod()
-            f_mod2 = inst.interp(conf, f_mod2, self.z, self.filters, self.spectra)
+            model = bcnz_model.model_mag(conf, zdata)
+            f_mod2 = model.f_mod()
+            f_mod2 = model.interp(conf, f_mod2, self.z, self.filters, self.spectra)
             t4 = time.time()
 
             f_mod = f_mod2

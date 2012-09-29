@@ -16,7 +16,7 @@ conf = {
     'sky_spec': 'sky_spectrum.txt',
 
     'add_noise': False,
-    'old_model': True,
+    'old_model': False,
     'ab_tmp': 'ab',
     'zmax_ab': 12.,
     'dz_ab': 0.01,
