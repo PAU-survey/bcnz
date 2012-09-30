@@ -3,7 +3,7 @@
 
 descr = {
     'D_tel': 'Telescope diameter',
-    'aperture': 'Apperature',
+    'aperture': 'Aperture',
     'scale': 'Scale',
     'n_exp': 'Number of exposures',
     'RN': 'Readout noise',
@@ -14,6 +14,7 @@ descr = {
     'sky_spec': 'Sky spectrum.',
     'add_noise': 'Add noise to the magnitudes.',
     'old_model': 'Use the BPZ model for observed magnitudes.',
+
     'ab_tmp': 'TEMPORARY',
     'zmax_ab': 'Maximum redshift in AB files',
     'dz_ab': 'Redshift step in AB files',

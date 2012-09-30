@@ -17,7 +17,6 @@ def err_magnitude(conf, zdata, mag):
     in_r = zdata['in_r']
     in_sky = zdata['in_sky']
     t_exp = zdata['t_exp']
-
     pix_size = conf['scale']**2.
     n_pix = conf['aperture'] / pix_size
 
@@ -30,7 +29,8 @@ def err_magnitude(conf, zdata, mag):
     # For each filter..
     yN_sky = tel_surface*pix_size*(in_sky*t_exp)
 
-    yStoN =  np.sqrt(n_pix*n_exp)*yN_sig / np.sqrt(RN**2 + yN_sig + yN_sky)
+    yStoN =  np.sqrt(n_pix*conf['n_exp'])*yN_sig / \
+             np.sqrt(conf['RN']**2 + yN_sig + yN_sky)
     ynoise_ctn = 2.5*np.log10(1 + 0.02)
     yerr_m_obs = 2.5*np.log10(1.+ 1./yStoN)
 
@@ -45,8 +45,7 @@ def add_noise(conf, zdata, data):
     # tell something else.. Yes, its confusing...
 
     mag = data['f_obs']
-    filters = zdata['filters']
-    t_exp = bcnz_exposure.texp(conf, filters)
+    zdata['t_exp'] = bcnz_exposure.texp(conf, zdata)
     err_mag = err_magnitude(conf, zdata, mag)
 
     ngal, nfilters = err_mag.shape
