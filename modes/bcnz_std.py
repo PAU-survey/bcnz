@@ -1,12 +1,15 @@
 # encoding: UTF8
 from __future__ import print_function
+import os
 import pdb
+import shutil
 import numpy as np
 
 import bpz_flux
 import bpz_output
 
 import loadparts
+import obj_hash
 import bcnz_chi2
 import bcnz_flux
 import bcnz_norm
@@ -25,17 +28,47 @@ class standard:
         self.mstep = mstep
         self.conf['nmax'] = 10000
 
-    def run_file(self): #, obs_file):
+        obj_name = obj_hash.hash_structure(self.conf)
+        self.obj_path = os.path.join('cache', obj_name)
+
+
+    def relink(self):
+        """Link output file name to the object file."""
+
+        if os.path.isfile(self.out_name):
+            shutil.move(self.out_name, "%s.bak" % self.out_name)
+
+        if os.path.islink(self.out_name):
+            os.remove(self.out_name)
+
+        os.symlink(self.obj_path, self.out_name)
+
+    def run_file(self):
+
+        if not os.path.isdir('cache'):
+            os.mkdir('cache')
+
+        if os.path.isfile(self.obj_path):
+            self.relink()
+            print('No estimation.!')
+            return 
+
+        self.estimate_photoz()
+        self.relink()
+
+    def estimate_photoz(self):
+        """Estimate the photoz for one input file."""
+
         obs_file = self.obs_file
 
         # Prepare output file.
 #self.col_pars)
         out_format, hdr, has_mags = bpz_output.find_something(self.conf, self.zdata)
 
-        output = bcnz_output.output_file(self.out_name)
+        output = bcnz_output.output_file(self.obj_path)
 
         if self.conf['get_z']:
-            bpz_output.add_header(self.conf, output, self.out_name, hdr)
+            bpz_output.add_header(self.conf, output, self.obj_path, hdr)
 
 
         nmax = self.conf['nmax']
