@@ -29,7 +29,10 @@ class standard:
         self.conf['nmax'] = 10000
 
         obj_name = obj_hash.hash_structure(self.conf)
-        self.obj_path = os.path.join('cache', obj_name)
+
+        root_dir = self.conf['root']
+        self.cache_dir = os.path.join(root_dir, 'cache')
+        self.obj_path = os.path.join(self.cache_dir, obj_name)
 
 
     def relink(self):
@@ -44,13 +47,11 @@ class standard:
         os.symlink(self.obj_path, self.out_name)
 
     def run_file(self):
-
-        if not os.path.isdir('cache'):
-            os.mkdir('cache')
+        if not os.path.isdir(self.cache_dir):
+            os.mkdir(self.cache_dir)
 
         if os.path.isfile(self.obj_path):
             self.relink()
-            print('No estimation.!')
             return 
 
         self.estimate_photoz()

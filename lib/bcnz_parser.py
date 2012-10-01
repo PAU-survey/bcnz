@@ -130,7 +130,7 @@ class first_parser:
     def __init__(self):
         parser = argparse.ArgumentParser()
         #parser.add_argument('-c', type=str, nargs=1, dest="config")
-        parser.add_argument('-c', type=str, dest="config", default="standard")
+        parser.add_argument('-c ', type=str, dest="config", default="standard")
         self.parser = parser
 
     def __call__(self):

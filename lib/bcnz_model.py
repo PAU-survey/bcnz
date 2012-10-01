@@ -1,6 +1,8 @@
 #!/usr/bin/env python
-from __future__ import print_function
+# encoding: UTF8
 # Project into the different filters.
+
+from __future__ import print_function
 import numpy as np
 import os
 import pdb
@@ -89,7 +91,6 @@ class model_mag:
         # than the linear interpolation in BPZ!
 
         f_mod = np.zeros((len(z), len(spectra), len(filters)))
-        t1 = time.time()
         for i,sed in enumerate(spectra):
             for j,filter_name in enumerate(filters):
                 file_name = '%s.%s.AB' % (sed, filter_name)
@@ -101,10 +102,7 @@ class model_mag:
 
                 f_mod[:,i,j] = y_new
 
-        t2 = time.time()
 
-        print('time splev', t2-t1)
-#        pdb.set_trace()
         return f_mod
 
     def interp(self, conf, f_mod, z, filters, spectra):

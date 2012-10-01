@@ -17,6 +17,8 @@ import bcnz_parser
 def parse_arguments():
     """Parse input arguments."""
 
+    # Detects which configuration file to use. This enable
+    # b
     first_parser = bcnz_parser.first_parser()
     config_file = first_parser()
 
