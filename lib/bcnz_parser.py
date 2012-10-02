@@ -6,6 +6,8 @@ import pdb
 import sys
 import numpy as np
 
+# is_true  - Values accepted as Bool true
+# is_false - Values accepted as Bool false
 is_true = ['yes', 'true', '1']
 is_false = ['no', 'false', '0']
 convert_directly = [int, float, str, bool, complex]

@@ -3,6 +3,7 @@
 import numpy as np
 
 conf = {
+    'output': '',
     # Telescope noise parameters.
     'D_tel': 4.2,
     'aperture': 2.0,

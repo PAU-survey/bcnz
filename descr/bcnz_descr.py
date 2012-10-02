@@ -2,6 +2,7 @@
 # encoding: UTF8
 
 descr = {
+    'output': 'Output file',
     'D_tel': 'Telescope diameter',
     'aperture': 'Aperture',
     'scale': 'Scale',
