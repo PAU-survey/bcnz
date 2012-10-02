@@ -24,7 +24,7 @@ np.seterr(under='ignore')
 test_min = False
 class chi2:
 #    @profile
-    def __init__(self, conf, zdata, f_obs, ef_obs, m_0, m_step, ninterp, \
+    def __init__(self, conf, zdata, f_obs, ef_obs, m_0, \
                  z_s, ngal_calc=100):
 
         self.conf = conf
@@ -36,8 +36,6 @@ class chi2:
 
         self.z = zdata['z']
         self.m_0 = m_0
-        self.m_step = m_step
-        self.ninterp = ninterp
         self.z_s = z_s
         # Priors
         self.load_priors(conf)
@@ -72,7 +70,7 @@ class chi2:
         prior_name = 'prior_%s' % conf['prior']
         try:
             self.priors = getattr(priors, prior_name)(conf, \
-                          self.zdata, self.m_0, self.m_step, self.ninterp)
+                          self.zdata, self.m_0)
 
         except ImportError:
             msg_import = """\
@@ -176,9 +174,9 @@ To import priors, you need the following:
 
 
 #        import pdb; pdb.set_trace()
-
-        tt_b = it_b / (1.+self.ninterp)
-        tt_ml = it / (1.+self.ninterp)
+        interp = self.conf['interp']
+        tt_b = it_b / (1. + interp)
+        tt_ml = it / (1. + interp)
 
         A = pb[range(len(zb)),it_b]
         test = pb[range(len(zb)),:,it_b].max(axis=1) < 1e-300

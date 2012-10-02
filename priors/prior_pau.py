@@ -2,7 +2,7 @@ import numpy as np
 import sys
 
 class prior_pau:
-    def __init__(self, conf, zdata, m_0, m_step, ninterp):
+    def __init__(self, conf, zdata, m_0):
         ndes = 1 # Number of decimals
 
         # Ok, these might be passed later on..
@@ -12,18 +12,19 @@ class prior_pau:
         self.fo_t = np.array((0.48,0.22,0.22))
         self.k_t = np.array((0.186,0.038,0.038))
 
+        m_step = conf['m_step']
         m_min = np.floor(10**ndes*min(m_0)) / 10.**ndes
         steps = np.ceil((max(m_0) - m_min) / m_step).astype(int)
 
         m = m_min + m_step * np.arange(steps+1)
         #self.pr = np.ascontiguousarray(self.prior_precalc(z, m, ninterp))
-        self.pr = self.prior_precalc(zdata['z'], m, ninterp)
+        self.pr = self.prior_precalc(conf, zdata, m)
+
+        self.conf = conf
 
         self.z = zdata['z']
         self.m_0 = m_0
         self.m_min = m_min
-        self.m_step = m_step
-
     def prior_basis(self, z, m):
         """Priors without interpolation between types."""
         nt = len(self.a)
@@ -62,14 +63,14 @@ class prior_pau:
 
         return p
 
-    def prior_precalc(self, z, m, ninterp):
+    def prior_precalc(self, conf, zdata, m):
         """Precalculating the priors with interpolated types."""
 
         nt = len(self.a)
         temp_types = np.arange(nt, dtype=float)
-        all_types = np.linspace(0.,nt-1., nt + ninterp*(nt-1))
+        all_types = np.linspace(0.,nt-1., nt + conf['interp']*(nt-1))
 
-        p = self.prior_basis(z,m)
+        p = self.prior_basis(zdata['z'], m)
 
         # Derivative with respect to type. 
         d = (p[:,:,1:] - p[:,:,:-1]) / (temp_types[1:] - temp_types[:-1])
@@ -84,7 +85,7 @@ class prior_pau:
     def inds(self, m):
         """Indexes for the magnitude to use."""
 
-        return np.round((m  - self.m_min)/self.m_step).astype(int)
+        return np.round((m  - self.m_min)/self.conf['m_step']).astype(int)
 
     def add_priors(self, m, lh):
 

@@ -16,16 +16,13 @@ import bcnz_norm
 import bcnz_output
 
 class standard:
-    def __init__(self, conf, zdata, obs_file, out_name, mstep, ninterp):
+    def __init__(self, conf, zdata, obs_file, out_name):
 
-        # You might wonder why.. This is only a transition..
         self.conf = conf
         self.zdata = zdata
         self.obs_file = obs_file
         self.out_name = out_name
 
-        self.ninterp = ninterp
-        self.mstep = mstep
         self.conf['nmax'] = 10000
 
         obj_name = obj_hash.hash_structure(self.conf)
@@ -82,7 +79,7 @@ class standard:
 
             f_obs, ef_obs = bcnz_norm.norm_data(self.conf, self.zdata, f_obs, ef_obs)
 
-            inst = bcnz_chi2.chi2(self.conf, self.zdata, f_obs, ef_obs, m_0, self.mstep, self.ninterp, \
+            inst = bcnz_chi2.chi2(self.conf, self.zdata, f_obs, ef_obs, m_0, \
                           z_s, 100)
 
 

@@ -2,6 +2,7 @@
 # encoding: UTF8
 
 descr = {
+    'm_step': 'Resolution in magnitude prior interpolation',
     'output': 'Output file',
     'D_tel': 'Telescope diameter',
     'aperture': 'Aperture',

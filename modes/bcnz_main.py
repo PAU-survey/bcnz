@@ -13,16 +13,15 @@ def prepare_objects(conf, zdata):
 
     globals().update(zdata)
 
-    mstep = .1
-    ninterp = conf['interp']
+#    mstep = .1
+#    ninterp = conf['interp']
 
     assert not (1 < len(conf['obs_files']) and \
                 isinstance(conf['output'], types.NoneType))
 
     if conf['output']:
         obs_file = conf['obs_files'][0]
-        ans = [bcnz_std.standard(conf, zdata, obs_file, conf['output'], \
-                                 mstep, ninterp)]
+        ans = [bcnz_std.standard(conf, zdata, obs_file, conf['output'])]
         return ans
 
     ans = []
@@ -30,8 +29,7 @@ def prepare_objects(conf, zdata):
         out_file = '%s.bpz' % os.path.splitext(obs_file)[0]
 
         ans.append(\
-          bcnz_std.standard(conf, zdata, obs_file, out_file, \
-                            mstep, ninterp))
+          bcnz_std.standard(conf, zdata, obs_file, out_file))
 
 #1 < len(conf['obs_files'])
     return ans
