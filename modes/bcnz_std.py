@@ -85,16 +85,21 @@ class standard:
 
             ng = len(f_obs)
 
+
+            order = ['zb', 'zb_min', 'zb_max', 't_b', 'odds', 'z_ml', 't_ml', 'chi2', 'z_s', 'm_0']
+            ndesi = 4
+            rest = [('{%s:.%sf}' % (x, ndesi)) for x in order]
+            out_format2 = '{id} ' + ' '.join(rest) + '\n'
+
+
             for ig in range(ng):
-                iz_ml, t_ml, red_chi2, pb, p_bayes, iz_b, zb, o, \
+                iz_ml, t_ml, red_chi2, pb, p_bayes, iz_b, zb, odds, \
                 it_b, tt_b, tt_ml,z1,z2,opt_type = inst(ig)
 
-                # <standard BPZ>
-                salida=[ids[ig],zb,z1,z2,tt_b+1,o,self.zdata['z'][iz_ml],tt_ml+1,red_chi2]
-                if 'Z_S' in self.zdata['col_pars']: salida.append(z_s[ig])
-                if has_mags: salida.append(m_0[ig]-self.conf['delta_m_0'])
-                if 'OTHER' in self.zdata['col_pars']: salida.append(other[ig])
+                gal = {'id': ids[ig], 'zb': zb, 'zb_min':  z1, 'zb_max': z2, \
+                       't_b': tt_b+1, 'odds': odds, 'z_ml': self.zdata['z'][iz_ml], \
+                       't_ml': tt_ml+1, 'chi2': red_chi2, 'z_s': z_s[ig], \
+                       'm_0': m_0[ig] - self.conf['delta_m_0']}
 
-                output.write(out_format % tuple(salida)+'\n')
+                output.write(out_format2.format(**gal))
 
-                # </standard BPZ>

@@ -17,3 +17,4 @@ def output_file(output_file):
         raise SystemError
 
     return open(file_name, 'w')
+
