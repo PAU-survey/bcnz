@@ -38,7 +38,7 @@ def create_header(conf, obs_file):
                                            conf[key]))
     header.append('#')
     header.append('# Column information')
-    for i, col in enumerate(conf['order']):
+    for i, col in enumerate(conf['order']+conf['others']):
         header.append('# {0} {1}'.format(i+1, col))
 
     header.append('#')

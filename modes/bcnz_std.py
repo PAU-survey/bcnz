@@ -69,7 +69,8 @@ class standard:
         tmp = loadparts.loadparts(obs_file, nmax, cols_keys, cols)
 
         ndesi = self.conf['ndesi']
-        rest = [('{%s:.%sf}' % (x, ndesi)) for x in self.conf['order']]
+        columns = self.conf['order']+self.conf['others']
+        rest = [('{%s:.%sf}' % (x, ndesi)) for x in columns]
         out_format = '{id} ' + ' '.join(rest) + '\n'
 
         for data in tmp:
