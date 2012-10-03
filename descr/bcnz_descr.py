@@ -2,6 +2,8 @@
 # encoding: UTF8
 
 descr = {
+    'ndesi': 'Number of decimals in output',
+    'order': 'Order in the output parameters',
     'm_step': 'Resolution in magnitude prior interpolation',
     'output': 'Output file',
     'D_tel': 'Telescope diameter',

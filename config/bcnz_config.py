@@ -3,6 +3,8 @@
 import numpy as np
 
 conf = {
+    'order': ['zb', 'zb_min', 'zb_max', 't_b', 'odds', 'z_ml', 't_ml', 'chi2', 'z_s', 'm_0'],
+    'ndesi': 4,
     'm_step': 0.1,
     'output': '',
     # Telescope noise parameters.
