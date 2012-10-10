@@ -10,6 +10,7 @@ import re
 import time
 from scipy.interpolate import splrep, splev
 from scipy.integrate import simps, trapz, quad
+from scipy.ndimage.interpolation import zoom
 
 np.seterr('raise')
 
@@ -108,33 +109,9 @@ class model_mag:
     def interp(self, conf, f_mod, z, filters, spectra):
         """Interpolation between spectras."""
 
-#        if conf['opt']:
-#            return f_mod
-
-        ninterp = conf['interp']
-        if not ninterp:
-            return f_mod
-
-        nz = len(z)
-        nt = len(spectra)
-        nf = len(filters)
-
-        # Index of the first type in the linear interpolation
-        ftype = np.repeat(np.arange(nt-1), ninterp+1)
-        btype = np.array(list(ftype)+[nt-1])
-
-        f_new = f_mod[:,btype,:]
-        df = f_mod[:,1:,:] - f_mod[:,:-1,:]
-        df_part = df[:,ftype,:] 
-
-        # Weights for each of the interpolation points. 
-        w = np.tile(np.arange(ninterp+1), nt-1)/(ninterp+1.)
-
-        for i, wi in enumerate(w):
-            f_new[:,i,:] += wi*df_part[:,i,:]
-
-        from scipy.ndimage.interpolation import zoom
-#        pdb.set_trace()
+        ntypes_orig = len(self.zdata['spectra'])
+        nt = self.conf['interp']*(ntypes_orig - 1) + ntypes_orig
+        zoom_fac = (1, 1, float(nt) / ntypes_orig)
 
         f_new = zoom(f_mod, (1,16./6.,1), order=1)
 

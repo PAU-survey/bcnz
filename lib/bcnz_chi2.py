@@ -38,17 +38,13 @@ class chi2:
         self.z = zdata['z']
         self.m_0 = m_0
         self.z_s = z_s
+
         # Priors
         self.load_priors(conf)
-#        pdb.set_trace()
-#        self.priors = new_prior.new_prior(z, m_0, m_step, ninterp)
-#        assert not ninterp
-#        self.priors = dc6_priors.dc6_priors(z)
         obs = np.logical_and(ef_obs <= 1., 1e-4 < f_obs /ef_obs)
         self.h = obs / ef_obs ** 2.
 
         self.nf = self.f_mod.shape[2]
-        self.z_t_shape = self.f_mod.shape[:2]
 
         # Working with 2D is faster.
         nz,nt,nf = self.f_mod.shape
@@ -101,11 +97,6 @@ To import priors, you need the following:
         P2 = np.dot(l2, self.f_mod2)
         P3 = np.dot(h, self.r3)
 
-        if False:
-            ntypes_orig = len(self.zdata['spectra'])
-            nt = self.conf['interp']*(ntypes_orig - 1) + ntypes_orig
-            zoom_fac = (1, 1, float(nt) / ntypes_orig)
-
         if use_numexpr:
             D = ne.evaluate("P2**2 / (P3 + 2.0e-300)")
         else:
@@ -120,10 +111,7 @@ To import priors, you need the following:
         chi2_ig_last = self.P1[imin:imax] - D
         chi2 = chi2_ig_last.swapaxes(0,2)
 
-#        pdb.set_trace()
-
         chi_argmin = np.array([np.argmin(x) for x in chi2])
-#        iz, it = np.unravel_index(chi_argmin,  self.z_t_shape)
         iz, it = np.unravel_index(chi_argmin,  chi2.shape[1:]) #self.z_t_shape)
         min_chi2 = chi2[range(chi2.shape[0]), iz,it]
         red_chi2 = min_chi2 / float(self.nf-1.) 
@@ -140,7 +128,6 @@ To import priors, you need the following:
 
         p_bayes = pb.sum(axis=2)
 
-#        pdb.set_trace()
         # Only to be compatible with BPZ. The ideal case would be a
         # absolute value...
         pmin = self.conf['p_min']*p_bayes.max(axis=1.)
@@ -183,9 +170,7 @@ To import priors, you need the following:
         _z_odds = [bpz_tools.interval(x,self.z,self.conf['odds']) for x in p_bayes]
         z1, z2 = zip(*_z_odds)
  
-#        import pdb; pdb.set_trace()
         # Set values.
-#        self.chi2 = chi2
         self.iz = iz
         self.it = it
         self.min_chi2 = min_chi2
