@@ -130,6 +130,11 @@ class model_mag:
         for i, wi in enumerate(w):
             f_new[:,i,:] += wi*df_part[:,i,:]
 
+        from scipy.ndimage.interpolation import zoom
+#        pdb.set_trace()
+
+        f_new = zoom(f_mod, (1,16./6.,1), order=1)
+
         return f_new
 
     def __call__(self):

@@ -4,6 +4,7 @@
 import numpy as np
 
 conf = {
+    'opt': True,
     'others': [],
     'order': ['zb', 'zb_min', 'zb_max', 't_b', 'odds', 'z_ml', 't_ml', 'chi2', 'z_s', 'm_0'],
     'ndesi': 4,

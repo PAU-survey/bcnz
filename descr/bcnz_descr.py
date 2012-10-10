@@ -2,6 +2,7 @@
 # encoding: UTF8
 
 descr = {
+    'opt': 'Test new optimization...',
     'others': 'Additional columns',
     'ndesi': 'Number of decimals in output',
     'order': 'Order in the output parameters',

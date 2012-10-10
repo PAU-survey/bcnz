@@ -50,9 +50,13 @@ class chi2:
         self.z_t_shape = self.f_mod.shape[:2]
 
         nz,nt,nf = self.f_mod.shape
-        f_mod2 = self.f_mod.swapaxes(0,2)
-        f_mod2 = f_mod2.swapaxes(1,2)
-        f_mod2 = f_mod2.reshape((nf,nz*nt))
+        if not self.conf['opt']:
+            f_mod2 = self.f_mod.swapaxes(0,2)
+            f_mod2 = f_mod2.swapaxes(1,2)
+
+            f_mod2 = f_mod2.reshape((nf,nz*nt))
+        else:
+            f_mod2 = self.f_mod.swapaxes(1,2)
 
         self.nz = nz
         self.nf = nf
@@ -99,19 +103,29 @@ To import priors, you need the following:
         P2 = np.dot(l2, self.f_mod2)
         P3 = np.dot(h, self.r3)
 
+#        pdb.set_trace()
+        if False: #self.conf['opt']:
+            nz,nt,nf = self.f_mod.shape
+            pdb.set_trace()
+            P2 = P2.reshape((nf,nz*nt))
+
+#        pdb.set_trace()
+
+
         if use_numexpr:
             D = ne.evaluate("P2**2 / (P3 + 2.0e-300)")
         else:
             D = P2**2 / (P3 + 2.0e-300)
 
         #sys.float_info.min
+        if not self.conf['opt']:
+            D = D.reshape((h.shape[0], self.nz, self.nt))
 
-        D = D.reshape((h.shape[0], self.nz, self.nt))
         self.D = D
         # Order after: type - redshift - ig
         D = D.swapaxes(0,2) 
 
-
+        print('opt', self.conf['opt'])
         chi2_ig_last = self.P1[imin:imax] - D
         chi2 = chi2_ig_last.swapaxes(0,2)
 

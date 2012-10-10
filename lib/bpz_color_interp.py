@@ -1,8 +1,13 @@
 #!/usr/bin/env python
+import pdb
 import sys
 import numpy as np
 
 import bpz_useful
+
+#
+# OLD CODE. WILL SOON BE DELETED!!!!!
+#
 
 def interp(conf, f_mod, z, filters, spectra):
     nf=len(filters)
@@ -38,14 +43,15 @@ def interp(conf, f_mod, z, filters, spectra):
  
     if ninterp:
         nti = nt+(nt-1)*ninterp
-        buffer = np.zeros((nz,nti,nf))*1.
+        f_int = np.zeros((nz,nti,nf))*1.
         tipos = np.arange(0.,float(nti),float(ninterp)+1.)
         xtipos = np.arange(float(nti))
         for iz in np.arange(nz):
             for jf in range(nf):
-                buffer[iz,:,jf] = bpz_useful.match_resol(tipos,f_mod[iz,:,jf],xtipos)
+                f_int[iz,:,jf] = bpz_useful.match_resol(tipos,f_mod[iz,:,jf],xtipos)
     
         nt=nti
-        f_mod=buffer
+#        f_mod=buffer
+    pdb.set_trace()
 
-    return f_mod
+    return f_int
