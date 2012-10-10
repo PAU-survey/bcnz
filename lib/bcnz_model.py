@@ -108,6 +108,9 @@ class model_mag:
     def interp(self, conf, f_mod, z, filters, spectra):
         """Interpolation between spectras."""
 
+#        if conf['opt']:
+#            return f_mod
+
         ninterp = conf['interp']
         if not ninterp:
             return f_mod

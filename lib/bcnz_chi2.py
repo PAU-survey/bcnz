@@ -6,6 +6,7 @@ import pdb
 import time
 import sys
 import numpy as np
+from scipy.ndimage.interpolation import zoom
 
 import priors
 import bpz_useful
@@ -49,14 +50,11 @@ class chi2:
         self.nf = self.f_mod.shape[2]
         self.z_t_shape = self.f_mod.shape[:2]
 
+        # Working with 2D is faster.
         nz,nt,nf = self.f_mod.shape
-        if not self.conf['opt']:
-            f_mod2 = self.f_mod.swapaxes(0,2)
-            f_mod2 = f_mod2.swapaxes(1,2)
-
-            f_mod2 = f_mod2.reshape((nf,nz*nt))
-        else:
-            f_mod2 = self.f_mod.swapaxes(1,2)
+        f_mod2 = self.f_mod.swapaxes(0,2)
+        f_mod2 = f_mod2.swapaxes(1,2)
+        f_mod2 = f_mod2.reshape((nf,nz*nt))
 
         self.nz = nz
         self.nf = nf
@@ -103,51 +101,36 @@ To import priors, you need the following:
         P2 = np.dot(l2, self.f_mod2)
         P3 = np.dot(h, self.r3)
 
-#        pdb.set_trace()
-        if False: #self.conf['opt']:
-            nz,nt,nf = self.f_mod.shape
-            pdb.set_trace()
-            P2 = P2.reshape((nf,nz*nt))
-
-#        pdb.set_trace()
-
+        if False:
+            ntypes_orig = len(self.zdata['spectra'])
+            nt = self.conf['interp']*(ntypes_orig - 1) + ntypes_orig
+            zoom_fac = (1, 1, float(nt) / ntypes_orig)
 
         if use_numexpr:
             D = ne.evaluate("P2**2 / (P3 + 2.0e-300)")
         else:
             D = P2**2 / (P3 + 2.0e-300)
 
-        #sys.float_info.min
         if not self.conf['opt']:
             D = D.reshape((h.shape[0], self.nz, self.nt))
 
-        self.D = D
         # Order after: type - redshift - ig
         D = D.swapaxes(0,2) 
 
-        print('opt', self.conf['opt'])
         chi2_ig_last = self.P1[imin:imax] - D
         chi2 = chi2_ig_last.swapaxes(0,2)
 
 #        pdb.set_trace()
 
         chi_argmin = np.array([np.argmin(x) for x in chi2])
-        iz, it = np.unravel_index(chi_argmin,  self.z_t_shape)
+#        iz, it = np.unravel_index(chi_argmin,  self.z_t_shape)
+        iz, it = np.unravel_index(chi_argmin,  chi2.shape[1:]) #self.z_t_shape)
         min_chi2 = chi2[range(chi2.shape[0]), iz,it]
         red_chi2 = min_chi2 / float(self.nf-1.) 
 
         # Using numexpr does not improve this evaluation.
         pb = -0.5*(chi2_ig_last - min_chi2)
         pb = np.exp(pb).swapaxes(0,2)
-
-        if False:
-            zs_ind = np.digitize(self.z_s[imin:imax], self.z)
-            pb_type = pb[np.arange(len(zs_ind)), zs_ind,:]
-            opt_type = pb_type.argmax(axis=1)
-
-#        pdb.set_trace()
-        if test_min:
-            pb_without = pb.copy()
 
         # Add priors.
         use_priors = True
