@@ -21,6 +21,18 @@ try:
 except ImportError:
     use_numexpr = False
 
+# <testing>
+import math
+def texp(n):
+    if n == 0:
+        return '1'
+    else:
+        part = '+ (-pb2)**{0}/{1}.'.format(n, math.factorial(n))
+
+    return texp(n-1)+part
+# </testing>
+
+
 np.seterr(under='ignore')
 test_min = False
 class chi2:
@@ -87,7 +99,7 @@ To import priors, you need the following:
         self.l2 = self.f_obs*self.h
         self.r3 = self.f_mod2**2.
 
-#    @profile
+    @profile
     def calc_D(self, imin):
         imax = imin + self.ngal_calc
 
@@ -102,9 +114,10 @@ To import priors, you need the following:
         else:
             D = P2**2 / (P3 + 2.0e-300)
 
-        if not self.conf['opt']:
-            D = D.reshape((h.shape[0], self.nz, self.nt))
+#        if not self.conf['opt']:
+        D = D.reshape((h.shape[0], self.nz, self.nt))
 
+#        pdb.set_trace()
         # Order after: type - redshift - ig
         D = D.swapaxes(0,2) 
 
@@ -119,7 +132,7 @@ To import priors, you need the following:
         # Using numexpr does not improve this evaluation.
         pb = -0.5*(chi2_ig_last - min_chi2)
         pb = np.exp(pb).swapaxes(0,2)
-
+        
         # Add priors.
         use_priors = True
         if use_priors:
