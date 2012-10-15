@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# encode: UTF8
+# encoding: UTF8
 # First iteration on a code to do Bayesian template 
 # fitting to determine galaxy type and redshift.
 import pdb
@@ -247,6 +247,8 @@ To import priors, you need the following:
         return np.rec.fromarrays(A, dtype)
 
     def blocks(self):
+        """Iterate over the different blocks."""
+
 #        pdb.set_trace()
         ngal = len(self.z_s_data)
         nblocks = int(np.ceil(float(ngal) / self.ngal_calc))
@@ -293,8 +295,9 @@ To import priors, you need the following:
         return iz, it, red_chi2, pb, p_bayes, iz_b, zb, odds, it_b, tt_b, tt_ml, z1, z2, opt_type
 
 class chi2_combined:
+#(conf, zdata, f_obs, ef_obs, m_0, z_s, ids, ngal_calc)
     def __init__(self, conf, zdata, f_obs, ef_obs, m_0, \
-                 z_s, ngal_calc):
+                 z_s, inds, ngal_calc):
 
         filters = zdata['filters']
         filter_id = filters.index('i')
@@ -306,69 +309,91 @@ class chi2_combined:
         ind_faint = np.logical_not(ind_bright)
 
         self.chi2_bright = chi2_calc(conf, zdata, f_obs[ind_bright], ef_obs[ind_bright], \
-                                     m_0, z_s, ngal_calc, conf['dz_bright'], conf['min_rms_bright'])
+                                     m_0[ind_bright], z_s[ind_bright], inds[ind_bright], \
+                                     ngal_calc, conf['dz_bright'], conf['min_rms_bright'])
 
-        self.chi2_faint = chi2_calc(conf, zdata, f_obs[ind_faint], ef_obs[ind_faint], m_0, \
-                                    z_s, ngal_calc, conf['dz_faint'], conf['min_rms_faint'])
+        self.chi2_faint = chi2_calc(conf, zdata, f_obs[ind_faint], ef_obs[ind_faint], \
+                                    m_0[ind_faint], z_s[ind_faint], inds[ind_faint], \
+                                    ngal_calc, conf['dz_faint'], conf['min_rms_faint'])
 
         # use_ind gives the index within chi2_bright and chi2_faint to use.
         use_ind = np.zeros(f_obs.shape[0], dtype=np.int)
         use_ind[ind_bright] = np.array(np.arange(np.sum(ind_bright)))
         use_ind[ind_faint] = np.array(np.arange(np.sum(ind_faint)))
 
+        self.ngal = len(z_s)
+        self.ngal_calc = ngal_calc
         self.ind_bright = ind_bright
+        self.ind_faint= ind_faint
         self.use_ind = use_ind
 
-    def __call__(self, ig):
-        is_bright = self.ind_bright[ig]
-        new_ig = self.use_ind[ig]
-        if is_bright:
-            return self.chi2_bright(new_ig)
-        else:
-            return self.chi2_faint(new_ig)
-
-class chi2_basic:
-
-    def __init__(self, conf, zdata, f_obs, ef_obs, m_0, \
-                 z_s, ids, ngal_calc):
-
-        self.conf = conf
-        self.zdata = zdata
-        self.f_obs = f_obs
-        self.ef_obs = ef_obs
-        self.m_0 = m_0
-        self.z_s = z_s
-        self.ids = ids
-        self.ngal_calc = ngal_calc
-
-        self.create_obj(0)
-
-#    @profile 
-    def create_obj(self, n):
-        conf = self.conf
-#        imin = int(float(ig)/self.ngal_calc)*self.ngal_calc
+    def _block(self, n):
         imin = n*self.ngal_calc
         imax = (n+1)*self.ngal_calc
-        print('imin imax', imin, imax)
-        self.chi2 = chi2_calc(conf, self.zdata, self.f_obs[imin:imax], self.ef_obs[imin:imax], \
-                              self.m_0, self.z_s, self.ids, self.ngal_calc, conf['dz'], conf['min_rms'])
 
-        self.res = self.chi2.block()
-        names = self.res.dtype.names
-        self.in_dict = [dict(zip(names, record)) for record in self.res]
-#        pdb.set_trace()
-        self.n = n
+        b1 = self.chi2_bright._block(0)
+#        b2 = self.chi2_faint._block(0)
 
+        pdb.set_trace()
 
-    def __call__(self, ig):
-        if not int(ig/self.ngal_calc) == self.n:
-            print('recalc', ig)
-            self.create_obj(self.n+1)
+    def blocks(self):
+        """Iterate over galaxy blocks merged from the bright and faint."""
 
-        ig_part = ig % self.ngal_calc
+        nblocks = int(np.ceil(float(self.ngal) / self.ngal_calc))
+        ind_bright = self.ind_bright
+        ind_faint = self.ind_faint
+        ncalc = self.ngal_calc
 
-        return self.in_dict[ig_part] 
+        block_bright = self.chi2_bright._block(0)
+        block_faint = self.chi2_faint._block(0)
 
+        b_blocknr, f_blocknr, nb, nf = 0, 0, 0, 0
+        for n in np.arange(nblocks):
+            new_block = np.zeros(ncalc, dtype=block_bright.dtype)
+            imin = n*self.ngal_calc
+            imax = (n+1)*self.ngal_calc
+
+            b_ind = ind_bright[imin:imax]
+            f_ind = ind_faint[imin:imax]
+
+            # Number of galaxies in the current and next block.
+            b_sum = np.sum(b_ind)            
+            f_sum = np.sum(f_ind)            
+            b1 = min(nb+b_sum, ncalc)
+            f1 = min(nf+f_sum, ncalc)
+            b2 = b_sum - b1
+            f2 = f_sum - f1
+
+            new_block[b_ind[:b1]] = block_bright[nb:nb+b1]
+            new_block[f_ind[:f1]] = block_faint[nf:nf+f1]
+
+            pdb.set_trace()
+
+            if b2:
+                # Fetch new bright block.
+                b_blocknr += 1
+                block_bright = self.chi2_bright._block(b_blocknr)
+                new_block[b_ind[b1:b2]] = block_bright[:b2] 
+
+            if f2:
+                # Fetch new faint block.
+                f_blocknr += 1
+                block_faint = self.chi2_faint._block(f_blocknr)
+                new_block[b_ind[b1:b2]] = block_bright[:b2] 
+
+            nb = b2
+            nf = f2
+
+            yield new_block
+#            pdb.set_trace()
+
+#    def blocks(self):
+#        """Iterate over blocks of galaxies."""
+#
+#        nblocks = int(np.ceil(float(self.ngal) / self.ngal_calc))
+#        self.blah()
+#        for n in np.arange(nblocks):
+#            yield self._block(n)
 
 
 #@def chi2_inst(conf, zdata, f_obs, ef_obs, m_0, z_s, ngal_calc=100):
@@ -376,11 +401,6 @@ def chi2_inst(conf, zdata, f_obs, ef_obs, m_0, z_s, ids, ngal_calc=100):
     """Select which chi2 object to use depending on splitting in magnitudes
        or not.
     """
-    if conf['tblock']:
-        dz = conf['dz']
-        min_rms = conf['min_rms']
-
-        return chi2_calc(conf, zdata, f_obs, ef_obs, m_0, z_s, ids, ngal_calc, dz, min_rms)
 
     if conf['split_pop']:
         return chi2_combined(conf, zdata, f_obs, ef_obs, m_0, z_s, ids, ngal_calc)
