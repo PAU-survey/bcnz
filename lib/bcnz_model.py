@@ -111,10 +111,11 @@ class model_mag:
 
         ntypes_orig = len(self.zdata['spectra'])
         nt = self.conf['interp']*(ntypes_orig - 1) + ntypes_orig
-        zoom_fac = (1, 1, float(nt) / ntypes_orig)
+        zoom_fac = (1, float(nt) / ntypes_orig, 1)
 
-        f_new = zoom(f_mod, (1,16./6.,1), order=1)
+        f_new = zoom(f_mod, zoom_fac, order=1)
 
+#        pdb.set_trace()
         return f_new
 
     def __call__(self):

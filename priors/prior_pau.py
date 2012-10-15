@@ -1,7 +1,13 @@
-import numpy as np
+#!/usr/bin/env python
+# encoding: UTF8
+
+import pdb
 import sys
+import numpy as np
 
 class prior_pau:
+    """Priors calibrated to mocks used for the PAU survey."""
+
     def __init__(self, conf, zdata, m_0):
         ndes = 1 # Number of decimals
 
@@ -79,7 +85,7 @@ class prior_pau:
         inds = np.clip(inds, 0, nt-2)
 
         pr = p[:,:,inds] + d[:,:,inds]*(all_types-temp_types[inds])
-#        import pdb; pdb.set_trace()
+
         return pr
 
     def inds(self, m):
@@ -88,6 +94,7 @@ class prior_pau:
         return np.round((m  - self.m_min)/self.conf['m_step']).astype(int)
 
     def add_priors(self, m, lh):
+#        pdb.set_trace()
 
         inds = self.inds(m)
         for i in range(lh.shape[0]):

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# encoding: UTF8
 import pdb
 import sys
 import numpy as np
@@ -111,8 +113,7 @@ def mega_function(conf, zdata, data):
     cals = zdata['cals']
     col_pars = zdata['col_pars']
 
-
-#    import pdb; pdb.set_trace()  
+    mytest = f_obs.copy()
     #Convert them to arbitrary fluxes if they are in magnitudes
     if conf['mag']:
         seen=np.greater(f_obs,0.)*np.less(f_obs,undet) #*(ef_obs != -1.)
@@ -229,7 +230,8 @@ def mega_function(conf, zdata, data):
             print 'AB or Vega?. Check '+col_file+' file'
             sys.exit()
     		
-   
+    A = 10.**(-.4*mytest) 
+#    import pdb; pdb.set_trace() 
    
     ##### CHECK THIS #####
     
@@ -242,5 +244,6 @@ def mega_function(conf, zdata, data):
     
     #Add cluster 'spikes' to the prior?
     cluster_prior=0.
-  
+ 
+    
     return ids,f_obs,ef_obs,m_0,z_s

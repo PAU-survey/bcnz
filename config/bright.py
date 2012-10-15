@@ -8,4 +8,4 @@ conf['prior'] = 'pau'
 conf['dz'] = 0.001
 conf['odds'] = 0.68
 conf['min_rms'] = 0.0055
-conf['spectra'] = 'spectras.txt'
+#conf['spectra'] = 'spectras.txt'

@@ -4,6 +4,13 @@
 import numpy as np
 
 conf = {
+    'tblock': True,
+    'dz_bright': 0.001,
+    'dz_faint': 0.005,
+    'min_rms_bright': 0.0055,
+    'min_rms_faint': 0.055,
+    'mag_split': 22.5,
+    'split_pop': False,
     'opt': True,
     'others': [],
     'order': ['zb', 'zb_min', 'zb_max', 't_b', 'odds', 'z_ml', 't_ml', 'chi2', 'z_s', 'm_0'],
@@ -39,7 +46,7 @@ conf = {
     'plots': False,
     'probs_lite': True,
     'mag': True,
-    'spectra': 'spectra.txt',
+    'spectra': 'spectras.txt',
     'get_z': True,
     'use_par': True,
     'nthr': None,
@@ -67,8 +74,8 @@ conf = {
     'verbose': True,
     'min_magerr': 0.001,
     'catalog': None,
-    'interp': 0,
-    'prior': 'hdfn_gen',
+    'interp': 2,
+    'prior': 'pau',
     'dz': 0.01,
     'odds': 0.95,
     'min_rms': 0.05}

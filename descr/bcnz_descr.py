@@ -2,6 +2,13 @@
 # encoding: UTF8
 
 descr = {
+    'tblock': 'Test working with blocks',
+    'dz_bright': 'Resolution for the bright sample',
+    'dz_faint': 'Resolution for the faint sample',
+    'min_rms_bright': 'Intrinsic photo-z scatter for the bright sample',
+    'min_rms_faint': 'Intrinsic photo-z scatter for the faint sample',
+    'mag_split': 'Split between the two populations',
+    'split_pop': 'Split internally in two populations',
     'opt': 'Test new optimization...',
     'others': 'Additional columns',
     'ndesi': 'Number of decimals in output',
