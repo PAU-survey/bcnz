@@ -44,7 +44,6 @@ class model_mag:
         phi_spl = self.zdata['resp_spls'][filter_name]
         xpart = self.zdata['r_const'][filter_name]*xw*splev(xm, phi_spl)
    
- 
         a_ab = 1./(1.+z_ab)
 
         res = {}
@@ -75,14 +74,14 @@ class model_mag:
 
 #            pdb.set_trace()
 
-    def f_mod(self):
+    def f_mod(self, z):
         """Model frequencies."""
         
 
         d = self.conf['ab_dir']
         spectra = self.zdata['spectra']
         filters = self.zdata['filters']
-        z = self.zdata['z']
+#        z = self.zdata['z']
 
         # HACK. Does not handle new filters added..
         if not os.listdir(d):

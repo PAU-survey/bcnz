@@ -8,7 +8,7 @@ import numpy as np
 class prior_pau:
     """Priors calibrated to mocks used for the PAU survey."""
 
-    def __init__(self, conf, zdata, m_0):
+    def __init__(self, conf, zdata, z, m_0):
         ndes = 1 # Number of decimals
 
         # Ok, these might be passed later on..
@@ -24,18 +24,18 @@ class prior_pau:
 
         m = m_min + m_step * np.arange(steps+1)
         #self.pr = np.ascontiguousarray(self.prior_precalc(z, m, ninterp))
-        self.pr = self.prior_precalc(conf, zdata, m)
+        self.pr = self.prior_precalc(conf, z, m)
 
         self.conf = conf
 
-        self.z = zdata['z']
+        self.z = z
         self.m_0 = m_0
         self.m_min = m_min
+
     def prior_basis(self, z, m):
         """Priors without interpolation between types."""
         nt = len(self.a)
         nm = len(m)
-
 
         # Indexes magnitude, type. Both add and pow works over
         # the last index.
@@ -69,14 +69,14 @@ class prior_pau:
 
         return p
 
-    def prior_precalc(self, conf, zdata, m):
+    def prior_precalc(self, conf, z, m):
         """Precalculating the priors with interpolated types."""
 
         nt = len(self.a)
         temp_types = np.arange(nt, dtype=float)
         all_types = np.linspace(0.,nt-1., nt + conf['interp']*(nt-1))
 
-        p = self.prior_basis(zdata['z'], m)
+        p = self.prior_basis(z, m)
 
         # Derivative with respect to type. 
         d = (p[:,:,1:] - p[:,:,:-1]) / (temp_types[1:] - temp_types[:-1])

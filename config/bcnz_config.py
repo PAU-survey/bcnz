@@ -77,5 +77,6 @@ conf = {
     'interp': 2,
     'prior': 'pau',
     'dz': 0.01,
-    'odds': 0.95,
+#    'odds': 0.95,
+    'odds': 0.68,
     'min_rms': 0.05}

@@ -40,10 +40,20 @@ class filter_and_so:
 
     def tja(self, zdata):
         conf = self.conf
-        self.z = zdata['z']
+#        self.z = zdata['z']
         self.filters = zdata['filters']
         self.spectra = zdata['spectra']
         self.ab_db = zdata['ab_db']
+
+        def binning(pop):
+            dz = conf['dz_{0}'.format(pop)]
+
+            return np.arange(conf['zmin'],conf['zmax']+dz,dz)
+
+        if conf['split_pop']:
+            for pop in ['bright', 'faint']:
+
+                zdata['{0}.z'.format(pop)] = binning(pop)
 
         if conf['old_model']:
             # Old approach..
@@ -59,9 +69,18 @@ class filter_and_so:
             zdata = sed_filt_inst(conf, zdata)
 
             t3 = time.time()
+
+            if conf['split_pop']:
+                to_iter = [('bright.f_mod', zdata['bright.z']), ('faint.f_mod', zdata['faint.z'])]
+            else:
+                to_iter = [('f_mod', zdata['z'])]
+
             model = bcnz_model.model_mag(conf, zdata)
-            f_mod2 = model.f_mod()
-            f_mod2 = model.interp(conf, f_mod2, self.z, self.filters, self.spectra)
+            for key, z in to_iter:
+                f_mod2 = model.f_mod(z)
+                f_mod2 = model.interp(conf, f_mod2, z, self.filters, self.spectra)
+                zdata[key] = f_mod2
+
             t4 = time.time()
 
             f_mod = f_mod2
@@ -79,7 +98,6 @@ class filter_and_so:
         if conf['zp_offsets']:
             zdata['zp_offsets'] += conf['zp_offsets']
 
-        zdata['f_mod'] = f_mod
         zdata['col_pars'] = col_pars
 
         return zdata
