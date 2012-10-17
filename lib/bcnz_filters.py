@@ -50,7 +50,7 @@ class filter_and_so:
 
             return np.arange(conf['zmin'],conf['zmax']+dz,dz)
 
-        if conf['split_pop']:
+        if conf['use_split']:
             for pop in ['bright', 'faint']:
 
                 zdata['{0}.z'.format(pop)] = binning(pop)
@@ -70,7 +70,7 @@ class filter_and_so:
 
             t3 = time.time()
 
-            if conf['split_pop']:
+            if conf['use_split']:
                 to_iter = [('bright.f_mod', zdata['bright.z']), ('faint.f_mod', zdata['faint.z'])]
             else:
                 to_iter = [('f_mod', zdata['z'])]

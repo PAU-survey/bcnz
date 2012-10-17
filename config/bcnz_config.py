@@ -4,13 +4,14 @@
 import numpy as np
 
 conf = {
+    'use_cache': True,
     'tblock': True,
     'dz_bright': 0.001,
     'dz_faint': 0.005,
     'min_rms_bright': 0.0055,
     'min_rms_faint': 0.055,
     'mag_split': 22.5,
-    'split_pop': False,
+    'use_split': False,
     'opt': True,
     'others': [],
     'order': ['zb', 'zb_min', 'zb_max', 't_b', 'odds', 'z_ml', 't_ml', 'chi2', 'z_s', 'm_0'],

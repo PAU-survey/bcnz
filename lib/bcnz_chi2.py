@@ -46,7 +46,7 @@ class chi2_calc:
         self.zdata = zdata
         self.f_obs = f_obs
         self.ef_obd = ef_obs
-        if conf['split_pop']:
+        if conf['use_split']:
             self.f_mod = zdata['{0}.f_mod'.format(pop)]
             z = zdata['{0}.z'.format(pop)]
         else:
@@ -86,11 +86,10 @@ class chi2_calc:
 
         oi = bpz_useful.inv_gauss_int(float(conf['odds']))
         self.odds_pre = oi * self.min_rms #conf['min_rms']
-
         self.z = z
+
         # Precalculate values.
         self.calc_P1()
-        self.calc_D(0)
 
     def cols_dtype(self):
         """Columns and block dtype."""
@@ -143,14 +142,11 @@ To import priors, you need the following:
         else:
             D = P2**2 / (P3 + 2.0e-300)
 
-#        if not self.conf['opt']:
         D = D.reshape((h.shape[0], self.nz, self.nt))
 
-#        pdb.set_trace()
         # Order after: type - redshift - ig
         D = D.swapaxes(0,2) 
 
-        print('D', imin, D.shape)
         chi2_ig_last = self.P1[imin:imax] - D
         chi2 = chi2_ig_last.swapaxes(0,2)
 
@@ -238,17 +234,11 @@ To import priors, you need the following:
         self.imin = imin
         self.imax = imax
 
-#        pdb.set_trace()
+#    def find_zp_odds(self):
+#        self.calc_D(0)
+#
+#        return self.zb, self.odds
 
-#        self.opt_type = opt_type
-
-#    @profile
-    def find_zp_odds(self):
-        self.calc_D(0)
-
-        return self.zb, self.odds
-
-#    @profile
     def _block(self, n):
         imin = n*self.ngal_calc
         self.calc_D(imin)
@@ -276,45 +266,46 @@ To import priors, you need the following:
             yield self._block(n)
 
 #        yield
+
 #        pdb.set_trace()
 #        return np.array(np.vstack(A).T, dtype)
-
-    def __call__(self, ig):
-
-        corr_imin = int(float(ig)/self.ngal_calc)*self.ngal_calc
-        ind = ig - corr_imin
-
-        if not self.imin <= ig < self.imax:
-            self.calc_D(corr_imin)
-
-        # Note that P1 contains information about all galaxies
-        # and is therefore indexed by ig and *not* ind.
-
-        iz = self.iz[ind]
-        it = self.it[ind]
-
-        red_chi2 = self.red_chi2[ind]
-        pb = self.pb[ind]
-        p_bayes = self.p_bayes[ind]
-        iz_b = self.iz_b[ind]
-        zb = self.zb[ind]
-        odds = self.odds[ind]
-        it_b = self.it_b[ind]
-
-        tt_b = self.tt_b[ind]
-        tt_ml = self.tt_ml[ind]
-
-        z1 = self.z1[ind]
-        z2 = self.z2[ind]
-
-        
-#        opt_type = self.opt_type[ind]
-        opt_type = 0.
-
-        return iz, it, red_chi2, pb, p_bayes, iz_b, zb, odds, it_b, tt_b, tt_ml, z1, z2, opt_type
-
+#
+#    def __call__(self, ig):
+#
+#        corr_imin = int(float(ig)/self.ngal_calc)*self.ngal_calc
+#        ind = ig - corr_imin
+#
+#        if not self.imin <= ig < self.imax:
+#            self.calc_D(corr_imin)
+#
+#        # Note that P1 contains information about all galaxies
+#        # and is therefore indexed by ig and *not* ind.
+#
+#        iz = self.iz[ind]
+#        it = self.it[ind]
+#
+#        red_chi2 = self.red_chi2[ind]
+#        pb = self.pb[ind]
+#        p_bayes = self.p_bayes[ind]
+#        iz_b = self.iz_b[ind]
+#        zb = self.zb[ind]
+#        odds = self.odds[ind]
+#        it_b = self.it_b[ind]
+#
+#        tt_b = self.tt_b[ind]
+#        tt_ml = self.tt_ml[ind]
+#
+#        z1 = self.z1[ind]
+#        z2 = self.z2[ind]
+#
+#        
+#        opt_type = 0.
+#
+#        return iz, it, red_chi2, pb, p_bayes, iz_b, zb, odds, it_b, tt_b, tt_ml, z1, z2, opt_type
+#
 class chi2_combined:
-#(conf, zdata, f_obs, ef_obs, m_0, z_s, ids, ngal_calc)
+    """Interface for combining the results for several populations."""
+
     def __init__(self, conf, zdata, f_obs, ef_obs, m_0, \
                  z_s, inds, ngal_calc):
 
@@ -349,116 +340,29 @@ class chi2_combined:
 #        pdb.set_trace()
 
     def blocks(self):
+        """Iterate over blocs."""
 
         new_block = np.zeros(self.ngal, dtype=self.chi2_bright.dtype)
         to_iter = [(self.ind_bright, self.chi2_bright),\
                    (self.ind_faint, self.chi2_faint)]
 
-        print('in blocks')
         for ind, pop_chi2 in to_iter:
             nparts = int(np.ceil(len(ind)/ float(self.ngal_calc)))
             s = self.ngal_calc*np.arange(self.ngal_calc)
 
             splitted = np.split(ind.nonzero()[0], s[1:])
-#            pdb.set_trace()
             for i, p_block in enumerate(pop_chi2.blocks()):
+#                if not p_
                 new_block[splitted[i]] = p_block
 
-#            for ind_part, p_block in zip(splitted, pop_chi2.blocks()):
-#                print('here')
-#                pdb.set_trace()
-#
-#                imin = n*self.ngal_calc
-#                imax = min((n+1)*self.ngal_calc, self.ngal)
-#                part_ind = imin + ind[imin:imax].nonzero()[0]
-#
-#                new_block[part_ind] = p_block
-
         yield new_block
-#                print('here!!!!')
-#                pdb.set_trace()
 
-#    def OLD_blocks(self):
-#        """Iterate over galaxy blocks merged from the bright and faint."""
-#
-#        # Not the most elegant conde, but it was difficult getting it
-#        # right. Abstractions are badly needed.
-#        nblocks = int(np.ceil(float(self.ngal) / self.ngal_calc))
-#        ind_bright = self.ind_bright
-#        ind_faint = self.ind_faint
-#        ncalc = self.ngal_calc
-#
-#        block_bright = self.chi2_bright._block(0)
-#        block_faint = self.chi2_faint._block(0)
-#
-#        b_blocknr, f_blocknr, nb, nf = 0, 0, 0, 0
-#        for n in np.arange(nblocks):
-#            imin = n*self.ngal_calc
-#            imax = min((n+1)*self.ngal_calc, self.ngal)
-#            new_block = np.zeros(imax-imin, dtype=block_bright.dtype)
-#
-#            b_ind = ind_bright[imin:imax].nonzero()[0]
-#            f_ind = ind_faint[imin:imax].nonzero()[0]
-#
-#            # Number of galaxies in the current and next block.
-#            b_sum,f_sum = len(b_ind), len(f_ind)
-#            b1 = min(b_sum, ncalc)
-#            f1 = min(f_sum, ncalc)
-#            b2 = b_sum - b1
-#            f2 = f_sum - f1
-#
-#            # It complains on empty indices.
-#            if b1: new_block[b_ind[:b1]] = block_bright[nb:nb+b1]
-#            if f1: new_block[f_ind[:f1]] = block_faint[nf:nf+f1]
-#
-#            nb += b1
-#            nf += f1
-#
-#            if b2 or b1 == ncalc:
-#                # Fetch new bright block.
-#                b_blocknr += 1
-#                block_bright = self.chi2_bright._block(b_blocknr)
-#                nb = 0
-#                if b2:
-#                    #new_block[b_ind[b1:b2]] = block_bright[:b2] 
-#                    new_block[b_ind[b1:]] = block_bright[:b2] 
-#                    nb = b2
-#
-#            if f2 or f1 == ncalc:
-#                # Fetch new faint block.
-#                f_blocknr += 1
-#                block_faint = self.chi2_faint._block(f_blocknr)
-#                nf = 0
-#                if f2:
-#                    new_block[b_ind[f1:]] = block_bright[:f2] 
-#                    nf = f2
-#            
-#            if 13069 in new_block['id']:
-#                pdb.set_trace()
-#
-#            if 1 < np.sum(new_block['id'] == 0):
-#                pdb.set_trace()
-##            nb = b2
-##            nf = f2
-#
-#            yield new_block[:imax-imin]
-
-#    def blocks(self):
-#        """Iterate over blocks of galaxies."""
-#
-#        nblocks = int(np.ceil(float(self.ngal) / self.ngal_calc))
-#        self.blah()
-#        for n in np.arange(nblocks):
-#            yield self._block(n)
-
-
-#@def chi2_inst(conf, zdata, f_obs, ef_obs, m_0, z_s, ngal_calc=100):
 def chi2_inst(conf, zdata, f_obs, ef_obs, m_0, z_s, ids, ngal_calc=100):
     """Select which chi2 object to use depending on splitting in magnitudes
        or not.
     """
 
-    if conf['split_pop']:
+    if conf['use_split']:
         return chi2_combined(conf, zdata, f_obs, ef_obs, m_0, z_s, ids, ngal_calc)
     else:
         dz = conf['dz']
