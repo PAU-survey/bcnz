@@ -10,7 +10,6 @@ from scipy.ndimage.interpolation import zoom
 
 import priors
 import bpz_useful
-import bpz_min_tools as bpz_tools
 import bcnz_mintest
 
 # Currently the speedup with numexpr is not high
@@ -187,7 +186,7 @@ To import priors, you need the following:
         zo1 = zb - dz
         zo2 = zb + dz
 
-        odds = [bpz_tools.odds(p_bayes[i], self.z, zo1[i], zo2[i]) for i \
+        odds = [bpz_useful.odds(p_bayes[i], self.z, zo1[i], zo2[i]) for i \
                 in range(len(zb))]
         odds = np.array(odds)
 
@@ -208,7 +207,7 @@ To import priors, you need the following:
         it_b = np.where(test,  -1., it_b)
         tt_b = np.where(test,  -1., tt_b)
 
-        _z_odds = [bpz_tools.interval(x,self.z,self.conf['odds']) for x in p_bayes]
+        _z_odds = [bpz_useful.interval(x,self.z,self.conf['odds']) for x in p_bayes]
         z1, z2 = zip(*_z_odds)
  
         # Set values.

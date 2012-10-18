@@ -5,8 +5,6 @@ import pdb
 import shutil
 import numpy as np
 
-import bpz_flux
-
 import loadparts
 import obj_hash
 import bcnz_chi2
