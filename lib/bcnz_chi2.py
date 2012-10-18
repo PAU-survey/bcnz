@@ -68,7 +68,9 @@ class chi2_calc:
 
         # Priors
         self.load_priors(conf, z)
+#        pdb.set_trace()
         obs = np.logical_and(ef_obs <= 1., 1e-4 < f_obs /ef_obs)
+        #obs = np.logical_and(ef_obs <= 1., 1e-4*ef_obs < f_obs )
         self.h = obs / ef_obs ** 2.
 
         self.nf = self.f_mod.shape[2]

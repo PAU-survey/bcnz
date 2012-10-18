@@ -75,7 +75,7 @@ def fix_fluxes(conf, zdata, data):
 
 def post_pros(conf, data):
     # FJC seems to have an inconsisten definition..
-    data['f_obs'] = np.where(data['f_obs'] == 90, 99, data['f_obs'])
+    data['f_obs'] = np.where(data['f_obs'] == 90, -99, data['f_obs'])
 
     if 'ID' in data:
         ids = data['ID'].astype(np.int)
@@ -84,4 +84,28 @@ def post_pros(conf, data):
 
     data['ids'] = ids
 
+    if 'm_0' in data:
+        data['m_0'] += conf['delta_m_0']
+
     return data
+
+def get_cols(conf, zdata):
+
+    # Yes, this will be improved later..
+    cols_keys = []
+    cols = []
+
+    to_iter = [('f_obs', 'flux_cols'), ('ef_obs', 'eflux_cols')]
+    for k1,k2 in to_iter:
+        cols_keys.append(k1)
+        cols.append(zdata[k2])
+
+    col_pars = zdata['col_pars']
+    for key, val in col_pars.iteritems():
+        if not len(val) == 1:
+            continue
+
+        cols_keys.append(key.lower())
+        cols.append(int(val)-1)
+
+    return cols_keys, cols

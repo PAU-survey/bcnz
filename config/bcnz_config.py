@@ -4,7 +4,7 @@
 import numpy as np
 
 conf = {
-    'use_cache': True,
+    'use_cache': False,
     'tblock': True,
     'dz_bright': 0.001,
     'dz_faint': 0.005,

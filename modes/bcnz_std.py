@@ -70,7 +70,10 @@ class standard:
             out_file.writelines(header)
 
         nmax = self.conf['nmax']
-        cols_keys, cols = bpz_flux.get_cols(self.conf, self.zdata) 
+        xcols_keys, xcols = bpz_flux.get_cols(self.conf, self.zdata) 
+        cols_keys, cols = bcnz_flux.get_cols(self.conf, self.zdata) 
+
+#        pdb.set_trace()
         tmp = loadparts.loadparts(obs_file, nmax, cols_keys, cols)
 
         ndesi = self.conf['ndesi']
@@ -80,7 +83,6 @@ class standard:
 
         for data in tmp:
             data = bcnz_flux.post_pros(self.conf, data)
-            data = bpz_flux.post_pros(data, self.conf)
             ids,f_obs,ef_obs,m_0,z_s = bcnz_flux.fix_fluxes(self.conf, self.zdata, data) 
 
             f_obs, ef_obs = bcnz_norm.norm_data(self.conf, self.zdata, f_obs, ef_obs)
@@ -92,40 +94,9 @@ class standard:
 
 
             ng = len(f_obs)
-            if self.conf['tblock']:
-                for block in inst.blocks():
-                    names = block.dtype.names
-                    in_dict = [dict(zip(names, record)) for record in block]
+            for block in inst.blocks():
+                names = block.dtype.names
+                in_dict = [dict(zip(names, record)) for record in block]
 
-                    lines = [out_format.format(**gal) for gal in in_dict]
-#                    print('nr lines', len(lines))
-                    out_file.writelines(lines)
-
-                continue
-#                pdb.set_trace()
-
-
-                for ig in range(ng):
-                    gal = inst(ig)
-#                    pdb.set_trace()
-                    out_file.write(out_format.format(**gal))
-
-                continue
-
-            else:
-                print('DO NOT SHOW:::')
-                for ig in range(ng):
-                    iz_ml, t_ml, red_chi2, pb, p_bayes, iz_b, zb, odds, \
-                    it_b, tt_b, tt_ml,z1,z2,opt_type = inst(ig)
-
-                    # Temporary before moving it into the chi2 estimation code.
-                    gal = {'id': ids[ig], 'zb': zb, 'zb_min':  z1, 'zb_max': z2, \
-                           't_b': tt_b+1, 'odds': odds, 'z_ml': self.zdata['z'][iz_ml], \
-                           't_ml': tt_ml+1, 'chi2': red_chi2, 'z_s': z_s[ig], \
-                           'm_0': m_0[ig] - self.conf['delta_m_0']}
-
-    #                if ids[ig] == 112807:
-    #                    pdb.set_trace()
-    #                print(out_format.format(**gal))
-                    out_file.write(out_format.format(**gal))
-
+                lines = [out_format.format(**gal) for gal in in_dict]
+                out_file.writelines(lines)
