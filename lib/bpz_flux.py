@@ -5,7 +5,7 @@ import sys
 import numpy as np
 from bpz_min_tools import e_mag2frac
 
-def mega_function(conf, zdata, data):
+def mega1(conf, zdata, data):
 
     # I don't really feel like reading the details yet!
     undet = conf['undet']
@@ -13,17 +13,7 @@ def mega_function(conf, zdata, data):
  
     f_obs = data['f_obs']
     ef_obs = data['ef_obs']
-    ids = data['ids']
-    m_0 = data['m_0']
-    z_s = data['z_s'] 
- 
-    zp_errors = zdata['zp_errors']
-    zp_offsets = zdata['zp_offsets']
-    filters = zdata['filters']
-    cals = zdata['cals']
-    col_pars = zdata['col_pars']
 
-    mytest = f_obs.copy()
     #Convert them to arbitrary fluxes if they are in magnitudes
     if conf['mag']:
         seen=np.greater(f_obs,0.)*np.less(f_obs,undet) #*(ef_obs != -1.)
@@ -86,7 +76,12 @@ def mega_function(conf, zdata, data):
         f_obs=np.where(no_observed,0.,f_obs)
         ef_obs=np.where(no_observed,0.,ef_obs)
     
-    
+    return f_obs, ef_obs
+
+def mega2(conf, zdata, f_obs, ef_obs):
+    zp_errors = zdata['zp_errors']
+    zp_offsets = zdata['zp_offsets']
+
     #Flux codes:
     # If f>0 and ef>0 : normal objects
     # If f==0 and ef>0 :object not detected
@@ -129,31 +124,4 @@ def mega_function(conf, zdata, data):
     f_obs=f_obs*zp_offsets
     ef_obs=ef_obs*zp_offsets
     
-    #Convert fluxes to AB if needed
-    for i in range(f_obs.shape[1]):
-        if cals[i]=='Vega':
-            const=mag2flux(VegatoAB(0.,filters[i]))
-            f_obs[:,i]=f_obs[:,i]*const
-            ef_obs[:,i]=ef_obs[:,i]*const
-        elif cals[i]=='AB':continue
-        else:
-            print 'AB or Vega?. Check '+col_file+' file'
-            sys.exit()
-    		
-    A = 10.**(-.4*mytest) 
-#    import pdb; pdb.set_trace() 
-   
-    ##### CHECK THIS #####
-    
-    #Use a empirical prior?
-    tipo_prior = conf['prior']
-    useprior=0
-    if 'M_0' in col_pars: has_mags=1
-    else: has_mags=0
-    if has_mags and tipo_prior<>'none' and tipo_prior<>'flat': useprior=1
-    
-    #Add cluster 'spikes' to the prior?
-    cluster_prior=0.
- 
-    
-    return ids,f_obs,ef_obs,m_0,z_s
+    return f_obs,ef_obs

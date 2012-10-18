@@ -69,7 +69,12 @@ def fix_fluxes(conf, zdata, data):
     if conf['add_noise']:
         add_noise(conf, zdata, data)
 
-    ids,f_obs,ef_obs,m_0,z_s = bpz_flux.mega_function(conf, zdata, data)
+    f_obs,ef_obs = bpz_flux.mega1(conf, zdata, data)
+    f_obs,ef_obs = bpz_flux.mega2(conf, zdata,f_obs, ef_obs)
+
+    ids = data['ids']
+    m_0 = data['m_0']
+    z_s = data['z_s']
 
     return ids,f_obs,ef_obs,m_0,z_s
 

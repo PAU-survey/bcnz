@@ -5,9 +5,6 @@ import time
 
 import numpy as np
 
-import bpz_color_interp
-import bpz_model
-
 import bcnz_div
 import bcnz_input
 import bcnz_model
@@ -56,13 +53,8 @@ class filter_and_so:
                 zdata['{0}.z'.format(pop)] = binning(pop)
 
         if conf['old_model']:
-            # Old approach..
-            t1 = time.time()
-            f_mod = bpz_model.gen_model(conf, zdata)
-            f_mod = bpz_color_interp.interp(conf, f_mod, self.z, self.filters, self.spectra)
+            raise
 
-            t2 = time.time()
-#            print('time bpz', t2-t1)
         else:
             # New approach..
             sed_filt_inst = bcnz_sedf.sed_filters()

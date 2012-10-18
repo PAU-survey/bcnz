@@ -61,7 +61,6 @@ class standard:
         """Estimate the photoz for one input file."""
 
         obs_file = self.obs_file
-
         out_file = bcnz_output.output_file(out_file)
 
         if self.conf['get_z']:
@@ -70,10 +69,8 @@ class standard:
             out_file.writelines(header)
 
         nmax = self.conf['nmax']
-        xcols_keys, xcols = bpz_flux.get_cols(self.conf, self.zdata) 
         cols_keys, cols = bcnz_flux.get_cols(self.conf, self.zdata) 
 
-#        pdb.set_trace()
         tmp = loadparts.loadparts(obs_file, nmax, cols_keys, cols)
 
         ndesi = self.conf['ndesi']
@@ -87,8 +84,6 @@ class standard:
 
             f_obs, ef_obs = bcnz_norm.norm_data(self.conf, self.zdata, f_obs, ef_obs)
 
-#            inst = bcnz_chi2.chi2(self.conf, self.zdata, f_obs, ef_obs, m_0, \
-#                          z_s, 100)
             inst = bcnz_chi2.chi2_inst(self.conf, self.zdata, f_obs, ef_obs, m_0, \
                           z_s, ids, 100)
 
