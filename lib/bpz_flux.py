@@ -7,14 +7,14 @@ from bpz_min_tools import e_mag2frac
 
 def post_pros(data, conf):
     # Post processing...
-    if data.has_key('ID'):
-        ids = data['ID'].astype(np.int)
-    else:
-        ngal = data['f_obs'].shape[0] # bcnz
-        
-        ids=map(str,range(1,ngal+1))
-
-    data['ids'] = ids
+#    if data.has_key('ID'):
+#        ids = data['ID'].astype(np.int)
+#    else:
+#        ngal = data['f_obs'].shape[0] # bcnz
+#        
+#        ids=map(str,range(1,ngal+1))
+#
+#    data['ids'] = ids
 
     if data.has_key('m_0'):
         data['m_0'] += conf['delta_m_0']

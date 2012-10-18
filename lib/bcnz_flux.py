@@ -72,3 +72,16 @@ def fix_fluxes(conf, zdata, data):
     ids,f_obs,ef_obs,m_0,z_s = bpz_flux.mega_function(conf, zdata, data)
 
     return ids,f_obs,ef_obs,m_0,z_s
+
+def post_pros(conf, data):
+    # FJC seems to have an inconsisten definition..
+    data['f_obs'] = np.where(data['f_obs'] == 90, 99, data['f_obs'])
+
+    if 'ID' in data:
+        ids = data['ID'].astype(np.int)
+    else:
+        ids = np.arange(data['f_obs'].shape[0])
+
+    data['ids'] = ids
+
+    return data

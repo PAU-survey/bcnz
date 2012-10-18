@@ -310,7 +310,7 @@ class chi2_combined:
                  z_s, inds, ngal_calc):
 
         filters = zdata['filters']
-        filter_id = filters.index('i')
+        filter_id = filters.index('Fi')
         mag_lim = conf['mag_split']
 
         f_lim = 10.**(-0.4*mag_lim)
@@ -318,6 +318,16 @@ class chi2_combined:
         ind_bright = f_lim < f_obs[:,filter_id]
         ind_faint = np.logical_not(ind_bright)
 
+        self.conf = conf
+        self.zdata = zdata
+        self.f_obs = f_obs
+        self.ef_obs = ef_obs
+        self.m_0 = m_0
+        self.z_s = z_s
+        self.inds = inds
+        self.ind_pop = {'bright': ind_bright, 'faint': ind_faint}
+
+        """
         self.chi2_bright = chi2_calc(conf, zdata, f_obs[ind_bright], ef_obs[ind_bright], \
                                      m_0[ind_bright], z_s[ind_bright], inds[ind_bright], \
                                      ngal_calc, conf['dz_bright'], conf['min_rms_bright'], 'bright')
@@ -325,6 +335,7 @@ class chi2_combined:
         self.chi2_faint = chi2_calc(conf, zdata, f_obs[ind_faint], ef_obs[ind_faint], \
                                     m_0[ind_faint], z_s[ind_faint], inds[ind_faint], \
                                     ngal_calc, conf['dz_faint'], conf['min_rms_faint'], 'faint')
+        """
 
         # use_ind gives the index within chi2_bright and chi2_faint to use.
         use_ind = np.zeros(f_obs.shape[0], dtype=np.int)
@@ -342,16 +353,23 @@ class chi2_combined:
     def blocks(self):
         """Iterate over blocs."""
 
-        new_block = np.zeros(self.ngal, dtype=self.chi2_bright.dtype)
-        to_iter = [(self.ind_bright, self.chi2_bright),\
-                   (self.ind_faint, self.chi2_faint)]
+        for pop in ['bright', 'faint']:
+            dz = self.conf['dz_{}'.format(pop)]
+            min_rms = self.conf['min_rms_{}'.format(pop)]
+            ind = self.ind_pop[pop]
+            chi2_pop = chi2_calc(self.conf, self.zdata, self.f_obs[ind], self.f_obs[ind], \
+                                 self.m_0[ind], self.z_s[ind], self.inds[ind], \
+                                 self.ngal_calc, dz, min_rms, pop)
 
-        for ind, pop_chi2 in to_iter:
+            if not hasattr(self, 'new_block'):
+                new_block = np.zeros(self.ngal, dtype=chi2_pop.dtype)
+
+
             nparts = int(np.ceil(len(ind)/ float(self.ngal_calc)))
             s = self.ngal_calc*np.arange(self.ngal_calc)
 
             splitted = np.split(ind.nonzero()[0], s[1:])
-            for i, p_block in enumerate(pop_chi2.blocks()):
+            for i, p_block in enumerate(chi2_pop.blocks()):
 #                if not p_
                 new_block[splitted[i]] = p_block
 

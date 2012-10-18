@@ -46,18 +46,23 @@ class standard:
         if not os.path.isdir(self.cache_dir):
             os.mkdir(self.cache_dir)
 
-        if os.path.isfile(self.obj_path):
+        if self.conf['use_cache']:
+            if os.path.isfile(self.obj_path):
+                self.relink()
+                return 
+
+            self.estimate_photoz(self.obj_path)
             self.relink()
-            return 
+        else:
+            self.estimate_photoz(self.out_name)
 
-        self.estimate_photoz()
-        self.relink()
 
-    def estimate_photoz(self):
+    def estimate_photoz(self, out_file):
         """Estimate the photoz for one input file."""
 
         obs_file = self.obs_file
-        out_file = bcnz_output.output_file(self.obj_path)
+
+        out_file = bcnz_output.output_file(out_file)
 
         if self.conf['get_z']:
             header = bcnz_output.create_header(self.conf, obs_file)
@@ -74,6 +79,7 @@ class standard:
         out_format = '{id} ' + ' '.join(rest) + '\n'
 
         for data in tmp:
+            data = bcnz_flux.post_pros(self.conf, data)
             data = bpz_flux.post_pros(data, self.conf)
             ids,f_obs,ef_obs,m_0,z_s = bcnz_flux.fix_fluxes(self.conf, self.zdata, data) 
 
@@ -81,7 +87,6 @@ class standard:
 
 #            inst = bcnz_chi2.chi2(self.conf, self.zdata, f_obs, ef_obs, m_0, \
 #                          z_s, 100)
-
             inst = bcnz_chi2.chi2_inst(self.conf, self.zdata, f_obs, ef_obs, m_0, \
                           z_s, ids, 100)
 
