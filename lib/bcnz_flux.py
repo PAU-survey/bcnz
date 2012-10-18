@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
+import copy
 import pdb
 import numpy as np
 import time
@@ -8,7 +9,6 @@ from numpy.random import normal
 from scipy.integrate import quad
 from scipy.interpolate import splev
 
-import bpz_flux
 import bcnz_exposure
 
 def err_magnitude(conf, zdata, mag):
@@ -63,14 +63,45 @@ def add_noise(conf, zdata, data):
 
     return zdata
 
+def mega1(conf, zdata, data):
+
+    assert conf['mag'], 'Only magnitudes are implemented'
+    f_obs = data['f_obs']
+    ef_obs = data['ef_obs']
+
+    seen = np.logical_and(0. < f_obs, f_obs < conf['undet'])
+
+    not_seen = (f_obs == conf['undet'])
+    not_obs = (f_obs == conf['unobs'])
+
+    # Multiplied with one to test if not multiple values are true
+    # at once...
+    assert (1*seen + 1*not_seen + 1*not_obs == 1).all()
+
+    ef_obs = np.clip(ef_obs, conf['min_magerr'], np.inf)
+
+#    pdb.set_trace()
+    # Convert to fluxes
+    f_obs = seen*(10**(-0.4*f_obs))
+    ef_obs = seen*(10**(0.4*ef_obs)-1)*f_obs
+
+    # One exception...
+    ef_obs += not_seen*(10**(-0.4*np.abs(ef_obs)))
+
+    assert (0. <= f_obs).all()
+    ef_obs = np.where(not_obs, 1e108, ef_obs)
+
+#    pdb.set_trace()
+
+    return f_obs, ef_obs
+
 def fix_fluxes(conf, zdata, data):
     """Manipulate the flux values."""
 
     if conf['add_noise']:
         add_noise(conf, zdata, data)
 
-    f_obs,ef_obs = bpz_flux.mega1(conf, zdata, data)
-    f_obs,ef_obs = bpz_flux.mega2(conf, zdata,f_obs, ef_obs)
+    f_obs, ef_obs = mega1(conf, zdata, data)
 
     ids = data['ids']
     m_0 = data['m_0']
@@ -115,9 +146,4 @@ def get_cols(conf, zdata):
 
     return cols_keys, cols
 
-def mega1(conf, zdata, data):
 
-
-    pdb.set_trace()
-
-    return f_obs, ef_obs
