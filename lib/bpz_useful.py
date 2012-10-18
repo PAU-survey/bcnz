@@ -9,33 +9,6 @@ def view_keys(dict):
     for line in claves:
         print line.upper(),'  =  ',dict[line]
 
-def match_resol(xg,yg,xf,method="linear"):
-    """ 
-    Interpolates and/or extrapolate yg, defined on xg, onto the xf coordinate set.
-    Options are 'linear' or 'spline' (uses spline.py from Johan Hibscham)
-    Usage:
-    ygn=match_resol(xg,yg,xf,'spline')
-    """
-
-    if method<>"spline":
-        if type(xf)==type(1.):
-            xf=array([xf])
-
-        ng = len(xg)
-        d = (yg[1:]-yg[0:-1])/(xg[1:]-xg[0:-1])
-
-        #Get positions of the new x coordinates
-        ind = np.clip(np.searchsorted(xg,xf)-1,0,ng-2)
-        ygn = np.take(yg,ind)+np.take(d,ind)*(xf-np.take(xg,ind))
-        if len(ygn)==1: ygn=ygn[0]
-        return ygn
-    else:
-        low_slope=(yg[1]-yg[0])/(xg[1]-xg[0])
-        high_slope=(yg[-1]-yg[-2])/(xg[-1]-xg[-2])
-        sp=Spline(xg,yg,low_slope,high_slope)
-
-    return sp(xf)
-
 def inv_gauss_int(p):
     #Brute force approach. Limited accuracy for >3sigma
     #find something better 

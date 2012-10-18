@@ -1,18 +1,5 @@
-import os
 from numpy import *
 import numpy as np
-import bpz_useful
-
-"""
-clight_AHz=2.99792458e18
-
-zmax_ab=12.
-dz_ab=0.01
-ab_clip=1e-6
-
-import bcnz_div
-fil_dir, sed_dir, ab_dir = bcnz_div.paths()
-"""
 
 def interval(p,x,ci=.99):
     """Gives the limits of the confidence interval
