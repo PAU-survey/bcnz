@@ -114,3 +114,10 @@ def get_cols(conf, zdata):
         cols.append(int(val)-1)
 
     return cols_keys, cols
+
+def mega1(conf, zdata, data):
+
+
+    pdb.set_trace()
+
+    return f_obs, ef_obs
