@@ -68,6 +68,8 @@ def mega1(conf, zdata, data):
     assert conf['mag'], 'Only magnitudes are implemented'
     f_obs = data['f_obs']
     ef_obs = data['ef_obs']
+    f1 = f_obs.copy()
+    ef1 = ef_obs.copy()
 
     seen = np.logical_and(0. < f_obs, f_obs < conf['undet'])
 
@@ -91,8 +93,6 @@ def mega1(conf, zdata, data):
     assert (0. <= f_obs).all()
     ef_obs = np.where(not_obs, 1e108, ef_obs)
 
-#    pdb.set_trace()
-
     return f_obs, ef_obs
 
 def fix_fluxes(conf, zdata, data):
@@ -103,11 +103,7 @@ def fix_fluxes(conf, zdata, data):
 
     f_obs, ef_obs = mega1(conf, zdata, data)
 
-    ids = data['ids']
-    m_0 = data['m_0']
-    z_s = data['z_s']
-
-    return ids,f_obs,ef_obs,m_0,z_s
+    return f_obs,ef_obs
 
 def post_pros(conf, data):
     # FJC seems to have an inconsisten definition..
@@ -138,7 +134,7 @@ def get_cols(conf, zdata):
 
     col_pars = zdata['col_pars']
     for key, val in col_pars.iteritems():
-        if not len(val) == 1:
+        if isinstance(val, tuple):
             continue
 
         cols_keys.append(key.lower())

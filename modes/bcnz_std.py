@@ -78,8 +78,12 @@ class standard:
 
         for data in tmp:
             data = bcnz_flux.post_pros(self.conf, data)
-            ids,f_obs,ef_obs,m_0,z_s = bcnz_flux.fix_fluxes(self.conf, self.zdata, data) 
+            f_obs, ef_obs = bcnz_flux.fix_fluxes(self.conf, self.zdata, data) 
 
+            ids = data['ids']
+            m_0 = data['m_0']
+            z_s = data['z_s']
+  
             f_obs, ef_obs = bcnz_norm.norm_data(self.conf, self.zdata, f_obs, ef_obs)
 
             inst = bcnz_chi2.chi2_inst(self.conf, self.zdata, f_obs, ef_obs, m_0, \

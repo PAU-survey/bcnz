@@ -266,44 +266,7 @@ To import priors, you need the following:
         for n in np.arange(nblocks):
             yield self._block(n)
 
-#        yield
 
-#        pdb.set_trace()
-#        return np.array(np.vstack(A).T, dtype)
-#
-#    def __call__(self, ig):
-#
-#        corr_imin = int(float(ig)/self.ngal_calc)*self.ngal_calc
-#        ind = ig - corr_imin
-#
-#        if not self.imin <= ig < self.imax:
-#            self.calc_D(corr_imin)
-#
-#        # Note that P1 contains information about all galaxies
-#        # and is therefore indexed by ig and *not* ind.
-#
-#        iz = self.iz[ind]
-#        it = self.it[ind]
-#
-#        red_chi2 = self.red_chi2[ind]
-#        pb = self.pb[ind]
-#        p_bayes = self.p_bayes[ind]
-#        iz_b = self.iz_b[ind]
-#        zb = self.zb[ind]
-#        odds = self.odds[ind]
-#        it_b = self.it_b[ind]
-#
-#        tt_b = self.tt_b[ind]
-#        tt_ml = self.tt_ml[ind]
-#
-#        z1 = self.z1[ind]
-#        z2 = self.z2[ind]
-#
-#        
-#        opt_type = 0.
-#
-#        return iz, it, red_chi2, pb, p_bayes, iz_b, zb, odds, it_b, tt_b, tt_ml, z1, z2, opt_type
-#
 class chi2_combined:
     """Interface for combining the results for several populations."""
 
@@ -328,16 +291,6 @@ class chi2_combined:
         self.inds = inds
         self.ind_pop = {'bright': ind_bright, 'faint': ind_faint}
 
-        """
-        self.chi2_bright = chi2_calc(conf, zdata, f_obs[ind_bright], ef_obs[ind_bright], \
-                                     m_0[ind_bright], z_s[ind_bright], inds[ind_bright], \
-                                     ngal_calc, conf['dz_bright'], conf['min_rms_bright'], 'bright')
-
-        self.chi2_faint = chi2_calc(conf, zdata, f_obs[ind_faint], ef_obs[ind_faint], \
-                                    m_0[ind_faint], z_s[ind_faint], inds[ind_faint], \
-                                    ngal_calc, conf['dz_faint'], conf['min_rms_faint'], 'faint')
-        """
-
         # use_ind gives the index within chi2_bright and chi2_faint to use.
         use_ind = np.zeros(f_obs.shape[0], dtype=np.int)
         use_ind[ind_bright] = np.array(np.arange(np.sum(ind_bright)))
@@ -358,7 +311,10 @@ class chi2_combined:
             dz = self.conf['dz_{}'.format(pop)]
             min_rms = self.conf['min_rms_{}'.format(pop)]
             ind = self.ind_pop[pop]
-            chi2_pop = chi2_calc(self.conf, self.zdata, self.f_obs[ind], self.f_obs[ind], \
+            if not len(self.m_0[ind]):
+                continue
+
+            chi2_pop = chi2_calc(self.conf, self.zdata, self.f_obs[ind], self.ef_obs[ind], \
                                  self.m_0[ind], self.z_s[ind], self.inds[ind], \
                                  self.ngal_calc, dz, min_rms, pop)
 

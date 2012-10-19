@@ -69,18 +69,20 @@ def catalogs(conf):
     return cat_files
 
 def columns_file(conf):
+    """Name of the columns file."""
+
     obs_files = conf['obs_files']
 
-    if len(obs_files) == 1: 
+    if 'columns' in conf:
+        return conf['columns']
+    elif len(obs_files) == 1: 
 #    if os.path.exists(obs_file):
         root = os.path.splitext(obs_files[0])[0]
         file_name = "%s.%s" % (root, 'columns')
 
         return file_name
-    elif 'columns' in conf:
-        return conf['columns']
-
-    raise ValueError
+    else:
+        raise ValueError
 
 def basic_read(file_name):
     """Remove empty and commented lines."""
