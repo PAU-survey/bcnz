@@ -4,6 +4,15 @@
 import numpy as np
 
 conf = {
+
+    'pr_a': [2.369,1.843,1.843,1.340,1.340,1.340],
+    'pr_zo': [0.387,0.390,0.390,0.208,0.208,0.208],
+    'pr_km': [0.119,0.093,0.093,0.130,0.130,0.130],
+    'pr_fo_t': [0.48,0.22,0.22],
+
+    'pr_k_t': [0.186,0.038,0.038],
+
+
     'use_cache': False,
     'tblock': True,
     'dz_bright': 0.001,
@@ -14,7 +23,7 @@ conf = {
     'use_split': False,
     'opt': True,
     'others': [],
-    'order': ['zb', 'zb_min', 'zb_max', 't_b', 'odds', 'z_ml', 't_ml', 'chi2', 'z_s', 'm_0'],
+    'order': ['id', 'zb', 'zb_min', 'zb_max', 't_b', 'odds', 'z_ml', 't_ml', 'chi2', 'm_0', 'z_s'],
     'ndesi': 4,
     'm_step': 0.1,
     'output': '',

@@ -83,7 +83,8 @@ def columns_file(conf):
         return file_name
     else:
         raise ValueError
-
+    
+    pdb.set_trace()
 def basic_read(file_name):
     """Remove empty and commented lines."""
 

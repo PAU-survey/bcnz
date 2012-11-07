@@ -54,12 +54,17 @@ def add_noise(conf, zdata, data):
         for j in range(nfilters):
             add_mag[i,j] += normal(scale=err_mag[i,j])
 
-    mag_filter = np.logical_not(np.logical_or(mag == conf['unobs'], \
-                                              mag == conf['undet']))
+#    mag_filter = np.logical_not(np.logical_or(mag == conf['unobs'], \
+#                                              mag == conf['undet']))
 
+#    mag_filter = err_mag < 0.5
+    to_use = err_mag < 0.5
     mag = data['f_obs']
-    mag += mag_filter*add_mag
+    mag += to_use*add_mag
     data['f_obs'] = mag
+    data['ef_obs'] = np.where(to_use, err_mag, -99.)
+
+#    pdb.set_trace()
 
     return zdata
 
@@ -71,15 +76,17 @@ def mega1(conf, zdata, data):
     f1 = f_obs.copy()
     ef1 = ef_obs.copy()
 
-    seen = np.logical_and(0. < f_obs, f_obs < conf['undet'])
+    if False:
+        seen = np.logical_and(0. < f_obs, f_obs < conf['undet'])
+        # Multiplied with one to test if not multiple values are true
+        # at once...
+        assert (1*seen + 1*not_seen + 1*not_obs == 1).all()
 
-    not_seen = (f_obs == conf['undet'])
-    not_obs = (f_obs == conf['unobs'])
+    not_seen = (ef_obs == conf['undet'])
+    not_obs = (ef_obs == conf['unobs'])
 
-    # Multiplied with one to test if not multiple values are true
-    # at once...
-    assert (1*seen + 1*not_seen + 1*not_obs == 1).all()
-
+    seen = np.logical_not(np.logical_or(not_seen, not_obs))
+#    pdb.set_trace()
     ef_obs = np.clip(ef_obs, conf['min_magerr'], np.inf)
 
 #    pdb.set_trace()
@@ -107,7 +114,10 @@ def fix_fluxes(conf, zdata, data):
 
 def post_pros(conf, data):
     # FJC seems to have an inconsisten definition..
+
+#    pdb.set_trace()
     data['f_obs'] = np.where(data['f_obs'] == 90, -99, data['f_obs'])
+    data['ef_obs'] = np.where(data['ef_obs'] == 99, -99, data['ef_obs'])
 
     if 'ID' in data:
         ids = data['ID'].astype(np.int)

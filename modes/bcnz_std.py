@@ -69,15 +69,17 @@ class standard:
         nmax = self.conf['nmax']
         cols_keys, cols = bcnz_flux.get_cols(self.conf, self.zdata) 
 
+#        pdb.set_trace()
         tmp = loadparts.loadparts(obs_file, nmax, cols_keys, cols)
 
         ndesi = self.conf['ndesi']
         columns = self.conf['order']+self.conf['others']
         rest = [('{%s:.%sf}' % (x, ndesi)) for x in columns]
-        out_format = '{id} ' + ' '.join(rest) + '\n'
+        out_format = ' '.join(rest) + '\n'
 
         for data in tmp:
             data = bcnz_flux.post_pros(self.conf, data)
+            #pdb.set_trace()
             f_obs, ef_obs = bcnz_flux.fix_fluxes(self.conf, self.zdata, data) 
 
             ids = data['ids']

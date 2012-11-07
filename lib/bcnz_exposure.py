@@ -33,6 +33,42 @@ def find_texp_layout(conf, tray_conf):
 
     return texp_layout
 
+def name_converter(filters):
+    """Since Francisco changed filter names *again*."""
+
+    def remove_pre(x):
+        if 'FD_' in x:
+            x = x.replace('FD_', '')
+            x = int(x) - 50
+
+            return str(x)
+        elif x == 'Fu':
+            return 'up'
+        else:
+            return x.replace('F', '')
+
+  
+    return map(remove_pre, filters)
+ 
+def another_converter(filters):
+    """Since Francisco changed filter names *again*."""
+
+    def remove_pre(x):
+        if 'FD_' in x:
+            x = x.replace('FD_', '')
+            x = 'fd_{0}_act'.format(x)
+            return x
+        elif x == 'Fu':
+            return 'u_PAU_DES_act'
+        else:
+            x = x.replace('F', '')
+            x = '{0}_PAU_DES_act'.format(x)
+
+            return x
+
+    return map(remove_pre, filters)
+ 
+
 def exp_in_filters(tray_conf, texp_layout, filters):
     """Find the exposure time in each filter."""
 
@@ -44,6 +80,8 @@ def exp_in_filters(tray_conf, texp_layout, filters):
 
         texpD[f] += texp
 
+#    pdb.set_trace()
+    filters = name_converter(filters)
     texp = [texpD[x] for x in filters]
 
     return np.array(texp)

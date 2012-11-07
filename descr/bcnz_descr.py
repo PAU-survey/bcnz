@@ -2,6 +2,12 @@
 # encoding: UTF8
 
 descr = {
+    'pr_a': 'Prior parameter a',
+    'pr_zo': 'Prior parameter zo',
+    'pr_km': 'Prior parameter km',
+    'pr_fo_t': 'Prior parameter ko_t',
+    'pr_k_t': 'Prior parameter k_t',
+
     'use_cache': 'Use temporary files to save the results.',
     'tblock': 'Test working with blocks',
     'dz_bright': 'Resolution for the bright sample',

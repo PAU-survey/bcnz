@@ -67,9 +67,7 @@ class chi2_calc:
 
         # Priors
         self.load_priors(conf, z)
-#        pdb.set_trace()
         obs = np.logical_and(ef_obs <= 1., 1e-4 < f_obs /ef_obs)
-        #obs = np.logical_and(ef_obs <= 1., 1e-4*ef_obs < f_obs )
         self.h = obs / ef_obs ** 2.
 
         self.nf = self.f_mod.shape[2]
@@ -86,7 +84,7 @@ class chi2_calc:
         self.f_mod2 = f_mod2
 
         oi = bpz_useful.inv_gauss_int(float(conf['odds']))
-        self.odds_pre = oi * self.min_rms #conf['min_rms']
+        self.odds_pre = oi * self.min_rms 
         self.z = z
 
         # Precalculate values.
@@ -96,7 +94,7 @@ class chi2_calc:
         """Columns and block dtype."""
 
         int_cols = ['id']
-        cols = ['id']+self.conf['order']+self.conf['others']
+        cols = self.conf['order']+self.conf['others']
         dtype = [(x, 'float' if not x in int_cols else 'int') for x in cols]
 
         return cols, dtype
@@ -235,6 +233,7 @@ To import priors, you need the following:
         self.imin = imin
         self.imax = imax
 
+#        pdb.set_trace()
 #    def find_zp_odds(self):
 #        self.calc_D(0)
 #
@@ -311,6 +310,7 @@ class chi2_combined:
             dz = self.conf['dz_{}'.format(pop)]
             min_rms = self.conf['min_rms_{}'.format(pop)]
             ind = self.ind_pop[pop]
+
             if not len(self.m_0[ind]):
                 continue
 
@@ -318,16 +318,16 @@ class chi2_combined:
                                  self.m_0[ind], self.z_s[ind], self.inds[ind], \
                                  self.ngal_calc, dz, min_rms, pop)
 
-            if not hasattr(self, 'new_block'):
+            if not 'new_block' in locals():
                 new_block = np.zeros(self.ngal, dtype=chi2_pop.dtype)
-
 
             nparts = int(np.ceil(len(ind)/ float(self.ngal_calc)))
             s = self.ngal_calc*np.arange(self.ngal_calc)
 
             splitted = np.split(ind.nonzero()[0], s[1:])
+
             for i, p_block in enumerate(chi2_pop.blocks()):
-#                if not p_
+#                pdb.set_trace()
                 new_block[splitted[i]] = p_block
 
         yield new_block

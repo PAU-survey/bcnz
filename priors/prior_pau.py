@@ -11,12 +11,8 @@ class prior_pau:
     def __init__(self, conf, zdata, z, m_0):
         ndes = 1 # Number of decimals
 
-        # Ok, these might be passed later on..
-        self.a = np.array((2.369,1.843,1.843,1.340,1.340,1.340))
-        self.zo = np.array((0.387,0.390,0.390,0.208,0.208,0.208))
-        self.km = np.array((0.119,0.093,0.093,0.130,0.130,0.130))
-        self.fo_t = np.array((0.48,0.22,0.22))
-        self.k_t = np.array((0.186,0.038,0.038))
+        for param in ['a', 'zo', 'km', 'fo_t', 'k_t']:
+            setattr(self, param, conf['pr_'+param])
 
         m_step = conf['m_step']
         m_min = np.floor(10**ndes*min(m_0)) / 10.**ndes

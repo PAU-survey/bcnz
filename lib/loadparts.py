@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # 
 import os
+import pdb
 import sys
 import numpy as np
 
@@ -51,7 +52,12 @@ class loadparts:
     def __iter__(self):
         while True:
             tmp_obj = file_part(self.fobj, self.nmax)
-            ans = np.loadtxt(tmp_obj, usecols=self.all_cols)
+
+            try: # TERMPORARY TEST
+                ans = np.loadtxt(tmp_obj, usecols=self.all_cols)
+            except UserWarning:
+                pdb.set_trace()
+
             if not len(ans):
                 raise StopIteration
 
