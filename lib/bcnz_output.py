@@ -1,46 +1,36 @@
 #!/use/bin/env python
 # encoding: UTF8
+
 import os
 import pdb
 import shutil
+import tables
 import time
 
-def output_file(output_file):
-    """Create file object to write BPZ catalog."""
+def create_hdf5(conf, file_path):
+    """Empty HDF5 to with a tables to store the photo-z results."""
 
-    file_name = output_file
-    if os.path.exists(file_name):
-        dst = '%s.bak' % file_name
-        shutil.move(file_name, dst)
+    # Move away existing file
+    if os.path.exists(file_path):
+        dst = '%s.bak' % file_path
+        shutil.move(file_path, dst)
 
-        print('File %s exists. Moving it to %s.' % (file_name, dst))
+        print('File %s exists. Moving it to %s.' % (file_path, dst))
 
-    if os.path.exists(file_name):
-        raise SystemError
 
-    return open(file_name, 'w')
+    int_cols = ['id']
+    cols = conf['order']+conf['others']
+    def colobj(i, col):
+        if col in int_cols:
+            return tables.Int64Col(pos=i)
+        else:
+            return tables.Float64Col(pos=i)
 
-def create_header(conf, obs_file):
-    """Header with the parameters and catalog fields."""
- 
-    fmt = '%Y:%m:%d %H:%M'
-    time_str = time.strftime(fmt, time.localtime())
 
-    # Input file and current time
-    header = ['# {0} {1}'.format(obs_file, time_str), '#']
+    descr = dict((col, colobj(i,col)) for i,col in enumerate(cols))
 
-    conf_keys = conf.keys()
-    conf_keys.sort()
-    max_key_len = max(len(x) for x in conf_keys)
+    f = tables.openFile(file_path, 'w')
+    f.createGroup('/', 'bcnz')
+    f.createTable('/bcnz', 'bcnz', descr, 'BCNZ photo-z')
 
-    for key in conf_keys:
-        header.append('# {0} =  {1}'.format(key.ljust(max_key_len), \
-                                           conf[key]))
-    header.append('#')
-    header.append('# Column information')
-    for i, col in enumerate(conf['order']+conf['others']):
-        header.append('# {0} {1}'.format(i+1, col))
-
-    header.append('#')
-
-    return header
+    return f

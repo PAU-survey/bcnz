@@ -52,31 +52,26 @@ class filter_and_so:
 
                 zdata['{0}.z'.format(pop)] = binning(pop)
 
-        if conf['old_model']:
-            raise
+        # New approach..
+        sed_filt_inst = bcnz_sedf.sed_filters()
+        zdata = sed_filt_inst(conf, zdata)
 
+        t3 = time.time()
+
+        if conf['use_split']:
+            to_iter = [('bright.f_mod', zdata['bright.z']), ('faint.f_mod', zdata['faint.z'])]
         else:
-            # New approach..
-            sed_filt_inst = bcnz_sedf.sed_filters()
-            zdata = sed_filt_inst(conf, zdata)
+            to_iter = [('f_mod', zdata['z'])]
 
-            t3 = time.time()
+        model = bcnz_model.model_mag(conf, zdata)
+        for key, z in to_iter:
+            f_mod2 = model.f_mod(z)
+            f_mod2 = model.interp(conf, f_mod2, z, self.filters, self.spectra)
+            zdata[key] = f_mod2
 
-            if conf['use_split']:
-                to_iter = [('bright.f_mod', zdata['bright.z']), ('faint.f_mod', zdata['faint.z'])]
-            else:
-                to_iter = [('f_mod', zdata['z'])]
+        t4 = time.time()
 
-            model = bcnz_model.model_mag(conf, zdata)
-            for key, z in to_iter:
-                f_mod2 = model.f_mod(z)
-                f_mod2 = model.interp(conf, f_mod2, z, self.filters, self.spectra)
-                zdata[key] = f_mod2
-
-            t4 = time.time()
-
-            f_mod = f_mod2
-#            print('time bcnz', t4-t3)
+        f_mod = f_mod2
 
 
         col_pars = bcnz_div.find_columns(conf['col_file'])

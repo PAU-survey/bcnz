@@ -58,28 +58,15 @@ class standard:
     def estimate_photoz(self, out_file):
         """Estimate the photoz for one input file."""
 
-        obs_file = self.obs_file
-        out_file = bcnz_output.output_file(out_file)
-
-        if self.conf['get_z']:
-            header = bcnz_output.create_header(self.conf, obs_file)
-            header = ['{0}\n'.format(x) for x in header]
-            out_file.writelines(header)
-
         nmax = self.conf['nmax']
         cols_keys, cols = bcnz_flux.get_cols(self.conf, self.zdata) 
 
-#        pdb.set_trace()
-        tmp = loadparts.loadparts(obs_file, nmax, cols_keys, cols)
-
-        ndesi = self.conf['ndesi']
-        columns = self.conf['order']+self.conf['others']
-        rest = [('{%s:.%sf}' % (x, ndesi)) for x in columns]
-        out_format = ' '.join(rest) + '\n'
+        tmp = loadparts.loadparts(self.obs_file, nmax, cols_keys, cols)
+        f_out = bcnz_output.create_hdf5(self.conf, out_file)
+        pz_table = f_out.getNode('/bcnz/bcnz')
 
         for data in tmp:
             data = bcnz_flux.post_pros(self.conf, data)
-            #pdb.set_trace()
             f_obs, ef_obs = bcnz_flux.fix_fluxes(self.conf, self.zdata, data) 
 
             ids = data['ids']
@@ -94,8 +81,7 @@ class standard:
 
             ng = len(f_obs)
             for block in inst.blocks():
-                names = block.dtype.names
-                in_dict = [dict(zip(names, record)) for record in block]
+                pz_table.append(block)
 
-                lines = [out_format.format(**gal) for gal in in_dict]
-                out_file.writelines(lines)
+
+        f_out.close()

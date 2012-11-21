@@ -26,7 +26,7 @@ def prepare_objects(conf, zdata):
 
     ans = []
     for obs_file in conf['obs_files']:
-        out_file = '%s.bpz' % os.path.splitext(obs_file)[0]
+        out_file = '%s.bcnz' % os.path.splitext(obs_file)[0]
 
         ans.append(\
           bcnz_std.standard(conf, zdata, obs_file, out_file))

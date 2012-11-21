@@ -23,17 +23,6 @@ def find_columns(file_name):
 
     return res
 
-def paths():
-    bpz_path = os.getenv('BPZPATH')
-    if not bpz_path:
-        bpz_path = os.getcwd()
-
-    fil_dir = os.path.join(bpz_path, 'FILTER')
-    sed_dir = os.path.join(bpz_path, 'SED')
-    ab_dir = os.path.join(bpz_path, 'AB')
-
-    return fil_dir, sed_dir, ab_dir
-
 def set_min_rms(conf):
     # Only for full compatability with BPZ.
 
