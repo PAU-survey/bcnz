@@ -80,7 +80,7 @@ conf = {
     'undet': 99.,
     'delta_m_0': 0.,
     'n_peaks': 1,
-    'verbose': True,
+    'verbose': False,
     'min_magerr': 0.001,
     'catalog': None,
     'interp': 2,

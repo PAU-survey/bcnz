@@ -1,13 +1,15 @@
 #!/usr/bin/env
+# encoding: UTF8
 import os
 import pdb
 import sys
 import time
 import re
 
+import numpy as np
+
 import bcnz_input
 
-import numpy as np
 
 def find_columns(file_name):
     res = {}
@@ -22,19 +24,6 @@ def find_columns(file_name):
         res[key] = val
 
     return res
-
-def set_min_rms(conf):
-    # Only for full compatability with BPZ.
-
-    if conf['spectra'] == 'CWWSB.list':
-        conf['min_rms'] = 0.067
-
-def test_conf(conf):
-
-    msg_z = 'zmax <= zmin is not allowed.'
-    assert conf['zmin'] < conf['zmax'], msg_z
-
-#    pdb.set_trace()
 
 def seglist(vals, mask=None):
    # Sent to Txitxo... not update to absolute imports of numpy.
@@ -100,28 +89,6 @@ def check_found(what, elems, elem_db):
 
     assert not elem_nf, msg
 
-def print_parameters(conf):
-    """Print the value of all parameters in conf."""
-
-    keys = conf.keys()
-    keys.sort()
-
-    for key in keys:
-        print('%s   =   %s' % (key.upper(), conf[key]))
-
-def root(rm_dir='bin'):
-    """Find root directory."""
-
-    cmd = sys.argv[0]
-    path = os.path.abspath(os.path.dirname(cmd))
-
-    if os.path.split(path)[1] == rm_dir:
-        path = os.path.join(path, '..') 
-        path = os.path.normpath(path)
-
-
-    return path
-
 def spectra_file(conf):
     """Detect the right path of spectra file."""
 
@@ -131,21 +98,6 @@ def spectra_file(conf):
             return file_path
 
     raise ValueError, 'No spectra file found.'
-
-def update_conf(conf):
-    """Update some of the configuration values."""
-
-    conf['root'] = root()
-    conf['obs_files'] = bcnz_input.catalogs(conf)
-    conf['col_file'] = bcnz_input.columns_file(conf)
-    set_min_rms(conf)
-
-    if conf['verbose']:
-        print('Current parameters')
-        print_parameters(conf)
-
-    return conf
-
 
 class watch:
     """Stopwatch that can disply time intervals."""

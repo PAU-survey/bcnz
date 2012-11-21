@@ -7,6 +7,18 @@ import shutil
 import tables
 import time
 
+def create_descr(cols):
+    def colobj(i, col):
+        int_cols = ['id']
+        if col in int_cols:
+            return tables.Int64Col(pos=i)
+        else:
+            return tables.Float64Col(pos=i)
+
+    descr = dict((col, colobj(i,col)) for i,col in enumerate(cols))
+
+    return descr
+
 def create_hdf5(conf, file_path):
     """Empty HDF5 to with a tables to store the photo-z results."""
 
@@ -18,16 +30,8 @@ def create_hdf5(conf, file_path):
         print('File %s exists. Moving it to %s.' % (file_path, dst))
 
 
-    int_cols = ['id']
     cols = conf['order']+conf['others']
-    def colobj(i, col):
-        if col in int_cols:
-            return tables.Int64Col(pos=i)
-        else:
-            return tables.Float64Col(pos=i)
-
-
-    descr = dict((col, colobj(i,col)) for i,col in enumerate(cols))
+    descr = create_descr(cols)
 
     f = tables.openFile(file_path, 'w')
     f.createGroup('/', 'bcnz')

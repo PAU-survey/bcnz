@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # encoding: UTF8
+
 import os
 import glob
 import pdb
+import sys
 
+import tables
 import numpy as np
 
 import config
@@ -12,31 +15,8 @@ import bcnz_config
 import bcnz_compat
 import bcnz_descr
 import bcnz_div
+import bcnz_output
 import bcnz_parser
-
-def parse_arguments():
-    """Parse input arguments."""
-
-    # Detects which configuration file to use. This enable
-    # b
-    first_parser = bcnz_parser.first_parser()
-    config_file = first_parser()
-
-    try: 
-        m = getattr(config, config_file)
-        def_conf = getattr(m, 'conf')
-    except AttributeError:
-        raise
-
-    def_descr = descr.standard.descr
-
-    arg_parser = bcnz_parser.argument_parser(def_conf, def_descr)
-    conf = arg_parser.parse_args()
-
-    bcnz_compat.assert_compat(conf)
-    bcnz_div.test_conf(conf)
-
-    return conf
 
 def check_collision(conf):
     """Check for collision between different input files."""
@@ -53,9 +33,6 @@ def check_collision(conf):
 
     msg_overwrite = 'Overwriting some input files.'
     assert len(set(all_files)) == len(all_files), msg_overwrite
-
-def test_config(conf):
-    check_collision(conf)
 
 def catalogs(conf):
     """File names with input catalogs."""
@@ -85,6 +62,7 @@ def columns_file(conf):
         raise ValueError
     
     pdb.set_trace()
+
 def basic_read(file_name):
     """Remove empty and commented lines."""
 
@@ -133,4 +111,72 @@ def split_col_pars(col_pars, filters):
     out['zp_offsets'] = np.array(A[4]).astype(np.float)
 
     return out
-#    return flux_cols, eflux_cols, cals, zp_errors, zp_offsets
+
+def DM_filter_names(filters):
+    """The notation which PAU-DM is using for the filters."""
+
+    known_broadband = ['i', 'up', 'g', 'r', 'z', 'y']
+    new_names = []
+    i = 0
+    for f in filters:
+        if f in known_broadband:
+            new_names.append(f)
+        else:
+            new_names.append(str(i))
+            i += 1
+
+    return new_names
+
+def convert_ascii(obs_file, cols_keys, colnr, filters):
+    """Convert the normal BPZ input files to the BCNZ format."""
+
+    conv_path = 'converted_catalog.h5'
+    assert not os.path.isfile(conv_path), conv_path+' Already exists!'
+
+    # This solution is only temporary. For the PAU project we have
+    # different catalogs in ascii. The idea is to have this around
+    # for half a year or year. Then new catalogs should be converted
+    # using an external tool.
+
+    new_names = DM_filter_names(filters)
+    descr = []
+    for col,nr in zip(cols_keys, colnr):
+        if col in ['f_obs', 'ef_obs']:
+            pre = {'f_obs': 'mag_', 'ef_obs': 'err_'}[col]
+            descr.extend(zip(nr, [pre+X for X in new_names]))
+        else:
+            descr.append((nr,col))
+
+    hdf5_descr = bcnz_output.create_descr(zip(*descr)[1])
+    f = tables.openFile(conv_path, 'w')
+    f.createGroup('/', 'mock')
+    mock = f.createTable('/mock', 'mock', hdf5_descr)
+
+    read_cols = zip(*descr)[0]
+    A = np.loadtxt(obs_file, usecols=read_cols)
+    mock.append(A)
+
+    id_nr = [x for x,y in descr if y == 'id']
+    assert len(id_nr) == 1
+    id_nr = int(id_nr[0])
+    ids = A[:,id_nr]
+
+    # Using zip did not work.
+    for i,row in enumerate(mock.iterrows()):
+        row['id'] = ids[i]
+        row.update()
+
+    f.close()
+
+    print('Catalog converted. Move the catalog somewhere sensible.')
+    sys.exit(0)
+
+def open_hdf5(obs_file, nmax, cols_keys, cols, filters):
+    """Open a HDF5 for reading. In a transition period the photo-z
+       code convert to the new format.
+    """
+
+    try:
+        return tables.openFile(obs_file)
+    except tables.exceptions.HDF5ExtError:
+        convert_ascii(obs_file, cols_keys, cols, filters)

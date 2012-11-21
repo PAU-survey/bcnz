@@ -9,6 +9,7 @@ import loadparts
 import obj_hash
 import bcnz_chi2
 import bcnz_flux
+import bcnz_input
 import bcnz_norm
 import bcnz_output
 
@@ -61,11 +62,18 @@ class standard:
         nmax = self.conf['nmax']
         cols_keys, cols = bcnz_flux.get_cols(self.conf, self.zdata) 
 
-        tmp = loadparts.loadparts(self.obs_file, nmax, cols_keys, cols)
+        filters = self.zdata['filters']
+        f_in = bcnz_input.open_hdf5(self.obs_file, nmax, cols_keys, cols, filters)
+        catalog = f_in.getNode('/mock/mock')
+
         f_out = bcnz_output.create_hdf5(self.conf, out_file)
         pz_table = f_out.getNode('/bcnz/bcnz')
 
-        for data in tmp:
+        i = 0
+        while True:
+#        pdb.set_trace()
+#        for data in tmp:
+            data = catalog.read(start=i*nmax, stop=(i+1)*nmax)
             data = bcnz_flux.post_pros(self.conf, data)
             f_obs, ef_obs = bcnz_flux.fix_fluxes(self.conf, self.zdata, data) 
 

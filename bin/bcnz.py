@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: UTF8
 # Author: Martin Eriksen
+
 import os
 import pdb
 import sys
@@ -25,6 +26,7 @@ for d in ['config', 'descr', 'lib', 'modes', 'priors','']:
 
 import config
 import descr
+import libconf
 import bcnz_div
 import bcnz_input
 import bcnz_filters
@@ -35,9 +37,9 @@ def main():
     watch = bcnz_div.watch()
 
     # Read the initial configuration..
-    conf = bcnz_input.parse_arguments()
-    conf = bcnz_div.update_conf(conf)
-    bcnz_input.test_config(conf)
+    conf = libconf.parse_arguments()
+    conf = libconf.update_conf(conf)
+    libconf.test_config(conf)
 
     # Estimate the photoz
     zdata = bcnz_zdata.find_zdata(conf)
