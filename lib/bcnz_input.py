@@ -9,14 +9,14 @@ import sys
 import tables
 import numpy as np
 
-import config
-import descr
-import bcnz_config
-import bcnz_compat
-import bcnz_descr
-import bcnz_div
-import bcnz_output
-import bcnz_parser
+#import config
+#import descr
+#import bcnz_config
+#import bcnz_compat
+#import bcnz_descr
+#import bcnz_div
+#import bcnz_output
+#import bcnz_parser
 
 def check_collision(conf):
     """Check for collision between different input files."""

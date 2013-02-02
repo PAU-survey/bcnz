@@ -52,9 +52,10 @@ def z_binning(conf):
 
     return np.arange(zmin,zmax+dz,dz)
 
-def sel_files(d, suf):
+def sel_files(conf, d, suf):
 
-    files = os.listdir(d)
+    path = os.path.join(conf['data_dir'], d) 
+    files = os.listdir(path)
     files = [x.replace(suf,'') for x in files if x.endswith(suf)]
 
     return files

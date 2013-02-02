@@ -8,9 +8,9 @@ import sys
 import numpy as np
 from scipy.ndimage.interpolation import zoom
 
-import priors
 import bpz_useful
 import bcnz_mintest
+from bcnz import priors
 
 # Currently the speedup with numexpr is not high
 # enough to make it mandatory.

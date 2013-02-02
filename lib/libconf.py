@@ -4,8 +4,6 @@
 import os
 import sys
 
-import config
-import descr
 import bcnz_compat
 import bcnz_input
 import bcnz_parser
@@ -37,7 +35,7 @@ def parse_arguments():
     config_file = first_parser()
 
     try:
-        m = getattr(config, config_file)
+        m = getattr(bcnz.config, config_file)
         def_conf = getattr(m, 'conf')
     except AttributeError:
         raise

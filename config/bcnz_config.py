@@ -46,6 +46,7 @@ conf = {
     'prior': 'pau',
     'train': False,
     'norm_flux': False,
+    'data_dir': '/Users/marberi/photoz/bcnz',
     'ab_dir': 'AB',
     'filter_dir': 'FILTER',
     'sed_dir': 'SED',

@@ -16,9 +16,9 @@ class filter_and_so:
     def blah(self, zdata):
         conf = self.conf
 
-        filters_db = bcnz_div.sel_files(conf['filter_dir'], '.res')
-        sed_db = bcnz_div.sel_files(conf['sed_dir'], '.sed')
-        ab_db = bcnz_div.sel_files(conf['ab_dir'], '.AB')
+        filters_db = bcnz_div.sel_files(conf, conf['filter_dir'], '.res')
+        sed_db = bcnz_div.sel_files(conf, conf['sed_dir'], '.sed')
+        ab_db = bcnz_div.sel_files(conf, conf['ab_dir'], '.AB')
 
         filters = bcnz_div.find_filters(conf)
 
