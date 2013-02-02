@@ -5,13 +5,13 @@ import pdb
 import shutil
 import numpy as np
 
-import loadparts
-import obj_hash
-import bcnz_chi2
-import bcnz_flux
-import bcnz_input
-import bcnz_norm
-import bcnz_output
+import bcnz.lib
+#import obj_hash
+#import bcnz_chi2
+#import bcnz_flux
+#import bcnz_input
+#import bcnz_norm
+#import bcnz_output
 
 class standard:
     def __init__(self, conf, zdata, obs_file, out_name):
@@ -23,10 +23,15 @@ class standard:
 
         self.conf['nmax'] = 10000
 
-        obj_name = obj_hash.hash_structure(self.conf)
+        obj_name = bcnz.lib.obj_hash.hash_structure(self.conf)
 
-        root_dir = self.conf['root']
-        self.cache_dir = os.path.join(root_dir, 'cache')
+        if self.conf['cache_dir']:  
+            self.cache_dir = os.path.join(self.conf['cache_dir'],\
+                                          'pzcat')
+        else:
+            root_dir = self.conf['root']
+            self.cache_dir = os.path.join(root_dir, 'cache')
+
         self.obj_path = os.path.join(self.cache_dir, obj_name)
 
 
@@ -60,10 +65,10 @@ class standard:
         """Estimate the photoz for one input file."""
 
         nmax = self.conf['nmax']
-        cols_keys, cols = bcnz_flux.get_cols(self.conf, self.zdata) 
+        cols_keys, cols = bcnz.lib.bcnz_flux.get_cols(self.conf, self.zdata) 
 
         filters = self.zdata['filters']
-        f_in = bcnz_input.open_hdf5(self.obs_file, nmax, cols_keys, cols, filters)
+        f_in = bcnz.lib.bcnz_input.open_hdf5(self.obs_file, nmax, cols_keys, cols, filters)
         catalog = f_in.getNode('/mock/mock')
 
         f_out = bcnz_output.create_hdf5(self.conf, out_file)

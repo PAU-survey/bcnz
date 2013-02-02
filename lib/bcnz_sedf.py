@@ -9,7 +9,8 @@ clight_AHz=2.99792458e18
 
 class sed_filters:
     def find_sky_spl(self, conf):
-        x,y = np.loadtxt(conf['sky_spec'], unpack=True)
+        file_path = os.path.join(conf['data_dir'], conf['sky_spec'])
+        x,y = np.loadtxt(file_path, unpack=True)
 
         return splrep(x,y)
 
@@ -24,7 +25,7 @@ class sed_filters:
 
         sky_spl = self.find_sky_spl(conf)
 
-        d = conf['filter_dir']
+        d = os.path.join(conf['data_dir'], conf['filter_dir'])
         for filter_name in filters:
             file_path = os.path.join(d, '%s.res' % filter_name)
             x,y = np.loadtxt(file_path, unpack=True)
@@ -51,8 +52,9 @@ class sed_filters:
         """Create spectra splines."""
 
         spls = {}
+        d = os.path.join(conf['data_dir'], conf['sed_dir'])
         for sed in seds:
-            file_path = os.path.join(conf['sed_dir'], '%s.sed' % sed)
+            file_path = os.path.join(d, '%s.sed' % sed)
             x,y = np.loadtxt(file_path, unpack=True)
 
             spls[sed] = splrep(x, y)

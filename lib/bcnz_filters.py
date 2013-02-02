@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # encoding: UTF8
+
+import os
 import pdb
 import time
 
@@ -73,8 +75,8 @@ class filter_and_so:
 
         f_mod = f_mod2
 
-
-        col_pars = bcnz_div.find_columns(conf['col_file'])
+        col_path = os.path.join(conf['data_dir'], conf['columns'])
+        col_pars = bcnz_div.find_columns(col_path)
 
 #        flux_cols, eflux_cols, cals, zp_errors, zp_offsets = \
 #        bcnz_input.split_col_pars(col_pars, filters)

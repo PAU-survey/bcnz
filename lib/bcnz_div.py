@@ -64,7 +64,8 @@ def find_filters(conf):
 
     # Demand that at least the magnitude system is specified.
     filters = []
-    for line in open(conf['col_file']):
+    file_path = os.path.join(conf['data_dir'], conf['columns'])
+    for line in open(file_path):
         spl = line.split()
         if not 2 < len(spl):
             continue
@@ -93,10 +94,11 @@ def check_found(what, elems, elem_db):
 def spectra_file(conf):
     """Detect the right path of spectra file."""
 
-    for d in [conf['root'], conf['sed_dir']]:
-        file_path = os.path.join(d, conf['spectra'])
-        if os.path.exists(file_path):
-            return file_path
+#    for d in [conf['root'], conf['sed_dir']]:
+#    for d in [conf['root'], conf['sed_dir']]:
+    file_path = os.path.join(conf['data_dir'], conf['spectra'])
+    if os.path.exists(file_path):
+        return file_path
 
     raise ValueError, 'No spectra file found.'
 

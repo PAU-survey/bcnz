@@ -78,7 +78,7 @@ class model_mag:
         """Model frequencies."""
         
 
-        d = self.conf['ab_dir']
+        d = os.path.join(self.conf['data_dir'], self.conf['ab_dir'])
         spectra = self.zdata['spectra']
         filters = self.zdata['filters']
 #        z = self.zdata['z']
