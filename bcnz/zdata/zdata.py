@@ -2,9 +2,12 @@
 # encoding: UTF8
 from __future__ import print_function
 
-import bcnz_div
-import bcnz_filters
-import bcnz_exposure
+def z_binning(conf):
+    zmin = conf['zmin']
+    zmax = conf['zmax']
+    dz = conf['dz']
+
+    return np.arange(zmin,zmax+dz,dz)
 
 def find_zdata(conf):
     zdata = {}

@@ -97,17 +97,3 @@ class prior_pau:
             lh[i] *= self.pr[inds[i]]
 
         return lh
- 
-#        import time
-#        t1 = time.time()
-##        lh = lh.reshape(lh.shape[0], self.nz*self.nt)
-##        ans = lh*self.pr[inds]
-##        ans = lh*self.pr[inds]
-##        lh *= self.pr[inds]
-#       
-#        priors = self.pr[inds]
-#        t2 = time.time()
-##        import pdb; pdb.set_trace()
-##        return lh
-##        return ans        
-#        return priors

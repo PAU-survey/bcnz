@@ -1,6 +1,6 @@
 __all__ = ['pau', 'fit_train']
 
-from prior_pau import prior_pau
-from prior_train import prior_train
-from prior_tess import prior_tess
-from prior_kde import prior_kde
+import pau
+import train
+import tess
+import kde
