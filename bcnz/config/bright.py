@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 # encoding: UTF8
-import bcnz_config
-import copy
 
-conf = copy.deepcopy(bcnz_config.conf)
+import copy
+import bcnz
+
+import standard
+conf = copy.deepcopy(standard.conf)
 conf['interp'] = 2
 conf['prior'] = 'pau'
 conf['dz'] = 0.001

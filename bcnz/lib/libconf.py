@@ -2,80 +2,40 @@
 # encoding: UTF8
 
 import os
+import pdb
 import sys
 
 import bcnz
 
-def root(rm_dir='bin'):
-    """Find root directory."""
-
-    cmd = sys.argv[0]
-    path = os.path.abspath(os.path.dirname(cmd))
-
-    if os.path.split(path)[1] == rm_dir:
-        path = os.path.join(path, '..')
-        path = os.path.normpath(path)
-
-    return path
-
-def set_min_rms(conf):
-    # Only for full compatability with BPZ.
-
-    if conf['spectra'] == 'CWWSB.list':
-        conf['min_rms'] = 0.067
-
-def parse_arguments():
-    """Parse input arguments."""
-
-    # Detects which configuration file to use. This enable
-    # b
-    first_parser = bcnz.lib.bcnz_parser.first_parser()
-    config_file = first_parser()
-
-    try:
-        m = getattr(bcnz.config, config_file)
-        def_conf = getattr(m, 'conf')
-    except AttributeError:
-        raise
-
-    def_descr = bcnz.descr.standard.descr
-
-    arg_parser = bcnz.lib.bcnz_parser.argument_parser(def_conf, def_descr)
-    conf = arg_parser.parse_args()
-
-    bcnz.lib.bcnz_compat.assert_compat(conf)
-    test_conf(conf)
-
-    return conf
-
-def print_parameters(conf):
-    """Print the value of all parameters in conf."""
-
-    keys = conf.keys()
-    keys.sort()
-
-    for key in keys:
-        print('%s   =   %s' % (key.upper(), conf[key]))
-
-def update_conf(conf):
-    """Update some of the configuration values."""
-
-    conf['root'] = root()
-    conf['obs_files'] = bcnz.lib.bcnz_input.catalogs(conf)
-    conf['col_file'] = bcnz.lib.bcnz_input.columns_file(conf)
-    set_min_rms(conf)
-
-    if conf['verbose']:
-        print('Current parameters') #z
-        print_parameters(conf)
-
-    return conf
-
-def test_config(conf):
-    bcnz.lib.bcnz_input.check_collision(conf)
-
-def test_conf(conf):
+class conf:
     msg_z = 'zmax <= zmin is not allowed.'
-    assert conf['zmin'] < conf['zmax'], msg_z
+    msg_overwrite = 'Overwriting some input files.'
+
+    def __init__(self, myconf):
+        self.data = bcnz.config.standard.conf.copy() # HACK
+        self.data.update(myconf)
+
+        self._test_zrange()
+        self._test_collisions()
+        pdb.set_trace()
+
+    def _test_zrange(self):
+
+        assert self.data['zmin'] < self.data['zmax'], self.msg_z
+
+    def _test_collisions(self):
+        """Check for collisions between different input files."""
+
+        file_keys = ['obs_files', 'col_file']
+        file_names = [self.data[x] for x in file_keys]
+
+        all_files = []
+        for file_name in file_names:
+            if isinstance(file_name, list):
+                all_files.extend(file_name)
+            else:
+                all_files.append(file_name)
+
+        assert len(set(all_files)) == len(all_files), self.msg_overwrite
 
 

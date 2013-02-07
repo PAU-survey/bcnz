@@ -7,8 +7,9 @@ import bcnz.config
 import bcnz.descr
 import bcnz.io
 import bcnz.lib
-#def libconf(myconf):
-#    bcnz.lib.libconf.conf(myconf)
+
+def libconf(myconf):
+    bcnz.lib.libconf.conf(myconf)
 
 import bcnz.priors
 import bcnz.modes
