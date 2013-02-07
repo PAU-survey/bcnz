@@ -4,9 +4,7 @@
 import os
 import sys
 
-import bcnz_compat
-import bcnz_input
-import bcnz_parser
+import bcnz
 
 def root(rm_dir='bin'):
     """Find root directory."""
@@ -31,7 +29,7 @@ def parse_arguments():
 
     # Detects which configuration file to use. This enable
     # b
-    first_parser = bcnz_parser.first_parser()
+    first_parser = bcnz.lib.bcnz_parser.first_parser()
     config_file = first_parser()
 
     try:
@@ -40,12 +38,12 @@ def parse_arguments():
     except AttributeError:
         raise
 
-    def_descr = descr.standard.descr
+    def_descr = bcnz.descr.standard.descr
 
-    arg_parser = bcnz_parser.argument_parser(def_conf, def_descr)
+    arg_parser = bcnz.lib.bcnz_parser.argument_parser(def_conf, def_descr)
     conf = arg_parser.parse_args()
 
-    bcnz_compat.assert_compat(conf)
+    bcnz.lib.bcnz_compat.assert_compat(conf)
     test_conf(conf)
 
     return conf
@@ -63,8 +61,8 @@ def update_conf(conf):
     """Update some of the configuration values."""
 
     conf['root'] = root()
-    conf['obs_files'] = bcnz_input.catalogs(conf)
-    conf['col_file'] = bcnz_input.columns_file(conf)
+    conf['obs_files'] = bcnz.lib.bcnz_input.catalogs(conf)
+    conf['col_file'] = bcnz.lib.bcnz_input.columns_file(conf)
     set_min_rms(conf)
 
     if conf['verbose']:
@@ -74,7 +72,7 @@ def update_conf(conf):
     return conf
 
 def test_config(conf):
-    bcnz_input.check_collision(conf)
+    bcnz.lib.bcnz_input.check_collision(conf)
 
 def test_conf(conf):
     msg_z = 'zmax <= zmin is not allowed.'

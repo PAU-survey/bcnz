@@ -9,15 +9,6 @@ import sys
 import tables
 import numpy as np
 
-#import config
-#import descr
-#import bcnz_config
-#import bcnz_compat
-#import bcnz_descr
-#import bcnz_div
-#import bcnz_output
-#import bcnz_parser
-
 def check_collision(conf):
     """Check for collision between different input files."""
 
@@ -180,3 +171,20 @@ def open_hdf5(obs_file, nmax, cols_keys, cols, filters):
         return tables.openFile(obs_file)
     except tables.exceptions.HDF5ExtError:
         convert_ascii(obs_file, cols_keys, cols, filters)
+
+#def open_hdf5(obs_file, nmax, cols_keys, cols, filters):
+    # Not really doing 
+
+class h5iter:
+    def __init__(self, obs_file, nmax, cols_keys, cols, filters):
+        pass
+
+    def __iter__(self):
+        i = 0
+        yield self.catalog.read(start=i*nmax, stop=(i+1)*nmax)
+        i += 1
+
+#    catalog = f_in.getNode('/mock/mock')
+#   data = catalog.read(start=i*nmax, stop=(i+1)*nmax)
+#   data = bcnz_flux.post_pros(self.conf, data)
+

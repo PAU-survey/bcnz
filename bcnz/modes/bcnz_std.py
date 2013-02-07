@@ -66,19 +66,15 @@ class standard:
 
         nmax = self.conf['nmax']
         cols_keys, cols = bcnz.lib.bcnz_flux.get_cols(self.conf, self.zdata) 
-
         filters = self.zdata['filters']
-        f_in = bcnz.lib.bcnz_input.open_hdf5(self.obs_file, nmax, cols_keys, cols, filters)
-        catalog = f_in.getNode('/mock/mock')
 
-        f_out = bcnz_output.create_hdf5(self.conf, out_file)
-        pz_table = f_out.getNode('/bcnz/bcnz')
+        read_cat = bcnz.io.ascii.read_cat
+        write_cat = bcnz.io.ascii.write_cat
 
-        i = 0
-        while True:
-#        pdb.set_trace()
-#        for data in tmp:
-            data = catalog.read(start=i*nmax, stop=(i+1)*nmax)
+        cat_in = read_cat(self.obs_file, nmax, cols_keys, cols, filters)
+        f_out = write_cat(self.conf, out_file)
+
+        for data in cat_in:
             data = bcnz_flux.post_pros(self.conf, data)
             f_obs, ef_obs = bcnz_flux.fix_fluxes(self.conf, self.zdata, data) 
 
@@ -95,6 +91,5 @@ class standard:
             ng = len(f_obs)
             for block in inst.blocks():
                 pz_table.append(block)
-
 
         f_out.close()

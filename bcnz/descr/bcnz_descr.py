@@ -34,6 +34,7 @@ descr = {
     'add_noise': 'Add noise to the magnitudes.',
     'old_model': 'Use the BPZ model for observed magnitudes.',
 
+    'cache_dir': 'Directory for the cache.',
     'data_dir': 'Directory for the data.',
     'ab_tmp': 'TEMPORARY',
     'zmax_ab': 'Maximum redshift in AB files',

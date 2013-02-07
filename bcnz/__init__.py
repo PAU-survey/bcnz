@@ -2,11 +2,15 @@
 # encoding: UTF8
 
 import pdb
-import bcnz
+
 import bcnz.config
+import bcnz.descr
+import bcnz.io
+import bcnz.lib
+#def libconf(myconf):
+#    bcnz.lib.libconf.conf(myconf)
 
 import bcnz.priors
-import bcnz.lib
 import bcnz.modes
 
 class pzcat:

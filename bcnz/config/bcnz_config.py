@@ -46,7 +46,7 @@ conf = {
     'prior': 'pau',
     'train': False,
     'norm_flux': False,
-    'cache_dir': '/Users/marberi/sci/cache',
+    'cache_dir': '/tmp/cache',
     'data_dir': '/Users/marberi/photoz/run',
     'ab_dir': 'AB',
     'filter_dir': 'FILTER',
