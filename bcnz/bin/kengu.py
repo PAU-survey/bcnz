@@ -38,7 +38,7 @@ def main():
     conf = bcnz.libconf(myconf)
     
     # Estimate the photoz
-    zdata = bcnz.lib.bcnz_zdata.find_zdata(conf)
+    zdata = bcnz.zdata.zdata(conf)
     zdata = bcnz.lib.bcnz_filters.filter_and_so()(conf, zdata)
     bcnz.modes.bcnz_main.wrapper(conf, zdata)
 

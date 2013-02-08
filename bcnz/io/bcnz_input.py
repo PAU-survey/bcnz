@@ -9,18 +9,6 @@ import sys
 import tables
 import numpy as np
 
-def catalogs(conf):
-    """File names with input catalogs."""
-
-    input_file = conf['catalog']
-    cat_files = glob.glob(input_file)
-    msg_noinput = "Found no input files for: %s" % input_file
-
-    assert len(cat_files), msg_noinput
-
-    return cat_files
-
-
 def mapping_templ_prior(file_name):
     """Read file with mapping between templates
        and priors names.
