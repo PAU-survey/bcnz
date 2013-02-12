@@ -7,35 +7,10 @@ import time
 
 import numpy as np
 
-import bcnz_div
-import bcnz_input
-import bcnz_model
-import bcnz_norm
-import bcnz_sedf
-#import bcnz_interp
-
-class filter_and_so:
-    def blah(self, zdata):
-        conf = self.conf
-
-        filters_db = bcnz_div.sel_files(conf, conf['filter_dir'], '.res')
-        sed_db = bcnz_div.sel_files(conf, conf['sed_dir'], '.sed')
-        ab_db = bcnz_div.sel_files(conf, conf['ab_dir'], '.AB')
-
-        filters = bcnz_div.find_filters(conf)
-
-        spectra_file = bcnz_div.spectra_file(conf)
-        spectra = bcnz_div.find_spectra(spectra_file)
-
-        bcnz_div.check_found('Filters', filters, filters_db)
-        bcnz_div.check_found('Spectras', spectra, sed_db)
-
-        zdata['filters'] = filters
-        zdata['spectra'] = spectra
-        zdata['ab_db'] = ab_db
-        zdata['sed_db'] = sed_db
-
-        return zdata
+class mag_model:
+    def __init__(self, conf, zdata):
+        self.conf = conf
+        self.zdata = zdata
 
     def tja(self, zdata):
         conf = self.conf
@@ -58,8 +33,6 @@ class filter_and_so:
         sed_filt_inst = bcnz_sedf.sed_filters()
         zdata = sed_filt_inst(conf, zdata)
 
-        t3 = time.time()
-
         if conf['use_split']:
             to_iter = [('bright.f_mod', zdata['bright.z']), ('faint.f_mod', zdata['faint.z'])]
         else:
@@ -71,15 +44,10 @@ class filter_and_so:
             f_mod2 = model.interp(conf, f_mod2, z, self.filters, self.spectra)
             zdata[key] = f_mod2
 
-        t4 = time.time()
-
         f_mod = f_mod2
 
         col_path = os.path.join(conf['data_dir'], conf['columns'])
         col_pars = bcnz_div.find_columns(col_path)
-
-#        flux_cols, eflux_cols, cals, zp_errors, zp_offsets = \
-#        bcnz_input.split_col_pars(col_pars, filters)
 
         col_data = bcnz_input.split_col_pars(col_pars, self.filters)
         zdata.update(col_data)
@@ -93,8 +61,6 @@ class filter_and_so:
 
     def __call__(self, conf, zdata):
         self.conf = conf
-
-        zdata = self.blah(zdata)
         zdata = self.tja(zdata)
 
         return zdata

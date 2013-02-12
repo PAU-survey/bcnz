@@ -6,6 +6,8 @@ import pdb
 import sys
 import numpy as np
 
+import bcnz
+
 # is_true  - Values accepted as Bool true
 # is_false - Values accepted as Bool false
 is_true = ['yes', 'true', '1']
@@ -81,7 +83,7 @@ def test_defaults(def_conf, descr):
 
         raise ValueError, msg
 
-class argument_parser:
+class main_parser:
     def __init__(self, def_conf, descr):
         """Create parser for the BCNZ command line options."""
 
@@ -140,3 +142,23 @@ class first_parser:
         config_file = args[0].config
 
         return config_file
+
+def parse_arguments():
+    """Parse input arguments."""
+
+    # Detects which configuration file to use. This enable
+    # b
+    config_file = first_parser()()
+
+    try:
+        m = getattr(bcnz.config, config_file)
+        def_conf = getattr(m, 'conf')
+    except AttributeError:
+        raise
+
+    def_descr = bcnz.descr.standard
+    arg_parser = bcnz.lib.parser.main_parser(def_conf, def_descr)
+    conf = arg_parser.parse_args()
+
+    return conf
+

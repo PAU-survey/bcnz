@@ -10,31 +10,34 @@ import numpy as np
 
 class zdata(dict):
     msg_filters = 'Missing filter files.'
-    msg_seds = 'Missing sed filtes.'
+    msg_seds = 'Missing sed files.'
 
     def __init__(self, conf):
         self.conf = conf
 
-        self['z'] = self.z_binning()
+        self['z_model'] = self.z_binning()
+        self['filters'] = self.use_filters()
+        self['seds'] = self.conf['seds']
 
-        self.read_files()
+        self.check_filenames()
         self.add_noise()
 
     def z_binning(self):
+        """Binning in redshift when calculating the model."""
+
         zmin = self.conf['zmin']
         zmax = self.conf['zmax']
         dz = self.conf['dz']
 
-        self['z'] = np.arange(zmin,zmax+dz,dz)
+        return np.arange(zmin,zmax+dz,dz)
 
     def use_filters(self):
         return ['up', 'g']
 
-    def read_files(self):
 
+    def check_filenames(self):
         def sel_files(self, d, suf):
-            g = os.path.join(self.conf['data_dir'], 
-                             self.conf['filter_dir'],
+            g = os.path.join(self.conf['data_dir'], d,
                              '*.{0}'.format(suf))
 
             names = map(os.path.basename, glob.glob(g))
@@ -43,43 +46,27 @@ class zdata(dict):
             return names
 
         filters_db = sel_files(self, self.conf['filter_dir'], 'res')
-        sed_db = sel_files(self, self.conf['sed_dir'], 'sed')
+        seds_db = sel_files(self, self.conf['sed_dir'], 'sed')
 
-        filters = self.use_filters()
+        assert set(self['filters']).issubset(set(filters_db)), self.msg_filters
+        assert set(self['seds']).issubset(set(seds_db)), self.msg_seds
 
-        assert set(filters_db).issubset(set(filters)), self.msg_filters
-        assert set(seds_db).issubset(set(seds)), self.msg_seds
-
-        pdb.set_trace()
-        filters = bcnz_div.find_filters(conf)
-        # TODO: CONTINUE HERE...
-        spectra_file = bcnz_div.spectra_file(conf)
-        seds = bcnz_div.find_spectra(spectra_file)
-
-        self['filters'] = filters
-        self['spectra'] = spectra
-
-        pdb.set_trace()
     def add_noise(self):
         # To not require tray configurations to always be
         # present.
-        if conf['add_noise']:
+        if self.conf['add_noise']:
             zdata['texp'] = bcnz_exposure.texp(conf, zdata)
 
         return zdata
 
+    def obs_files(conf):
+        """File names with input catalogs."""
 
+        input_file = conf['catalog']
+        cat_files = glob.glob(input_file)
+        msg_noinput = "Found no input files for: %s" % input_file
 
+        assert len(cat_files), msg_noinput
 
-def catalogs(conf):
-    """File names with input catalogs."""
-
-    input_file = conf['catalog']
-    cat_files = glob.glob(input_file)
-    msg_noinput = "Found no input files for: %s" % input_file
-
-    assert len(cat_files), msg_noinput
-
-    return cat_files
-
+        self['cat_files'] = cat_files
 

@@ -2,6 +2,7 @@
 # encoding: UTF8
 
 descr = {
+    'seds': 'Templates to use.',
     'pr_a': 'Prior parameter a',
     'pr_zo': 'Prior parameter zo',
     'pr_km': 'Prior parameter km',

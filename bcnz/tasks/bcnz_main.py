@@ -8,14 +8,10 @@ import types
 
 import bcnz_std
 
-def prepare_objects(conf, zdata):
+def prepare_tasks(conf, zdata):
     """Objects encapsulating the runs."""
 
-    globals().update(zdata)
-
-#    mstep = .1
-#    ninterp = conf['interp']
-
+    pdb.set_trace()
     assert not (1 < len(conf['obs_files']) and \
                 isinstance(conf['output'], types.NoneType))
 
@@ -34,10 +30,11 @@ def prepare_objects(conf, zdata):
 #1 < len(conf['obs_files'])
     return ans
 
-def my_f(x):
-    x.run_file()
+def run_tasks(conf, tasks):
+    """Execute either using multiprocessing or just run tasks in serial."""
 
-def do_work(conf, ans):
+    def run(task):
+        task.run()
 
     use_par = conf['use_par'] and 1 < len(conf['obs_files'])
     if use_par:
@@ -46,11 +43,12 @@ def do_work(conf, ans):
         nparts = nthr if nthr else ncpu
         #pdb.set_trace()
         pool = multiprocessing.Pool(processes=nparts)
-        pool.map(my_f, ans)
+        pool.map(run, tasks)
     else:
-        for x in ans:
-            x.run_file()
+        for task in tasks:
+            task.run()
 
-def wrapper(conf, zdata):
-    objs = prepare_objects(conf, zdata)
-    do_work(conf, objs)
+class pzcat:
+    def __init__(self, conf, zdata, mode):
+        tasks = prepare_tasks(conf, zdata)
+        run_tasks(conf, tasks)

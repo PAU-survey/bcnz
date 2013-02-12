@@ -1,3 +1,1 @@
-__all__ = ['standard']
-
-import standard
+from descr import descr as standard

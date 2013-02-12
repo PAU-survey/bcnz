@@ -113,9 +113,9 @@ def fix_fluxes(conf, zdata, data):
     return f_obs,ef_obs
 
 def post_pros(conf, data):
-    # FJC seems to have an inconsisten definition..
+    """Since FJC had a different definition."""
 
-#    pdb.set_trace()
+    # TODO: Coordinate what the diffent values means.
     data['f_obs'] = np.where(data['f_obs'] == 90, -99, data['f_obs'])
     data['ef_obs'] = np.where(data['ef_obs'] == 99, -99, data['ef_obs'])
 
@@ -131,25 +131,26 @@ def post_pros(conf, data):
 
     return data
 
-def get_cols(conf, zdata):
+# IS this needed???
 
-    # Yes, this will be improved later..
-    cols_keys = []
-    cols = []
-
-    to_iter = [('f_obs', 'flux_cols'), ('ef_obs', 'eflux_cols')]
-    for k1,k2 in to_iter:
-        cols_keys.append(k1)
-        cols.append(zdata[k2])
-
-    col_pars = zdata['col_pars']
-    for key, val in col_pars.iteritems():
-        if isinstance(val, tuple):
-            continue
-
-        cols_keys.append(key.lower())
-        cols.append(int(val)-1)
-
-    return cols_keys, cols
-
-
+#def get_cols(conf, zdata):
+#
+#    # Yes, this will be improved later..
+#    cols_keys = []
+#    cols = []
+#
+#    to_iter = [('f_obs', 'flux_cols'), ('ef_obs', 'eflux_cols')]
+#    for k1,k2 in to_iter:
+#        cols_keys.append(k1)
+#        cols.append(zdata[k2])
+#
+#    col_pars = zdata['col_pars']
+#    for key, val in col_pars.iteritems():
+#        if isinstance(val, tuple):
+#            continue
+#
+#        cols_keys.append(key.lower())
+#        cols.append(int(val)-1)
+#
+#    return cols_keys, cols
+#
