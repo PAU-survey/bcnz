@@ -2,6 +2,7 @@
 # encoding: UTF8
 
 descr = {
+    'nmax': 'Number of galaxies to read at once',
     'seds': 'Templates to use.',
     'pr_a': 'Prior parameter a',
     'pr_zo': 'Prior parameter zo',

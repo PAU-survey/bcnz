@@ -14,7 +14,7 @@ def main():
 
     # Read the initial configuration..
     myconf = bcnz.lib.parser.parse_arguments()
-    task = bcnz.tasks.pzcat(myconf)
+    task = bcnz.tasks.pzcat_local(myconf)
     task.run()
 
     print(watch)

@@ -2,6 +2,7 @@
 # encoding: UTF8
 
 import pdb
+import filebase
 
 class columns_file:
     def _columns_file(self):
@@ -33,7 +34,10 @@ class columns_file:
 
         return res
 
-class read_cat(columns_file):
+class read_cat(filebase.filebase):
+    def __init__(self, file_name):
+        self.file_name = file_name
+
     def basic_read(file_name):
         """Remove empty and commented lines."""
 
@@ -57,10 +61,12 @@ class read_cat(columns_file):
 
         return out
 
+    def __iter__(self):
+        return self
 
-    def __init__(self, obs_file, nmax, cols_keys, cols, filters):
-        pass
+    def next(self):
+        pdb.set_trace()
 
 class write_cat:
     def __init__(self, conf, out_file):
-        pass
+        self.out_file = out_file

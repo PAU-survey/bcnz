@@ -4,7 +4,7 @@
 import numpy as np
 
 conf = {
-
+    'nmax': 10000,
     'seds': ['Ell_01', 'Sbc_01', 'Scd_01', 'Irr_01', 'Irr_14', 'I99_05Gy'],
 
     'pr_a': [2.369,1.843,1.843,1.340,1.340,1.340],
