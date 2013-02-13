@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
+# Runs multiple catalog files in parallel. In the future it might
+# be replaced by another framework.
+
 import os
 import pdb
 import multiprocessing
@@ -12,16 +15,16 @@ def prepare_tasks(conf, zdata):
     """Objects encapsulating the runs."""
 
     pdb.set_trace()
-    assert not (1 < len(conf['obs_files']) and \
+    assert not (1 < len(zdata['cat_files']) and \
                 isinstance(conf['output'], types.NoneType))
 
     if conf['output']:
-        obs_file = conf['obs_files'][0]
+        obs_file = zdata['cat_files'][0]
         ans = [bcnz_std.standard(conf, zdata, obs_file, conf['output'])]
         return ans
 
     ans = []
-    for obs_file in conf['obs_files']:
+    for obs_file in conf['cat_files']:
         out_file = '%s.bcnz' % os.path.splitext(obs_file)[0]
 
         ans.append(\
@@ -50,5 +53,17 @@ def run_tasks(conf, tasks):
 
 class pzcat:
     def __init__(self, conf, zdata, mode):
+        tasks = prepare_tasks(conf, zdata)
+        run_tasks(conf, tasks)
+
+class pzcat:
+    def __init__(self, myconf):
+        self.conf = bcnz.libconf(myconf)
+
+    def run(self):
+        # Estimate the photoz
+        zdata = bcnz.zdata.zdata(self.conf)
+        model = bcnz.model.model(self.conf, zdata)
+
         tasks = prepare_tasks(conf, zdata)
         run_tasks(conf, tasks)

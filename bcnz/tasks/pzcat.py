@@ -9,9 +9,9 @@ class pzcat:
 
     def run(self):
         # Estimate the photoz
-        zdata = bcnz.zdata.zdata(conf)
-        model = bcnz.model.model(conf, zdata)
+        zdata = bcnz.zdata.zdata(self.conf)
+        model = bcnz.model.model(self.conf, zdata)
 
         # Bad hack, the interface needs to be improved.
         import bcnz_main
-        bcnz_main.pzcat(conf,zdata,model)
+        bcnz_main.pzcat_local(self.conf, zdata, model)

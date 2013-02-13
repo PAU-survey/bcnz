@@ -21,6 +21,7 @@ class zdata(dict):
 
         self.check_filenames()
         self.add_noise()
+        self.obs_files()
 
     def z_binning(self):
         """Binning in redshift when calculating the model."""
@@ -59,12 +60,12 @@ class zdata(dict):
 
         return zdata
 
-    def obs_files(conf):
+    def obs_files(self):
         """File names with input catalogs."""
 
-        input_file = conf['catalog']
+        input_file = self.conf['catalog']
         cat_files = glob.glob(input_file)
-        msg_noinput = "Found no input files for: %s" % input_file
+        msg_noinput = 'Found no input files for: {0}'.format(input_file)
 
         assert len(cat_files), msg_noinput
 
