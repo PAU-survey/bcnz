@@ -47,7 +47,7 @@ class model_mag:
         a_ab = 1./(1.+z_ab)
 
         res = {}
-        for sed in self.zdata['spectra']:
+        for sed in self.zdata['seds']:
             sed_spl = self.sed_spls[sed]
 
             ker = np.outer(a_ab, xm)
@@ -62,38 +62,35 @@ class model_mag:
 
         return res
 
-# NOT SURE IF THIS CODE IS USED OR NOT!!!
-#            pdb.set_trace()
+    def f_mod(self, z):
+        """Model frequencies."""
 
-#    def f_mod(self, z):
-#        """Model frequencies."""
-#        
-#
-#        dir_ab = os.path.join(self.conf['data_dir'], self.conf['ab_dir'])
-#        spectra = self.zdata['spectra']
-#        filters = self.zdata['filters']
-##        z = self.zdata['z']
-#
-#        # HACK. Does not handle new filters added..
-#        if not os.listdir(dir_ab):
-#            self.all_proj()
-#
-#        # This method is not the fastest, but works slightly faster
-#        # than the linear interpolation in BPZ!
-#        f_mod = np.zeros((len(z), len(spectra), len(filters)))
-#        for i,sed in enumerate(spectra):
-#            for j,filter_name in enumerate(filters):
-#                file_name = '%s.%s.AB' % (sed, filter_name)
-#                file_path = os.path.join(d, file_name)
-#
-#                x,y = np.loadtxt(file_path, unpack=True)
-#                spl = splrep(x,y)
-#                y_new = splev(z, spl)
-#
-#                f_mod[:,i,j] = y_new
-#
-#
-#        return f_mod
+        dir_ab = os.path.join(self.conf['cache_dir'], 'ab')
+
+        seds = self.zdata['seds']
+        filters = self.zdata['filters']
+        z = self.zdata['z']
+
+        # HACK. Does not handle new filters added..
+        if not os.listdir(dir_ab):
+            self.all_proj()
+
+        # This method is not the fastest, but works slightly faster
+        # than the linear interpolation in BPZ!
+        f_mod = np.zeros((len(z), len(seds), len(filters)))
+        for i,sed in enumerate(seds):
+            for j,filter_name in enumerate(filters):
+                file_name = '%s.%s.AB' % (sed, filter_name)
+                file_path = os.path.join(dir_ab, file_name)
+
+                x,y = np.loadtxt(file_path, unpack=True)
+                spl = splrep(x,y)
+                y_new = splev(z, spl)
+
+                f_mod[:,i,j] = y_new
+
+
+        return f_mod
 
     def all_proj(self):
         filters = self.zdata['filters']
@@ -101,15 +98,15 @@ class model_mag:
         dz_ab = self.conf['dz_ab']
 
         z_ab = np.arange(0., zmax_ab, dz_ab)
-        d = self.conf['ab_dir']
+        d = os.path.join(self.conf['cache_dir'], self.conf['ab_dir'])
         for filter_name in filters:
             self.proj_filter(d, z_ab, filter_name)
 
 
-    def interp(self, conf, f_mod, z, filters, spectra):
+    def interp(self, f_mod):
         """Interpolation between spectras."""
 
-        ntypes_orig = len(self.zdata['spectra'])
+        ntypes_orig = len(self.zdata['seds'])
         nt = self.conf['interp']*(ntypes_orig - 1) + ntypes_orig
         zoom_fac = (1, float(nt) / ntypes_orig, 1)
 

@@ -63,18 +63,17 @@ class sed_filters:
 
     def __call__(self, conf, zdata):
         filters = zdata['filters']
-        seds = zdata['spectra']
-
+        seds = zdata['seds']
 
         rlim, r_const, resp_spls,in_r,in_sky = self.find_response_spls(conf, filters)
         sed_spls = self.find_sed_spls(conf, seds)
 
-        zdata['resp_spls'] = resp_spls
-        zdata['sed_spls'] = sed_spls
-        zdata['rlim'] = rlim
-        zdata['r_const'] = r_const
-        zdata['max_type'] = len(seds) - 1
-        zdata['in_r'] = in_r
-        zdata['in_sky'] = in_sky
+        spl_data = {'resp_spls': resp_spls,
+                    'sed_spls': sed_spls,
+                    'rlim': rlim,
+                    'r_const': r_const,
+                    'max_type': len(seds) - 1,
+                    'in_r': in_r,
+                    'in_sky': in_sky}
 
-        return zdata
+        return spl_data

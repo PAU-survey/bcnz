@@ -8,36 +8,36 @@ import time
 import numpy as np
 import bcnz
 
-def add_model(conf, zdata):
-    """Add model predictions."""
-
-    def binning(pop):
-        """Model redshift binning for population."""
-
-        dz = conf['dz_{0}'.format(pop)]
-
-        return np.arange(conf['zmin'],conf['zmax']+dz,dz)
+def add_binning(conf, zdata):
+    """Model redshift binning for populations."""
 
     if conf['use_split']:
         for pop in ['bright', 'faint']:
+            dz = conf['dz_{0}'.format(pop)]
+            binning = np.arange(conf['zmin'],conf['zmax']+dz,dz)
 
-            zdata['{0}.z'.format(pop)] = binning(pop)
-
-    # New approach..
-    sed_filt_inst = bcnz_sedf.sed_filters()
-    zdata = sed_filt_inst(conf, zdata)
-
-    if conf['use_split']:
-        to_iter = [('bright.f_mod', zdata['bright.z']), ('faint.f_mod', zdata['faint.z'])]
+            zdata['{0}.z'.format(pop)] = binning
     else:
-        to_iter = [('f_mod', zdata['z'])]
+        dz = conf['dz']
+        zdata['z'] = np.arange(conf['zmin'],conf['zmax']+dz,dz)
+
+    return zdata
+
+def add_model(conf, zdata):
+    """Add model predictions."""
+
+    zdata = add_binning(conf, zdata)
+    resp_inst = bcnz.model.sed_filters()
+    zdata.update(resp_inst(conf,zdata))
 
     model = bcnz.model.model_mag(conf, zdata)
-    for key, z in to_iter:
-        f_mod2 = model.f_mod(z)
-        f_mod2 = model.interp(conf, f_mod2, z, self.filters, self.spectra)
-        zdata[key] = f_mod2
+    model()
+    to_iter = [('bright.f_mod', zdata['bright.z']), ('faint.f_mod', zdata['faint.z'])] \
+              if conf['use_split'] else [('f_mod', zdata['z'])]
 
-    f_mod = f_mod2
+    for key, z in to_iter:
+        f_mod = model.f_mod(z)
+        f_mod = model.interp(f_mod)
+        zdata[key] = f_mod
 
     return zdata
