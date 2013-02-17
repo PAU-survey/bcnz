@@ -21,7 +21,7 @@ train_zs = 0.1
 train_dm = .1
 smooth = 0.5
 
-class prior_train:
+class train:
     def __init__(self, conf, zdata, m_0, m_step, ninterp):
         self.conf = conf
 

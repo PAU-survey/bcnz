@@ -22,9 +22,9 @@ class pzcat:
 
         for data in in_iter:
             data = bcnz.observ.post_pros(self.conf, self.zdata, data)
-            chi2 = bcnz.fit.chi2(self.conf, self.zdata, data)
+            fit = bcnz.fit.chi2(self.conf, self.zdata, data)
 
-            for block in inst.blocks():
+            for block in fit.blocks():
                 out_table.append(block)
 
         out_table.close()

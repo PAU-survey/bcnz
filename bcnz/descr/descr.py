@@ -2,6 +2,8 @@
 # encoding: UTF8
 
 descr = {
+    'use_priors': 'Use priors',
+    'ncalc': 'Number of galaxies to calculate at once.',
     'nmax': 'Number of galaxies to read at once',
     'seds': 'Templates to use.',
     'pr_a': 'Prior parameter a',

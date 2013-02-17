@@ -5,7 +5,8 @@ import pdb
 import sys
 import numpy as np
 
-class prior_pau:
+np.seterr(under='ignore')
+class pau:
     """Priors calibrated to mocks used for the PAU survey."""
 
     def __init__(self, conf, zdata, z, m_0):
@@ -30,6 +31,7 @@ class prior_pau:
 
     def prior_basis(self, z, m):
         """Priors without interpolation between types."""
+
         nt = len(self.a)
         nm = len(m)
 
@@ -90,7 +92,7 @@ class prior_pau:
         return np.round((m  - self.m_min)/self.conf['m_step']).astype(int)
 
     def add_priors(self, m, lh):
-#        pdb.set_trace()
+        """Add priors to the likelihood."""
 
         inds = self.inds(m)
         for i in range(lh.shape[0]):

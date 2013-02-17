@@ -22,12 +22,15 @@ except ImportError:
 np.seterr(under='ignore')
 
 class chi2_calc:
-    def __init__(self, conf, zdata, data, pop=''):
+    def __init__(self, conf, zdata, data, pop='', dz='',min_rms=''):
         assert data['mag'].shape[0], 'No galaxies'
         self.conf = conf
         self.zdata = zdata
+        self.data = data
 
-        pdb.set_trace()
+        self.dz = dz if dz else conf['dz']
+        self.min_rms = min_rms if min_rms else conf['min_rms']
+
         if conf['use_split']:
             self.f_mod = zdata['{0}.f_mod'.format(pop)]
             z = zdata['{0}.z'.format(pop)]
@@ -35,10 +38,18 @@ class chi2_calc:
             self.f_mod = zdata['f_mod']
             z = zdata['z']
 
+        self.z = z
         self.cols, self.dtype = self.cols_dtype()
 
         # Priors
         self.load_priors(conf, z)
+        self.set_values()
+        self.calc_P1()
+
+    def set_values(self):
+        f_obs = self.data['f_obs']
+        ef_obs = self.data['ef_obs']
+
         obs = np.logical_and(ef_obs <= 1., 1e-4 < f_obs /ef_obs)
         self.h = obs / ef_obs ** 2.
 
@@ -55,12 +66,12 @@ class chi2_calc:
         self.nt = nt
         self.f_mod2 = f_mod2
 
-        oi = bpz_useful.inv_gauss_int(float(conf['odds']))
+        oi = bpz_useful.inv_gauss_int(float(self.conf['odds']))
+        
         self.odds_pre = oi * self.min_rms 
-        self.z = z
+#        self.z = z
 
         # Precalculate values.
-        self.calc_P1()
 
     def cols_dtype(self):
         """Columns and block dtype."""
@@ -71,34 +82,39 @@ class chi2_calc:
 
         return cols, dtype
 
-    def load_priors(self, conf, z):
-        prior_name = 'prior_%s' % conf['prior']
-        try:
-            self.priors = getattr(priors, prior_name)(conf, \
-                          self.zdata, z, self.m_0_data)
-
-        except ImportError:
-            msg_import = """\
+    msg_import = """\
 To import priors, you need the following:
 - Module to estimate priors.
 - Import statement in priors/__init__.py. Use a "priors_" prefix.
 - Set the option priors without the "priors_" prefix.
 """
-            raise ImportError, msg_import
+
+    def load_priors(self, conf, z):
+        """Load the prior module."""
+
+        prior_name = 'prior_%s' % conf['prior']
+        try:
+            self.priors = getattr(bcnz.priors, conf['prior'])(conf, \
+                          self.zdata, z, self.data['m_0'])
+
+        except ImportError:
+            raise ImportError(self.msg_import)
 
 #    @profile
     def calc_P1(self):
-        l1 = self.f_obs*self.f_obs*self.h
+        """Term in chi**2."""
+
+        l1 = self.data['f_obs']**2*self.h
         self.P1 = np.sum(l1, axis=1)
 
-        self.l2 = self.f_obs*self.h
+        self.l2 = self.data['f_obs']*self.h
         self.r3 = self.f_mod2**2.
 
-#        pdb.set_trace()
+    def _block(self, n):
+        """Term in chi**2."""
 
-#    @profile
-    def calc_D(self, imin):
-        imax = imin + self.ngal_calc
+        imin = n*self.conf['ncalc']
+        imax = imin + self.conf['ncalc']
 
         l2 = self.l2[imin:imax,:]
         h = self.h[imin:imax,:]
@@ -129,9 +145,8 @@ To import priors, you need the following:
         pb = np.exp(pb).swapaxes(0,2)
         
         # Add priors.
-        use_priors = True
-        if use_priors:
-            m =  self.m_0_data[imin:imax]
+        if self.conf['use_priors']:
+            m = self.data['m_0'][imin:imax]
             pb = self.priors.add_priors(m, pb) # pb now include priors.
 
         p_bayes = pb.sum(axis=2)
@@ -173,17 +188,27 @@ To import priors, you need the following:
 
         _z_odds = [bpz_useful.interval(x,self.z,self.conf['odds']) for x in p_bayes]
         z1, z2 = zip(*_z_odds)
- 
+        zb_min = np.array(z1)
+        zb_max = np.array(z2) 
+
         # Set values.
-        self.z_ml = self.z[iz]
-        self.m_0 = self.m_0_data[imin:imax]
-        self.z_s = self.z_s_data[imin:imax]
-        self.id = self.ids_data[imin:imax]
+        z_ml = self.z[iz]
+        m_0 = self.data['m_0'][imin:imax]
+        z_s = self.data['z_s'][imin:imax]
+        chi2 = red_chi2
+        t_b = tt_b+1
+        t_ml = tt_ml+1
+
+        id = self.data['id'][imin:imax]
+        loc = locals()
+        A = [loc[x] for x in self.cols]
+
+        return np.rec.fromarrays(A, self.dtype)
+
 
         self.iz = iz
         self.it = it
         self.min_chi2 = min_chi2
-        self.red_chi2 = red_chi2
         self.pb = pb
         self.p_bayes = p_bayes
         self.iz_b = iz_b
@@ -193,41 +218,22 @@ To import priors, you need the following:
 
         self.tt_b = tt_b
         self.tt_ml = tt_ml
+
         self.z1 = z1
         self.z2 = z2
 
         self.imin = imin
         self.imax = imax
 
-#        pdb.set_trace()
-#    def find_zp_odds(self):
-#        self.calc_D(0)
-#
-#        return self.zb, self.odds
-
-    def _block(self, n):
-        imin = n*self.ngal_calc
-        self.calc_D(imin)
-
-        self.zb_min = np.array(self.z1)
-        self.zb_max = np.array(self.z2)
-        self.t_b = self.tt_b+1
-        self.chi2 = self.red_chi2
-        self.t_ml = self.tt_ml+1
-
-
-        A = [getattr(self, x) for x in self.cols]
-
-        return np.rec.fromarrays(A, self.dtype)
+        pdb.set_trace()
 
     def blocks(self):
         """Iterate over the different blocks."""
 
-#        pdb.set_trace()
-        ngal = len(self.z_s_data)
-        nblocks = int(np.ceil(float(ngal) / self.ngal_calc))
+        ngal = len(self.data['id'])
+        ncalc = self.conf['ncalc']
+        nblocks = int(np.ceil(float(ngal) / ncalc))
 
-#        pdb.set_trace()
         for n in np.arange(nblocks):
             yield self._block(n)
 

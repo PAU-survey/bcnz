@@ -24,7 +24,7 @@ def toflux(conf, zdata, data):
     ef_obs = seen*(10**(0.4*emag)-1)*f_obs
 
     # One exception...
-    ef_obs += not_seen*(10**(-0.4*np.abs(ef_obs)))
+#    ef_obs += not_seen*(10**(-0.4*np.abs(ef_obs)))
 
     assert (0. <= f_obs).all()
     ef_obs = np.where(not_obs, 1e108, ef_obs)

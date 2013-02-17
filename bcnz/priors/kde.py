@@ -8,7 +8,7 @@ import itertools as it
 import numpy as np
 from scipy.stats import gaussian_kde
 
-class prior_kde:
+class kde:
     """Priors using a gaussian kernel density estimator
        calculated directly from the mocks.
     """
