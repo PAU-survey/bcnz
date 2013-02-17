@@ -8,6 +8,8 @@ import os
 import pdb
 import numpy as np
 
+import bcnz
+
 class zdata(dict):
     msg_filters = 'Missing filter files.'
     msg_seds = 'Missing sed files.'
@@ -20,7 +22,7 @@ class zdata(dict):
         self['seds'] = self.conf['seds']
 
         self.check_filenames()
-        self.add_noise()
+        self.add_texp()
         self.obs_files()
 
     def z_binning(self):
@@ -33,6 +35,8 @@ class zdata(dict):
         return np.arange(zmin,zmax+dz,dz)
 
     def use_filters(self):
+        """Filters to use."""
+
         return ['up', 'g']
 
 
@@ -52,7 +56,7 @@ class zdata(dict):
         assert set(self['filters']).issubset(set(filters_db)), self.msg_filters
         assert set(self['seds']).issubset(set(seds_db)), self.msg_seds
 
-    def add_noise(self):
+    def add_texp(self):
         # To not require tray configurations to always be
         # present.
         if self.conf['add_noise']:

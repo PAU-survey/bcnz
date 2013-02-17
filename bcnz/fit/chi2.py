@@ -8,9 +8,8 @@ import sys
 import numpy as np
 from scipy.ndimage.interpolation import zoom
 
+import bcnz
 import bpz_useful
-import bcnz_mintest
-from bcnz import priors
 
 # Currently the speedup with numexpr is not high
 # enough to make it mandatory.
@@ -20,48 +19,21 @@ try:
 except ImportError:
     use_numexpr = False
 
-# <testing>
-import math
-def texp(n):
-    if n == 0:
-        return '1'
-    else:
-        part = '+ (-pb2)**{0}/{1}.'.format(n, math.factorial(n))
-
-    return texp(n-1)+part
-# </testing>
-
-
 np.seterr(under='ignore')
-test_min = False
-class chi2_calc:
-#    @profile
-    def __init__(self, conf, zdata, f_obs, ef_obs, m_0, \
-                 z_s, ids, ngal_calc, dz, min_rms, pop=''):
 
-#        pdb.set_trace()
-        assert f_obs.shape[0], 'No galaxies'
+class chi2_calc:
+    def __init__(self, conf, zdata, data, pop=''):
+        assert data['mag'].shape[0], 'No galaxies'
         self.conf = conf
         self.zdata = zdata
-        self.f_obs = f_obs
-        self.ef_obd = ef_obs
+
+        pdb.set_trace()
         if conf['use_split']:
             self.f_mod = zdata['{0}.f_mod'.format(pop)]
             z = zdata['{0}.z'.format(pop)]
         else:
             self.f_mod = zdata['f_mod']
             z = zdata['z']
-
-        self.ngal_calc = ngal_calc
-
-#        pdb.set_trace()
-#        self.z = zdata['z']
-#        self.z = np.arange(conf['zmin'],conf['zmax']+dz,dz)
-
-        self.m_0_data = m_0
-        self.z_s_data = z_s
-        self.ids_data = ids
-        self.min_rms = min_rms
 
         self.cols, self.dtype = self.cols_dtype()
 
@@ -98,8 +70,6 @@ class chi2_calc:
         dtype = [(x, 'float' if not x in int_cols else 'int') for x in cols]
 
         return cols, dtype
-
-
 
     def load_priors(self, conf, z):
         prior_name = 'prior_%s' % conf['prior']
@@ -189,10 +159,6 @@ To import priors, you need the following:
         odds = np.array(odds)
 
         it_b = pb[range(len(zb)),iz_b].argmax(axis=1)
-
-        if test_min:
-            iz_b, it_b = bcnz_mintest.mintest(pb, pb_without, self.z, 
-                                              self.z_s[imin:imax], iz_b, it_b)
 
 
 #        import pdb; pdb.set_trace()
@@ -332,15 +298,16 @@ class chi2_combined:
 
         yield new_block
 
-def chi2_inst(conf, zdata, f_obs, ef_obs, m_0, z_s, ids, ngal_calc=100):
+def chi2(conf, zdata, data):
     """Select which chi2 object to use depending on splitting in magnitudes
        or not.
     """
 
     if conf['use_split']:
-        return chi2_combined(conf, zdata, f_obs, ef_obs, m_0, z_s, ids, ngal_calc)
+        #return chi2_combined(conf, zdata, f_obs, ef_obs, m_0, z_s, ids, ngal_calc)
+        return chi2_combined(conf, zdata, data)
     else:
-        dz = conf['dz']
-        min_rms = conf['min_rms']
+#        dz = conf['dz']
+#        min_rms = conf['min_rms']
 
-        return chi2_calc(conf, zdata, f_obs, ef_obs, m_0, z_s, ids, ngal_calc, dz,min_rms)
+        return chi2_calc(conf, zdata, data)

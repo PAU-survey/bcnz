@@ -56,10 +56,12 @@ class read_cat(filebase.filebase):
         return self
 
     def next(self):
-        mag = np.loadtxt(self.file_name, usecols=self.cols['mag_cols'])
-        emag = np.loadtxt(self.file_name, usecols=self.cols['emag_cols'])
+        data = {
+          'mag': np.loadtxt(self.file_name, usecols=self.cols['mag_cols']),
+          'emag': np.loadtxt(self.file_name, usecols=self.cols['emag_cols']),
+        }
 
-        yield {}, mag, emag
+        return data
 
 class write_cat:
     def __init__(self, conf, out_file):

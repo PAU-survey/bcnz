@@ -1,4 +1,4 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
-from model import add_model
+from chi2 import chi2

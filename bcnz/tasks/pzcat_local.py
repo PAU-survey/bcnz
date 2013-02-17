@@ -59,7 +59,7 @@ class pzcat_local:
     def run(self):
         # Estimate the photoz
         zdata = bcnz.zdata.zdata(self.conf)
-        model = bcnz.model.model(self.conf, zdata)
+        zdata= bcnz.model.add_model(self.conf, zdata)
 
         tasks = prepare_tasks(self.conf, zdata)
         run_tasks(self.conf, zdata, tasks)
