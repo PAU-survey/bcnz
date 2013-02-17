@@ -26,8 +26,9 @@ def prepare_tasks(conf, zdata):
     for obs_file in zdata['cat_files']:
         out_file = '%s.bcnz' % os.path.splitext(obs_file)[0]
 
-        in_iter = bcnz.io.ascii.read_cat(obs_file)
-        out_table = bcnz.io.ascii.read_cat(out_file)
+#        pdb.set_trace()
+        in_iter = bcnz.io.ascii.read_cat(conf, zdata, obs_file)
+        out_table = bcnz.io.ascii.write_cat(conf, out_file)
 
         tasks.append(bcnz.tasks.pzcat(conf, in_iter, out_table))
 

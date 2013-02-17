@@ -2,70 +2,64 @@
 # encoding: UTF8
 
 import pdb
+import numpy as np
+
 import filebase
 
-class columns_file:
-    def _columns_file(self):
-        """Name of the columns file."""
+class read_cat(filebase.filebase):
+    """Read an ascii catalogs. The columns file reading is directly
+       included here since I only want to use that format together
+       with the ascii files.
+    """
 
-        obs_files = self.conf['obs_files']
+    msg_notsupported = 'The feature in not implemented.'
+    def __init__(self, conf, zdata, file_name):
+        self.conf = conf
+        self.zdata = zdata
+        self.file_name = file_name
+        self.cols = self._columns()
 
-        if 'columns' in self.conf:
-            return self.conf['columns']
-        elif len(obs_files) == 1:
-            root = os.path.splitext(obs_files[0])[0]
-            file_name = "%s.%s" % (root, 'columns')
+        assert (self.cols['zp_errors'] == 0.).all(), self.msg_notsupported
+        assert (self.cols['zp_offsets'] == 0.).all(), self.msg_notsupported
 
-            return file_name
-        else:
-            raise ValueError
+    def _read_columns_file(self, file_name):
+        """Convert each line in the columns file to a touple."""
 
-    def find_columns(file_name):
         res = {}
         for line in open(file_name):
             spld = line.strip().split()
             spld = [x.split(',') for x in spld]
             spld = sum(spld, [])
 
-    #        key, val = spld[0], tuple(spld[1:])
             key = spld[0]
             val = spld[1] if len(spld) == 2 else tuple(spld[1:])
             res[key] = val
 
         return res
 
-class read_cat(filebase.filebase):
-    def __init__(self, file_name):
-        self.file_name = file_name
-
-    def basic_read(file_name):
-        """Remove empty and commented lines."""
-
-        a = [line.strip() for line in open(file_name)]
-        a = [x for x in a if not x.startswith('#')]
-        a = [x for x in a if x]
-
-        return a
-
-    def split_col_pars(col_pars, filters):
+    def _columns(self):
         """Split the input from the columns file in different parts."""
 
-        A = zip(*[col_pars[x] for x in filters])
+        cols_input = self._read_columns_file(self.conf['columns'])
+        A = zip(*[cols_input[x] for x in self.zdata['filters']])
 
-        out = {}
-        out['flux_cols'] = (np.array(A[0]).astype(np.int) - 1).tolist()
-        out['eflux_cols'] = (np.array(A[1]).astype(np.int) - 1).tolist()
-        out['cals'] = A[2]
-        out['zp_errors'] = np.array(A[3]).astype(np.float)
-        out['zp_offsets'] = np.array(A[4]).astype(np.float)
+        cols = {}
+        cols['mag_cols'] = (np.array(A[0]).astype(np.int) - 1).tolist()
+        cols['emag_cols'] = (np.array(A[1]).astype(np.int) - 1).tolist()
+        cols['cals'] = A[2]
+        cols['zp_errors'] = np.array(A[3]).astype(np.float)
+        cols['zp_offsets'] = np.array(A[4]).astype(np.float)
 
-        return out
+        return cols
 
     def __iter__(self):
         return self
 
     def next(self):
-        pdb.set_trace()
+        mag = np.loadtxt(self.file_name, usecols=self.cols['mag_cols'])
+        emag = np.loadtxt(self.file_name, usecols=self.cols['emag_cols'])
+
+        yield {}, mag, emag
 
 class write_cat:
     def __init__(self, conf, out_file):
