@@ -21,7 +21,7 @@ class sed_filters:
         clight_AHz=2.99792458e18
         sky_spl = self.find_sky_spl(conf)
 
-        spls, r_const, rlim, in_rD, in_skyD = 5*({},)
+        spls, r_const, rlim, in_rD, in_skyD = {},{},{},{},{}
         d = os.path.join(conf['data_dir'], conf['filter_dir'])
         for filter_name in filters:
             file_path = os.path.join(d, '%s.res' % filter_name)
@@ -29,7 +29,7 @@ class sed_filters:
 
             # Determines the range where the filter curve is non-zero.
             # Cryptic, but works.
-            rlim[filter_name] = tuple(x[(y != 0).nonzero()[0][[0,-1]]])
+#            rlim[filter_name] = tuple(x[(y != 0).nonzero()[0][[0,-1]]])
             rlim[filter_name] = (x[0], x[-1])
 
             # Normalization and CCD effects.
