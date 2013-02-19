@@ -12,13 +12,11 @@ import bcnz
 def main():
     watch = bcnz.lib.timer.watch()
 
-    # Read the initial configuration..
     myconf = bcnz.lib.parser.parse_arguments()
     task = bcnz.tasks.pzcat_local(myconf)
     task.run()
 
     print(watch)
-
 
 if __name__ == '__main__':
     main()
