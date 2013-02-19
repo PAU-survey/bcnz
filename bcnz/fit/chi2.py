@@ -203,6 +203,7 @@ To import priors, you need the following:
         loc = locals()
         A = [loc[x] for x in self.cols]
 
+#        pdb.set_trace()
         return np.rec.fromarrays(A, self.dtype)
 
 
@@ -225,7 +226,6 @@ To import priors, you need the following:
         self.imin = imin
         self.imax = imax
 
-        pdb.set_trace()
 
     def blocks(self):
         """Iterate over the different blocks."""

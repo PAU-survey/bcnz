@@ -97,7 +97,7 @@ class write_cat:
             if dt == '<i8':
                 return '{'+str(i)+'}'
             elif dt == '<f8':
-                return '{'+str(i)+':.4}' 
+                return '{'+str(i)+':.4f}' 
 
         fmt = [cfmt(i,dt) for i,(key,dt) in enumerate(dtype.descr)]
         self.fmt = ' '.join(fmt)+'\n'
