@@ -50,25 +50,12 @@ standard:
   filter_dir: 'filters'
   sed_dir: 'seds'
   p_min: 0.01
-  merge_peaks: False
-  interactive: False
-  plots: False
-  probs_lite: True
   mag: True
   spectra: 'spectras.txt'
   get_z: True
   use_par: True
   nthr: 0
   columns: 'mock.columns'
-  add_spec_prob: False
-  zc: False
-  nmax: False
-  probs: False
-  probs2: False
-  convolve_p: False
-  photo_errors: True
-  z_thr: 0.
-  color: False
   zp_offsets: 0.
   ntypes: []
   madau: False
