@@ -39,6 +39,8 @@ def err_magnitude(conf, zdata, mag):
 def add_noise(conf, zdata, data):
     """Add noise in the magnitudes."""
 
+    raise NotImplemented('Not updated with the latest changes..')
+
     # Note that the data is still in magnitudes even if the variable names
     # tell something else.. Yes, its confusing...
 
@@ -52,60 +54,11 @@ def add_noise(conf, zdata, data):
         for j in range(nfilters):
             add_mag[i,j] += normal(scale=err_mag[i,j])
 
-#    mag_filter = np.logical_not(np.logical_or(mag == conf['unobs'], \
-#                                              mag == conf['undet']))
-
-#    mag_filter = err_mag < 0.5
     to_use = err_mag < 0.5
     mag = data['f_obs']
     mag += to_use*add_mag
     data['f_obs'] = mag
     data['ef_obs'] = np.where(to_use, err_mag, -99.)
 
-#    pdb.set_trace()
 
     return zdata
-
-def mega1(conf, zdata, data):
-
-    assert conf['mag'], 'Only magnitudes are implemented'
-    f_obs = data['f_obs']
-    ef_obs = data['ef_obs']
-    f1 = f_obs.copy()
-    ef1 = ef_obs.copy()
-
-    if False:
-        seen = np.logical_and(0. < f_obs, f_obs < conf['undet'])
-        # Multiplied with one to test if not multiple values are true
-        # at once...
-        assert (1*seen + 1*not_seen + 1*not_obs == 1).all()
-
-    not_seen = (ef_obs == conf['undet'])
-    not_obs = (ef_obs == conf['unobs'])
-
-    seen = np.logical_not(np.logical_or(not_seen, not_obs))
-#    pdb.set_trace()
-    ef_obs = np.clip(ef_obs, conf['min_magerr'], np.inf)
-
-#    pdb.set_trace()
-    # Convert to fluxes
-    f_obs = seen*(10**(-0.4*f_obs))
-    ef_obs = seen*(10**(0.4*ef_obs)-1)*f_obs
-
-    # One exception...
-    ef_obs += not_seen*(10**(-0.4*np.abs(ef_obs)))
-
-    assert (0. <= f_obs).all()
-    ef_obs = np.where(not_obs, 1e108, ef_obs)
-
-    return f_obs, ef_obs
-
-def fix_fluxes(conf, zdata, data):
-    """Manipulate the flux values."""
-
-    if conf['add_noise']:
-        add_noise(conf, zdata, data)
-
-    f_obs, ef_obs = mega1(conf, zdata, data)
-
-    return f_obs,ef_obs
