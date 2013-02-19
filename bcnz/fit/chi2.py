@@ -28,15 +28,30 @@ def prob_interval(p,x,plim):
     """
 
     # Upper and lower limits.
-    q1 = 0.5*(1-plim)
-    q2 = 1. - q1
+    qmin = 0.5*(1-plim)
+    qmax = 1. - qmin
 
     cdf = p.cumsum(axis=1)
-    j1 = np.apply_along_axis(np.searchsorted,1,cdf,q1)
-    j2 = np.apply_along_axis(np.searchsorted,1,cdf,q2)
-    j2 = np.minimum(j2, p.shape[1] - 1)
+    jmin = np.apply_along_axis(np.searchsorted,1,cdf,qmin)
+    jmax = np.apply_along_axis(np.searchsorted,1,cdf,qmax)
+    jmax = np.minimum(jmax, p.shape[1] - 1)
 
-    return x[j1], x[j2]
+    return x[jmin], x[jmax]
+
+
+def find_odds(p,x,xmin,xmax):
+    """Probabilities in the given intervals."""
+
+    cdf = p.cumsum(axis=1)
+
+    def K(xlim):
+        return np.searchsorted(x, xlim)
+
+    imin = np.apply_along_axis(K, 0, xmin) - 1
+    imax = np.apply_along_axis(K, 0, xmax)
+    gind = np.arange(p.shape[0])
+
+    return (cdf[gind,imax] - cdf[gind,imin])/cdf[:,-1]
 
 class chi2_calc:
     def __init__(self, conf, zdata, data, pop='', dz='',min_rms=''):
@@ -187,9 +202,7 @@ To import priors, you need the following:
         zo1 = zb - dz
         zo2 = zb + dz
 
-        odds = [bpz_useful.odds(p_bayes[i], self.z, zo1[i], zo2[i]) for i \
-                in range(len(zb))]
-        odds = np.array(odds)
+        odds = find_odds(p_bayes, self.z, zo1, zo2)
 
         it_b = pb[range(len(zb)),iz_b].argmax(axis=1)
 
