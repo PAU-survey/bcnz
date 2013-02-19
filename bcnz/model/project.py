@@ -18,11 +18,9 @@ class model_mag:
     def set_ninterp(self, filters):
         """Number of interpolation points for each filter."""
 
-        self.ninterp = dict((name,200) for name in filters)
-
-#        nri = [(30 if re.match('PAU/\d+.res', name) else 200)  for name in self.all_filters]
-#        self.ninterp = dict((name, x) for name, x in zip(self.all_filters, nri))
-
+        # Quite high accuracy. It can be reduced, but in practice
+        # you don't care since its only going to be calculated once.
+        self.ninterp = dict((name, 200) for name in filters)
 
     def __init__(self, conf, zdata):
         self.conf = conf
@@ -88,7 +86,6 @@ class model_mag:
                 y_new = splev(z, spl)
 
                 f_mod[:,i,j] = y_new
-
 
         return f_mod
 

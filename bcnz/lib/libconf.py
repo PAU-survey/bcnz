@@ -12,7 +12,7 @@ class conf(dict):
     msg_overwrite = 'Overwriting some input files.'
 
     def __init__(self, myconf):
-        self.update(bcnz.config.standard.conf.copy()) # HACK
+        self.update(bcnz.config.conf['standard'].copy()) # HACK
         self.update(myconf)
         self._test_zrange()
 

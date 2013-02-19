@@ -1,11 +1,12 @@
 #!/usr/bin/env python
+# encoding: UTF8
+
 import os
 import pdb
 import numpy as np
 from scipy.integrate import trapz
 from scipy.interpolate import splev, splrep
 
-clight_AHz=2.99792458e18
 
 class sed_filters:
     def find_sky_spl(self, conf):
@@ -17,29 +18,26 @@ class sed_filters:
     def find_response_spls(self, conf, filters):
         """Create response splines for different filters."""
 
-        spls = {}
-        r_const = {}
-        rlim = {}
-        in_rD = {}
-        in_skyD = {}
-
+        clight_AHz=2.99792458e18
         sky_spl = self.find_sky_spl(conf)
 
+        spls, r_const, rlim, in_rD, in_skyD = 5*({},)
         d = os.path.join(conf['data_dir'], conf['filter_dir'])
         for filter_name in filters:
             file_path = os.path.join(d, '%s.res' % filter_name)
             x,y = np.loadtxt(file_path, unpack=True)
 
-            rlim[filter_name] = tuple(x[(x != 0).nonzero()[0][[0,-1]]])
+            # Determines the range where the filter curve is non-zero.
+            # Cryptic, but works.
+            rlim[filter_name] = tuple(x[(y != 0).nonzero()[0][[0,-1]]])
             rlim[filter_name] = (x[0], x[-1])
+
             # Normalization and CCD effects.
             y2 = y*x
             #r_const[file_name] = 1./simps(y/x/x,x) / clight_AHz
             r_const[filter_name] = 1./trapz(y2/x/x,x) / clight_AHz
             spls[filter_name] = splrep(x, y2)
-
             in_rD[filter_name] = trapz(y/x, x)
-
             y_sky = splev(x, sky_spl)
             in_skyD[filter_name] = trapz(y*y_sky, x)
 

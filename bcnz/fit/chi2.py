@@ -206,27 +206,6 @@ To import priors, you need the following:
 #        pdb.set_trace()
         return np.rec.fromarrays(A, self.dtype)
 
-
-        self.iz = iz
-        self.it = it
-        self.min_chi2 = min_chi2
-        self.pb = pb
-        self.p_bayes = p_bayes
-        self.iz_b = iz_b
-        self.zb = zb
-        self.odds = odds
-        self.it_b = it_b
-
-        self.tt_b = tt_b
-        self.tt_ml = tt_ml
-
-        self.z1 = z1
-        self.z2 = z2
-
-        self.imin = imin
-        self.imax = imax
-
-
     def blocks(self):
         """Iterate over the different blocks."""
 

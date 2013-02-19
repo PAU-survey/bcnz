@@ -146,13 +146,11 @@ class first_parser:
 def parse_arguments():
     """Parse input arguments."""
 
-    # Detects which configuration file to use. This enable
-    # b
+    # Detects which configuration file to use.
     config_file = first_parser()()
 
     try:
-        m = getattr(bcnz.config, config_file)
-        def_conf = getattr(m, 'conf')
+        def_conf = bcnz.config.conf[config_file]
     except AttributeError:
         raise
 

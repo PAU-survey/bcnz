@@ -1,0 +1,6 @@
+bright:
+  interp: 2
+  prior:  'pau'
+  dz: 0.001
+  odds: 0.68
+  min_rms: 0.0055
