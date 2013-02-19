@@ -7,6 +7,7 @@ import time
 import sys
 import numpy as np
 from scipy.ndimage.interpolation import zoom
+import scipy.stats
 
 import bcnz
 import bpz_useful
@@ -20,6 +21,22 @@ except ImportError:
     use_numexpr = False
 
 np.seterr(under='ignore')
+
+def prob_interval(p,x,plim):
+    """Limits enclosing probabilities plim. Handles
+       stacks of probabilities.
+    """
+
+    # Upper and lower limits.
+    q1 = 0.5*(1-plim)
+    q2 = 1. - q1
+
+    cdf = p.cumsum(axis=1)
+    j1 = np.apply_along_axis(np.searchsorted,1,cdf,q1)
+    j2 = np.apply_along_axis(np.searchsorted,1,cdf,q2)
+    j2 = np.minimum(j2, p.shape[1] - 1)
+
+    return x[j1], x[j2]
 
 class chi2_calc:
     def __init__(self, conf, zdata, data, pop='', dz='',min_rms=''):
@@ -67,7 +84,7 @@ class chi2_calc:
         self.f_mod2 = f_mod2
 
         q = 0.5*(1.-self.conf['odds'])
-        oi = np.abs(norm.ppf(q))
+        oi = np.abs(scipy.stats.norm.ppf(q))
 
         self.odds_pre = oi * self.min_rms 
 #        self.z = z
@@ -187,12 +204,9 @@ To import priors, you need the following:
         it_b = np.where(test,  -1., it_b)
         tt_b = np.where(test,  -1., tt_b)
 
-        _z_odds = [bpz_useful.interval(x,self.z,self.conf['odds']) for x in p_bayes]
-        z1, z2 = zip(*_z_odds)
-        zb_min = np.array(z1)
-        zb_max = np.array(z2) 
+        zb_min, zb_max = prob_interval(p_bayes, self.z, self.conf['odds'])
 
-        # Set values.
+        # Set values. Not exactly the right way....
         z_ml = self.z[iz]
         m_0 = self.data['m_0'][imin:imax]
         z_s = self.data['z_s'][imin:imax]
