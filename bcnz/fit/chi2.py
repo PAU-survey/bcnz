@@ -66,8 +66,9 @@ class chi2_calc:
         self.nt = nt
         self.f_mod2 = f_mod2
 
-        oi = bpz_useful.inv_gauss_int(float(self.conf['odds']))
-        
+        q = 0.5*(1.-self.conf['odds'])
+        oi = np.abs(norm.ppf(q))
+
         self.odds_pre = oi * self.min_rms 
 #        self.z = z
 
