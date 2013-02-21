@@ -12,12 +12,13 @@ def comb(A,B):
 
 # Horrible code. In the process of converting to YAML.
 d = '/Users/marberi/photoz/bcnz/bcnz/config'
+all_pop = ['bright', 'faint', 'mice', 'des']
 conf = {}
-for pop_name in ['standard', 'bright', 'faint', 'mice']:
+for pop_name in all_pop+['standard']:
     file_path = os.path.join(d, '{}.yaml'.format(pop_name))
     conf[pop_name] = yaml.load(open(file_path))[pop_name]
 
-for pop_name in ['bright', 'faint', 'mice']:
+for pop_name in all_pop:
     pop = conf['standard'].copy()
     pop.update(conf[pop_name])
 

@@ -37,10 +37,18 @@ class zdata(dict):
     def use_filters(self):
         """Filters to use."""
 
-        return ['up', 'g']
+        filters = self.conf['filters']
+        exclude = self.conf['exclude']
+
+        filters = [x for x in filters if not x in exclude]
+#        filters = [(x if not in exclude) for x in filters] # if not in exclude]
+
+        return filters
 
 
     def check_filenames(self):
+        """Test if the filter and sed files are there."""
+
         def sel_files(self, d, suf):
             g = os.path.join(self.conf['data_dir'], d,
                              '*.{0}'.format(suf))

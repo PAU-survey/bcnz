@@ -59,10 +59,13 @@ class read_cat(filebase.filebase):
     def _read_all(self):
         """Read all entries."""
 
-        data = {
-          'mag': np.loadtxt(self.file_name, usecols=self.cols['mag_cols']),
-          'emag': np.loadtxt(self.file_name, usecols=self.cols['emag_cols']),
-        }
+        try:
+            data = {
+              'mag': np.loadtxt(self.file_name, usecols=self.cols['mag_cols']),
+              'emag': np.loadtxt(self.file_name, usecols=self.cols['emag_cols']),
+            }
+        except IndexError:
+            raise IndexError('Could not load columns from file: {}'.format(self.file_name))
 
         keys, cols = zip(*self.col_other.items())
         A = np.loadtxt(self.file_name, usecols=cols, unpack=True)
