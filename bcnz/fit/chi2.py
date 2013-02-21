@@ -49,6 +49,7 @@ def find_odds(p,x,xmin,xmax):
 
     imin = np.apply_along_axis(K, 0, xmin) - 1
     imax = np.apply_along_axis(K, 0, xmax)
+    imax = np.minimum(imax, p.shape[1] - 1)
     gind = np.arange(p.shape[0])
 
     return (cdf[gind,imax] - cdf[gind,imin])/cdf[:,-1]

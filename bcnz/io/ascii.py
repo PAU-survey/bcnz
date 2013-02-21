@@ -67,6 +67,8 @@ class read_cat(filebase.filebase):
         except IndexError:
             raise IndexError('Could not load columns from file: {}'.format(self.file_name))
 
+        data['emag'] = 0.02*np.ones(data['emag'].shape) # HACK, So I can get results...
+
         keys, cols = zip(*self.col_other.items())
         A = np.loadtxt(self.file_name, usecols=cols, unpack=True)
         for i,key in enumerate(keys):

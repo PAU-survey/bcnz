@@ -24,7 +24,7 @@ def setid_m0s(conf, data):
     else:
         ids = np.arange(data['mag'].shape[0])
 
-    data['ids'] = ids
+    data['id'] = ids
 
     if 'm_0' in data:
         data['m_0'] += conf['delta_m_0']
