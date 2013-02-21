@@ -26,19 +26,27 @@ def prepare_tasks(conf, zdata):
     for obs_file in zdata['cat_files']:
         out_file = '%s.bcnz' % os.path.splitext(obs_file)[0]
 
+        print('obs_file', obs_file)
 #        pdb.set_trace()
         in_iter = bcnz.io.ascii.read_cat(conf, zdata, obs_file)
         out_table = bcnz.io.ascii.write_cat(conf, out_file)
 
-        tasks.append(bcnz.tasks.pzcat(conf, in_iter, out_table))
+        tasks.append(bcnz.tasks.pzcat(conf, zdata, in_iter, out_table))
 
     return tasks
+
+def run(task):
+    """The pool.map require a function. Defining a closure inside
+       run_tasks or using lambda fails badly.
+    """
+
+    task.run()
 
 def run_tasks(conf, zdata, tasks):
     """Execute either using multiprocessing or just run tasks in serial."""
 
-    def run(task):
-        task.run()
+#    def run(task):
+#        task.run()
 
     use_par = conf['use_par'] and 1 < len(zdata['cat_files'])
     if use_par:

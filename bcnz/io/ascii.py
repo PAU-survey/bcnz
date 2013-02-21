@@ -23,6 +23,17 @@ class read_cat(filebase.filebase):
         assert (self.cols['zp_errors'] == 0.).all(), self.msg_notsupported
         assert (self.cols['zp_offsets'] == 0.).all(), self.msg_notsupported
 
+    def open(self):
+        """Not relevant for the ascii files."""
+
+        pass
+
+    def close(self):
+        """Not relevant for the ascii files."""
+
+        pass
+
+
     def _read_columns_file(self, file_name):
         """Convert each line in the columns file to a tuple."""
 
@@ -90,7 +101,10 @@ class write_cat:
     """Write ascii catalog to file."""
 
     def __init__(self, conf, out_file):
-        self.fb_out = open(out_file, 'w')
+        self.out_file = out_file
+
+    def open(self):
+        self.fb_out = open(self.out_file, 'w')
 
     def close(self):
         self.fb_out.close()
