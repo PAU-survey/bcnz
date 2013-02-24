@@ -9,7 +9,8 @@ name = 'Martin B. Eriksen'
 email = 'martin.b.eriksen@gmail.com'
 
 data_files = [
-    ('bcnz/config', glob.glob('bcnz/config/*.yaml'))]
+    ('bcnz/config', glob.glob('bcnz/config/*.yaml')),
+    ('bcnz/descr', glob.glob('bcnz/descr/*.yaml'))]
 
 setup(
     name = 'bcnz',
