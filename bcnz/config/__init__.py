@@ -11,7 +11,7 @@ def comb(A,B):
         assert A[key] == B[key], key
 
 # Horrible code. In the process of converting to YAML.
-d = '/Users/marberi/photoz/bcnz/bcnz/config'
+d = os.path.dirname(__file__)
 all_pop = ['bright', 'faint', 'mice', 'des']
 conf = {}
 for pop_name in all_pop+['standard']:
