@@ -4,7 +4,7 @@
 import pdb
 import numpy as np
 
-import filebase
+from bcnz.io import filebase
 
 class read_cat(filebase.filebase):
     """Read an ascii catalogs. The columns file reading is directly
@@ -55,8 +55,9 @@ class read_cat(filebase.filebase):
     def _columns(self):
         """Split the input from the columns file in different parts."""
 
+        # Grouping similar information for different filters together.
         col2, col4 = self._read_columns_file(self.conf['columns'])
-        A = zip(*[col4[x] for x in self.zdata['filters']])
+        A = list(zip(*[col4[x] for x in self.zdata['filters']]))
 
         cols = {}
         cols['mag_cols'] = (np.array(A[0]).astype(np.int) - 1).tolist()
@@ -90,12 +91,15 @@ class read_cat(filebase.filebase):
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         if not self.has_read:
             self.has_read = True
             return self._read_all()
 
         raise StopIteration
+
+    # Python 2.x compatability.
+    next = __next__
 
 class write_cat:
     """Write ascii catalog to file."""

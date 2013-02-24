@@ -3,4 +3,4 @@
 
 import pdb
 
-from zdata import zdata
+from bcnz.zdata.zdata import zdata

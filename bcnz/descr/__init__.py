@@ -7,4 +7,4 @@ import yaml
 
 d = os.path.dirname(__file__)
 file_path = os.path.join(d, 'descr.yaml')
-standard = yaml.load(file(file_path))['descr']
+standard = yaml.load(open(file_path))['descr']

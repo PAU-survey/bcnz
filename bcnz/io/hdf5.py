@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 # encoding: UTF8
 import pdb
-import tables
 
+try:
+    import tables
+except ImportError:
+    pass
 
 def create_descr(cols):
     def colobj(i, col):

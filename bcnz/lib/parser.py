@@ -81,7 +81,7 @@ def test_defaults(def_conf, descr):
     if missing_descr:
         msg = 'Missing descriptions for: %s.' % list(missing_descr)
 
-        raise ValueError, msg
+        raise ValueError(msg)
 
 class main_parser:
     def __init__(self, def_conf, descr):
@@ -101,7 +101,7 @@ class main_parser:
         action.def_conf = def_conf
 
         parser.add_argument('catalog', help='Galaxy catalog.')
-        for var, def_val in def_conf.iteritems():
+        for var, def_val in def_conf.items():
             arg = '-%s' % var
             nargs = '*' if (type(def_val) in comb_types) else '?'
             h = descr[var]
@@ -120,7 +120,7 @@ class main_parser:
         vals = [getattr(args, x) for x in keys]
 
         # Remove entries set to None.
-        is_set = lambda (x,y): not isinstance(y, type(None))
+        is_set = lambda X: not isinstance(X[1], type(None))
         to_update = dict(filter(is_set, zip(keys,vals)))
         
         conf = self.def_conf.copy()

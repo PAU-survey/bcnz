@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
-from model import add_model
-from project import model_mag
-from response import sed_filters
+from bcnz.model.model import add_model
+from bcnz.model.project import model_mag
+from bcnz.model.response import sed_filters
