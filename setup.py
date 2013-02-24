@@ -27,8 +27,9 @@ setup(
     license = 'Read LICENSE.txt',
     maintainer = name,
     maintainer_email = email,
+    scripts = ['bcnz/bin/bcnz.py'],
     entry_points = {
         'brownthrower.task': [
-          'pzcat = sci.tasks.pzcat']
+          'pzcat = bcnz.tasks.pzcat'],
     }
 )
