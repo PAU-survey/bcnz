@@ -1,0 +1,15 @@
+des:
+  ncalc: 100
+  undet: 99
+  zmax: 2.
+  use_split: False
+  catalog: "/Users/marberi/data/des_mice/*.dat"
+  columns: "/Users/marberi/photoz/run/des_data/mock.columns"
+  filters: ['des_g', 'des_r', 'des_i', 'des_z', 'des_Y']
+  data_dir: '/Users/marberi/photoz/run/des_data'
+  filter_dir: 'filters/DES'
+  use_cache: False
+  use_par: True
+  dz: 0.005
+  odds: 0.68
+  min_rms: 0.055
