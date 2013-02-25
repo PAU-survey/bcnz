@@ -1,2 +1,6 @@
 *.pyc
 *.swp
+*-e
+bcnz.egg-info/
+build/
+dist/
