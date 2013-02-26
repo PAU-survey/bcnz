@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
+# Calibrate the priors. Possible temporary solution.
 import os
 import pdb
 import sys
@@ -15,8 +16,13 @@ def setup_path():
     dir_path = os.path.join(os.path.dirname(__file__), '../..')
     sys.path.insert(0, os.path.abspath(dir_path))
 
-setup_path()
-pdb.set_trace()
-import bcnz
+def main():
+    setup_path()
+    import bcnz
+    myconf = bcnz.lib.parser.parse_arguments()
 
-bcnz.tasks.priors()
+    task = bcnz.tasks.priors(myconf)
+    task.run()
+
+if __name__ == '__main__':
+    main()

@@ -1,4 +1,6 @@
 standard:
+  in_format: 'ascii'
+  out_format: 'ascii'
   use_priors: True
   ncalc: 100
   nmax: 10000

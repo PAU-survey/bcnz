@@ -1,4 +1,6 @@
 descr:
+  in_format: 'Format of the input files.'
+  out_format: 'Format of the output files.'
   filters: 'Filters to use'
   use_priors: 'Use priors'
   ncalc: 'Number of galaxies to calculate at once.'
