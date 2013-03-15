@@ -1,0 +1,3 @@
+The software is currently not public but distributed to the PAU
+collaboration. It will later be distributed under the MIT
+lisence.

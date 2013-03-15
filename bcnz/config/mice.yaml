@@ -1,0 +1,7 @@
+mice:
+  undet: 99
+  zmax: 2.
+  use_split: True
+  catalog: "/Users/marberi/data/pau_mice/*.dat"
+  use_cache: False
+  use_par: False

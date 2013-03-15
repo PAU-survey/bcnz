@@ -1,0 +1,6 @@
+faint:
+  interp: 2
+  prior: 'pau'
+  dz: 0.005
+  odds: 0.68
+  min_rms: 0.055
