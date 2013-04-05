@@ -77,3 +77,6 @@ standard:
   dz: 0.01
   odds: 0.68
   min_rms: 0.05
+  hdf5_node: '/cat/cat'
+  pre_mag: ''
+  pre_err: ''

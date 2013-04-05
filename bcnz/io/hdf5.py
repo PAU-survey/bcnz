@@ -49,12 +49,13 @@ class read_cat(filebase.filebase):
         self.conf = conf
         self.file_name = file_name
 
+        pdb.set_trace()
     def open(self):
         self.i = 0 
         self.catalog = tables.openFile(self.file_name)
 
         self.nmax = self.conf['nmax']
-        self.cat = self.catalog.getNode('/mock/mock')
+        self.cat = self.catalog.getNode(self.conf['hdf5_node'])
         self.mag_fields = ['mag_'+x for x in self.conf['filters']]
         self.err_fields = ['err_'+x for x in self.conf['filters']]
         self.nf = len(self.conf['filters'])

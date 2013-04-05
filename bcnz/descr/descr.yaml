@@ -77,3 +77,6 @@ descr:
   odds: 'Odds'
   min_rms: 'Intrinsic photo-z scatter.'
   spectra: 'List of spectras'
+  hdf5_node: 'Node in HDF5 with galaxy mock.'
+  pre_mag: 'Prefix to magnitude field in HDF5 catalogs.'
+  pre_err: 'Prefix to magnitude error field in HDF5 catalogs.'

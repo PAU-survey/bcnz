@@ -10,3 +10,7 @@ sv:
   interp: 8
   sed_dir: '/Users/marberi/work/des/CWWSB'
   spectra: '/Users/marberi/work/des/CWWSB/CWWSB.list'
+  seds: ['El_cww','Sbc_cww','Scd_cww','Im_cww','SB3_kin','SB2_kin']
+  sky_spec: '/Users/marberi/photoz/run/sky_spectrum.txt'
+  pre_mag: 'mag_detmodel_'
+  pre_err: 'err_detmodel_'
