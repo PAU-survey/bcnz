@@ -80,3 +80,4 @@ standard:
   hdf5_node: '/cat/cat'
   pre_mag: ''
   pre_err: ''
+  from_bcnz: ['id', 'zb', 'zb_min', 'zb_max', 't_b', 'odds', 'z_ml', 't_ml', 'chi2', 'z_s', 'm_0']

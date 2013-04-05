@@ -49,15 +49,23 @@ class read_cat(filebase.filebase):
         self.conf = conf
         self.file_name = file_name
 
-        pdb.set_trace()
+        filters = zdata['filters']
+        pre_mag = self.conf['pre_mag']
+        pre_err = self.conf['pre_err']
+
+#        self.conv_mag = {'{}{}'.format(pre_mag, x):x for x in filters}
+#        self.conv_err = {'{}{}'.format(pre_err, x):x for x in filters}
+        self.mag_fields = [pre_mag+x for x in self.conf['filters']]
+        self.err_fields = [pre_err+x for x in self.conf['filters']]
+
+        self.fields_in = [x for x in self.conf['order'] if not x in self.conf['from_bcnz']]
+
     def open(self):
         self.i = 0 
         self.catalog = tables.openFile(self.file_name)
 
         self.nmax = self.conf['nmax']
         self.cat = self.catalog.getNode(self.conf['hdf5_node'])
-        self.mag_fields = ['mag_'+x for x in self.conf['filters']]
-        self.err_fields = ['err_'+x for x in self.conf['filters']]
         self.nf = len(self.conf['filters'])
 
     def close(self):
@@ -71,20 +79,23 @@ class read_cat(filebase.filebase):
         nmax = self.nmax
         nf = self.nf
 
-        hmm = self.cat.read(start=i*nmax, stop=(i+1)*nmax)
-        ngal_read = hmm.shape[0]
+        tbl_array = self.cat.read(start=i*nmax, stop=(i+1)*nmax)
+        ngal_read = tbl_array.shape[0]
 
         if not ngal_read:
             raise StopIteration
 
-        data = {'z_s': hmm['z_s'], 'm_0': hmm['m_0']}
+        data = {}
+        for field in self.fields_in:
+            data[field] = tbl_array[field]
+
         mag = np.zeros((ngal_read, nf))
         err = np.zeros((ngal_read, nf))
         mag_fields = self.mag_fields
         err_fields = self.err_fields
         for j in range(nf):
-            mag[:,j] = hmm[mag_fields[j]]
-            err[:,j] = hmm[err_fields[j]]
+            mag[:,j] = tbl_array[mag_fields[j]]
+            err[:,j] = tbl_array[err_fields[j]]
 
         data['mag'] = mag
         data['emag'] = err

@@ -13,4 +13,6 @@ sv:
   seds: ['El_cww','Sbc_cww','Scd_cww','Im_cww','SB3_kin','SB2_kin']
   sky_spec: '/Users/marberi/photoz/run/sky_spectrum.txt'
   pre_mag: 'mag_detmodel_'
-  pre_err: 'err_detmodel_'
+  pre_err: 'magerr_detmodel_'
+#  order: ['id', 'zb', 'zb_min', 'zb_max', 't_b', 'odds', 'z_ml', 't_ml', 'chi2', 'z_s', 'm_0']
+  order: ['zb', 'ra', 'dec', 'odds', 'spread_model_i']
