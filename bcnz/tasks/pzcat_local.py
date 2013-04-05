@@ -24,7 +24,6 @@ def prepare_tasks(conf, zdata):
 
     tasks = []
     for obs_file in zdata['cat_files']:
-        print('obs_file', obs_file)
         out_file = '%s.bcnz' % os.path.splitext(obs_file)[0]
 
         in_fmt = conf['in_format']

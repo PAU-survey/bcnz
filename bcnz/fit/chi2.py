@@ -197,6 +197,8 @@ To import priors, you need the following:
         iz_b = p_bayes.argmax(axis=1)
         zb = self.z[iz_b]
 
+#        pdb.set_trace()
+
         # Calculate odds.
         dz = self.odds_pre*(1.+zb)
         zo1 = zb - dz

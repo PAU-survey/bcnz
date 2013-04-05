@@ -1,4 +1,5 @@
 descr:
+  max_magerr: 'Maximum magnitude error before removing the observation.'
   in_format: 'Format of the input files.'
   out_format: 'Format of the output files.'
   filters: 'Filters to use'

@@ -56,7 +56,7 @@ class read_cat(filebase.filebase):
         self.nmax = self.conf['nmax']
         self.cat = self.catalog.getNode('/mock/mock')
         self.mag_fields = ['mag_'+x for x in self.conf['filters']]
-        self.err_fields = ['mag_'+x for x in self.conf['filters']]
+        self.err_fields = ['err_'+x for x in self.conf['filters']]
         self.nf = len(self.conf['filters'])
 
     def close(self):
@@ -66,7 +66,6 @@ class read_cat(filebase.filebase):
         return self
 
     def next(self):
-        t1 = time.time()
         i = self.i
         nmax = self.nmax
         nf = self.nf
@@ -90,8 +89,7 @@ class read_cat(filebase.filebase):
         data['emag'] = err
 
         self.i += 1
-        dt1 = time.time() - t1
-        print('time', dt1)
+
         return data
 
 
