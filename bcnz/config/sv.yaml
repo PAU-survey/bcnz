@@ -1,0 +1,12 @@
+
+sv:
+  catalog: '/Users/marberi/data/sv/dessv.hdf5'
+  in_format: 'hdf5'
+  filter_dir: '/Users/marberi/work/des/DES@BLANCO'
+  filters: ['g', 'r', 'i', 'z', 'y']
+  min_magerr: 0.05
+  max_magerr: 0.5
+  min_rms: 0.067
+  interp: 8
+  sed_dir: '/Users/marberi/work/des/CWWSB'
+  spectra: '/Users/marberi/work/des/CWWSB/CWWSB.list'
