@@ -20,11 +20,11 @@ def toflux(conf, zdata, data):
 
     B1 = (mag == conf['undet'])
     B2 = (emag == conf['undet'])
-    not_seen = np.logical_or(B1, B2)
+    not_det = np.logical_or(B1, B2)
 #    not_obs = np.logical_or(emag == conf['unobs'], conf['max_magerr'] < emag)
-
-    seen = np.logical_not(np.logical_or(not_seen, not_obs))
-    assert (1*seen + 1*not_seen + 1*not_obs == 1).all()
+    not_use = np.logical_or(not_det, not_obs)
+    touse = np.logical_not(not_use)
+    assert (1*touse + 1*not_det + 1*not_obs == 1).all()
 
 #    print(np.min(emag), np.max(emag))
 #    pdb.set_trace()
@@ -32,19 +32,19 @@ def toflux(conf, zdata, data):
     # Clipping on mag value since some values can be unreasonable high..
     emag = np.clip(emag, conf['min_magerr'], 150.)
 
-    assert np.max(np.abs(seen*mag)) < 30
-    assert np.max(seen*emag) < 5.
+    assert np.max(np.abs(touse*mag)) < 30
+    assert np.max(touse*emag) < 5.
 
     # Convert to fluxes
 #    X = scipy.seterr(over='ignore')
-    f_obs = seen*(10**(-0.4*mag))
-    ef_obs = seen*(10**(0.4*emag)-1)*f_obs
+    f_obs = touse*(10**(-0.4*mag))
+    ef_obs = touse*(10**(0.4*emag)-1)*f_obs
 
     # One exception...
 #    ef_obs += not_seen*(10**(-0.4*np.abs(ef_obs)))
 
     assert (0. <= f_obs).all()
-    ef_obs = np.where(not_obs, 1e108, ef_obs)
+    ef_obs = np.where(not_use, 1e108, ef_obs)
 
     data['f_obs'] = f_obs
     data['ef_obs'] = ef_obs
