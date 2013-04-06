@@ -221,13 +221,21 @@ To import priors, you need the following:
 
         zb_min, zb_max = prob_interval(p_bayes, self.z, self.conf['odds'])
 
-        # Set values. Not exactly the right way....
+        # TODO: Find a better approach.
         z_ml = self.z[iz]
         m_0 = self.data['m_0'][imin:imax]
-        z_s = self.data['z_s'][imin:imax]
         chi2 = red_chi2
         t_b = tt_b+1
         t_ml = tt_ml+1
+        if 'z_s' in self.data:
+            z_s = self.data['z_s'][imin:imax]
+
+        # Added right before the LBNL DES conference.
+        ra = self.data['ra'][imin:imax]
+        dec = self.data['dec'][imin:imax]
+        spread_model_i = self.data['spread_model_i'][imin:imax]
+
+#        pdb.set_trace()
 
         id = self.data['id'][imin:imax]
         loc = locals()
