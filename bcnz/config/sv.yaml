@@ -16,3 +16,6 @@ sv:
   pre_err: 'magerr_detmodel_'
 #  order: ['id', 'zb', 'zb_min', 'zb_max', 't_b', 'odds', 'z_ml', 't_ml', 'chi2', 'z_s', 'm_0']
   order: ['zb', 'ra', 'dec', 'odds', 'spread_model_i']
+
+  unobs: 0.
+  undet: 99.
