@@ -58,7 +58,9 @@ class read_cat(filebase.filebase):
         self.mag_fields = [pre_mag+x for x in self.conf['filters']]
         self.err_fields = [pre_err+x for x in self.conf['filters']]
 
-        self.fields_in = [x for x in self.conf['order'] if not x in self.conf['from_bcnz']]
+        fields_in = {x:x for x in self.conf['order'] if not x in self.conf['from_bcnz']}
+        fields_in['m_0'] = pre_mag+self.conf['prior_mag']
+        self.fields_in = fields_in 
 
     def open(self):
         self.i = 0 
@@ -86,8 +88,8 @@ class read_cat(filebase.filebase):
             raise StopIteration
 
         data = {}
-        for field in self.fields_in:
-            data[field] = tbl_array[field]
+        for to_field, from_field in self.fields_in.iteritems():
+            data[to_field] = tbl_array[from_field]
 
         mag = np.zeros((ngal_read, nf))
         err = np.zeros((ngal_read, nf))

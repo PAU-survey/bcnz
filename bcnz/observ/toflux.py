@@ -13,7 +13,6 @@ def toflux(conf, zdata, data):
     mag = data['mag']
     emag = data['emag']
 
-    print('XXXX')
     A1 = mag == conf['unobs']
     A2 = emag == conf['unobs']
     A3 = conf['max_magerr'] < emag
@@ -40,8 +39,6 @@ def toflux(conf, zdata, data):
 #    X = scipy.seterr(over='ignore')
     f_obs = seen*(10**(-0.4*mag))
     ef_obs = seen*(10**(0.4*emag)-1)*f_obs
-    scipy.seterr(**X)
-    pdb.set_trace()
 
     # One exception...
 #    ef_obs += not_seen*(10**(-0.4*np.abs(ef_obs)))

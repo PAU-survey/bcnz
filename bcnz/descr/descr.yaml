@@ -81,3 +81,4 @@ descr:
   pre_mag: 'Prefix to magnitude field in HDF5 catalogs.'
   pre_err: 'Prefix to magnitude error field in HDF5 catalogs.'
   from_bcnz: 'Fields BCNZ can calculate.'
+  prior_mag: 'Filter used to calibrate the priors.'
