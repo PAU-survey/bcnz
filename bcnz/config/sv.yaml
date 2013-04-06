@@ -1,5 +1,10 @@
 
 sv:
+  pr_a: [3.588, 2.734, 2.734, 1.689, 1.689, 1.689]
+  pr_zo: [0.608, 0.479, 0.479, 0.226, 0.226, 0.226]
+  pr_km: [0.059, 0.101, 0.101, 0.105, 0.105, 0.105]
+  pr_k_t: [0.477, 0.0, 0.0]
+
   catalog: '/Users/marberi/data/sv/dessv.hdf5'
   in_format: 'hdf5'
   filter_dir: '/Users/marberi/work/des/DES@BLANCO'
