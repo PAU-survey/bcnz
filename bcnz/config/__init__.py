@@ -12,7 +12,7 @@ def comb(A,B):
 
 # Horrible code. In the process of converting to YAML.
 d = os.path.dirname(__file__)
-all_pop = ['bright', 'faint', 'mice', 'des']
+all_pop = ['bright', 'faint', 'mice', 'des', 'sv']
 conf = {}
 for pop_name in all_pop+['standard']:
     file_path = os.path.join(d, '{}.yaml'.format(pop_name))
