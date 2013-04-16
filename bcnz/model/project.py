@@ -95,9 +95,12 @@ class model_mag:
         dz_ab = self.conf['dz_ab']
 
         z_ab = np.arange(0., zmax_ab, dz_ab)
-        d = os.path.join(self.conf['cache_dir'], self.conf['ab_dir'])
+        ab_dir = os.path.join(self.conf['cache_dir'], self.conf['ab_dir'])
+        if not os.path.exists(ab_dir):
+            os.mkdir(ab_dir)
+
         for filter_name in filters:
-            self.proj_filter(d, z_ab, filter_name)
+            self.proj_filter(ab_dir, z_ab, filter_name)
 
 
     def interp(self, f_mod):

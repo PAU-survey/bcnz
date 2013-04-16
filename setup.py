@@ -31,6 +31,6 @@ setup(
     scripts = ['bcnz/bin/bcnz.py'],
     entry_points = {
         'brownthrower.task': [
-          'pzcat = bcnz.tasks.pzcat'],
+          'pzcat = bcnz.tasks.pzcat:pzcat'],
     }
 )
