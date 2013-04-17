@@ -10,16 +10,8 @@ class pzcat:
        Run the photo-z for one sample.
     """
 
-    def __init__(self, myconf, zdata, in_iter, out_table):
+    def __init__(self, myconf):
         self.conf = bcnz.libconf(myconf)
-        if not zdata: 
-            zdata = bcnz.zdata.zdata(self.conf)
-            self.zdata = bcnz.model.add_model(self.conf, zdata)
-        else:
-            self.zdata = zdata
-
-        self.in_iter = in_iter
-        self.out_table = out_table
 
     # Fields to properly implement.
     config_schema = """{}"""
@@ -36,13 +28,26 @@ class pzcat:
     def check_input(cls, inp): pass
 
     @classmethod
-    def check_output(cls, inp): pass
+    def check_output(cls, out): pass
 
-    def run(self):
-        """Estimate the photoz for one input file."""
+    @property
+    def config_schema(self):
+        return self.conf.schema()
+#        pdb.set_trace()
 
+    @property
+    def config_sample(self):
+        return self.conf.config_sample()
+
+    def _run_iter(self, iter_in, out_table):
         self.in_iter.open()
         self.out_table.open()
+
+        if not zdata: 
+            zdata = bcnz.zdata.zdata(self.conf)
+            self.zdata = bcnz.model.add_model(self.conf, zdata)
+        else:
+            self.zdata = zdata
 
         for data in self.in_iter:
             data = bcnz.observ.post_pros(self.conf, self.zdata, data)
@@ -52,3 +57,8 @@ class pzcat:
 
         self.in_iter.close()
         self.out_table.close()
+
+    def run(self):
+        """Estimate the photoz for one input file."""
+
+        raise NotImplementedError()
