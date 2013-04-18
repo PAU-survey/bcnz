@@ -18,10 +18,11 @@ setup(
     packages = find_packages(),
 
     install_requires = [
-        'Python >= 2.7',
         'Numpy',
         'Scipy',
-        'Tables'],
+        'Tables',
+        'argparse'
+    ],
     author = name,
     author_email = email,
     data_files = data_files,
@@ -29,8 +30,4 @@ setup(
     maintainer = name,
     maintainer_email = email,
     scripts = ['bcnz/bin/bcnz.py'],
-    entry_points = {
-        'brownthrower.task': [
-          'pzcat = bcnz.tasks.pzcat:pzcat'],
-    }
 )

@@ -1,6 +1,9 @@
+.project
+.pydevproject
 *.pyc
 *.swp
 *-e
+.settings/
 bcnz.egg-info/
 build/
 dist/
