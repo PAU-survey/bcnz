@@ -10,6 +10,17 @@ import multiprocessing
 import types
 
 import bcnz
+import pzcat
+
+class local_task(pzcat.pzcat):
+    def __init__(self, myconf, zdata, in_iter, out_table):
+        self.conf = bcnz.libconf(myconf)
+        self.zdata = zdata
+        self.in_iter = in_iter
+        self.out_table = out_table 
+
+    def run(self):
+        self._run_iter(self.in_iter, self.out_table)
 
 def prepare_tasks(conf, zdata):
     """Objects encapsulating the runs."""
@@ -31,7 +42,7 @@ def prepare_tasks(conf, zdata):
         in_iter = getattr(bcnz.io, in_fmt).read_cat(conf, zdata, obs_file)
         out_table = getattr(bcnz.io, out_fmt).write_cat(conf, out_file)
 
-        tasks.append(bcnz.tasks.pzcat(conf, zdata, in_iter, out_table))
+        tasks.append(local_task(conf, zdata, in_iter, out_table))
 
     return tasks
 

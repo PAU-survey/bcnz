@@ -43,11 +43,11 @@ class pzcat:
         self.in_iter.open()
         self.out_table.open()
 
-        if not zdata: 
+        if not self.zdata: 
             zdata = bcnz.zdata.zdata(self.conf)
-            self.zdata = bcnz.model.add_model(self.conf, zdata)
+            zdata = bcnz.model.add_model(self.conf, zdata)
         else:
-            self.zdata = zdata
+            zdata = self.zdata
 
         for data in self.in_iter:
             data = bcnz.observ.post_pros(self.conf, self.zdata, data)
