@@ -58,7 +58,9 @@ class read_cat(filebase.filebase):
         self.mag_fields = [pre_mag+x for x in self.conf['filters']]
         self.err_fields = [pre_err+x for x in self.conf['filters']]
 
-        fields_in = {x:x for x in self.conf['order'] if not x in self.conf['from_bcnz']}
+        fields_in = dict(
+            (x, x) for x in self.conf['order'] if not x in self.conf['from_bcnz']
+        )
         fields_in['m_0'] = pre_mag+self.conf['prior_mag']
         self.fields_in = fields_in 
 

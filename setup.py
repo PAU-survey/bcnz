@@ -29,5 +29,5 @@ setup(
     license = 'Read LICENSE.txt',
     maintainer = name,
     maintainer_email = email,
-    scripts = ['bcnz/bin/bcnz.py'],
+    #scripts = ['bcnz/bin/bcnz.py'],
 )
