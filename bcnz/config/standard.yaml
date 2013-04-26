@@ -19,6 +19,8 @@ standard:
   dz_faint: 0.005
   min_rms_bright: 0.0055
   min_rms_faint: 0.055
+  min_magerr: 0.0
+  max_magerr: 10.
   mag_split: 22.5
   use_split: False
   opt: True
