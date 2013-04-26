@@ -18,7 +18,7 @@ setup(
     packages = find_packages(),
 
     install_requires = [
-        'Numpy',
+        'Numpy >= 1.6',
         'Scipy',
         'Tables',
         'argparse'
