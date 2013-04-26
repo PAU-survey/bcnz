@@ -41,7 +41,7 @@ class zdata(dict):
         exclude = self.conf['exclude']
 
         filters = [x for x in filters if not x in exclude]
-#        filters = [(x if not in exclude) for x in filters] # if not in exclude]
+        assert filters, 'No filters specified.'
 
         return filters
 
