@@ -10,6 +10,7 @@ from scipy.ndimage.interpolation import zoom
 import scipy.stats
 
 import bcnz
+import bcnz.priors
 
 # Currently the speedup with numexpr is not high
 # enough to make it mandatory.

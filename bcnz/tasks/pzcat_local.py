@@ -10,6 +10,10 @@ import multiprocessing
 import types
 
 import bcnz
+import bcnz.io
+import bcnz.model
+import bcnz.zdata
+
 import pzcat
 
 class local_task(pzcat.pzcat):

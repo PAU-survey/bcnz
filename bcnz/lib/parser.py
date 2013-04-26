@@ -7,6 +7,8 @@ import sys
 import numpy as np
 
 import bcnz
+import bcnz.config
+import bcnz.descr
 
 # is_true  - Values accepted as Bool true
 # is_false - Values accepted as Bool false
