@@ -22,7 +22,7 @@ class conv_type(argparse.Action):
        the configuration.
     """
 
-    def conv_bool(self, x):
+    def _conv_bool(self, x):
         """Convert from string to bool."""
     
         assert not set(is_true) & set(is_false)
@@ -35,20 +35,20 @@ class conv_type(argparse.Action):
             msg = '\nNot convertible to bool: %s' % x            
             raise argparse.ArgumentError(self, msg)
     
-    def find_converter(self, key):
+    def _find_converter(self, key):
         """Function to convert the type of key."""
     
         def_type = type(self.def_conf[key])
-        if def_type == np.ndarray:
-            return np.array
-        elif def_type == bool:
-            return self.conv_bool
+        if def_type == bool:
+            return self._conv_bool
         else:
             return def_type
     
     def convert_combined(self, type_conv, key, values):
+        assert len(values) == 1
+
         try:
-            val = [x.rstrip(',') for x in values]
+            val = [x.strip() for x in values[0].split(',')]
             elem_type = type(self.def_conf[key][0])
             val = type_conv([elem_type(x) for x in val])
         except ValueError:
@@ -62,7 +62,7 @@ class conv_type(argparse.Action):
 
 
         # When converting numpy arrays, you can not use the type.
-        type_conv = self.find_converter(key)
+        type_conv = self._find_converter(key)
 
         # Convert basic types
         def_type = type(self.def_conf[key])
