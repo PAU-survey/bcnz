@@ -7,6 +7,8 @@ import sys
 import numpy as np
 
 import bcnz
+import bcnz.config
+import bcnz.descr
 
 # is_true  - Values accepted as Bool true
 # is_false - Values accepted as Bool false
@@ -22,7 +24,7 @@ class conv_type(argparse.Action):
        the configuration.
     """
 
-    def conv_bool(self, x):
+    def _conv_bool(self, x):
         """Convert from string to bool."""
     
         assert not set(is_true) & set(is_false)
@@ -35,20 +37,20 @@ class conv_type(argparse.Action):
             msg = '\nNot convertible to bool: %s' % x            
             raise argparse.ArgumentError(self, msg)
     
-    def find_converter(self, key):
+    def _find_converter(self, key):
         """Function to convert the type of key."""
     
         def_type = type(self.def_conf[key])
-        if def_type == np.ndarray:
-            return np.array
-        elif def_type == bool:
-            return self.conv_bool
+        if def_type == bool:
+            return self._conv_bool
         else:
             return def_type
     
     def convert_combined(self, type_conv, key, values):
+        assert len(values) == 1
+
         try:
-            val = [x.rstrip(',') for x in values]
+            val = [x.strip() for x in values[0].split(',')]
             elem_type = type(self.def_conf[key][0])
             val = type_conv([elem_type(x) for x in val])
         except ValueError:
@@ -62,7 +64,7 @@ class conv_type(argparse.Action):
 
 
         # When converting numpy arrays, you can not use the type.
-        type_conv = self.find_converter(key)
+        type_conv = self._find_converter(key)
 
         # Convert basic types
         def_type = type(self.def_conf[key])
@@ -83,7 +85,7 @@ def test_defaults(def_conf, descr):
 
         raise ValueError(msg)
 
-class main_parser:
+class bcnz_parser:
     def __init__(self, def_conf, descr):
         """Create parser for the BCNZ command line options."""
 
@@ -128,34 +130,12 @@ class main_parser:
 
         return conf
 
-class first_parser:
-    """Detect which configuration file to use."""
-
-    def __init__(self):
-        parser = argparse.ArgumentParser()
-        #parser.add_argument('-c', type=str, nargs=1, dest="config")
-        parser.add_argument('-c ', type=str, dest="config", default="standard")
-        self.parser = parser
-
-    def __call__(self):
-        args = self.parser.parse_known_args() 
-        config_file = args[0].config
-
-        return config_file
-
 def parse_arguments():
     """Parse input arguments."""
 
-    # Detects which configuration file to use.
-    config_file = first_parser()()
-
-    try:
-        def_conf = bcnz.config.conf[config_file]
-    except AttributeError:
-        raise
-
+    def_conf = bcnz.config.conf['standard']
     def_descr = bcnz.descr.standard
-    arg_parser = bcnz.lib.parser.main_parser(def_conf, def_descr)
+    arg_parser = bcnz.lib.parser.bcnz_parser(def_conf, def_descr)
     conf = arg_parser.parse_args()
 
     return conf

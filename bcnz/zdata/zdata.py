@@ -23,7 +23,9 @@ class zdata(dict):
 
         self.check_filenames()
         self.add_texp()
-        self.obs_files()
+
+        if not self.conf['in_format'] == 'db':
+            self.obs_files()
 
     def z_binning(self):
         """Binning in redshift when calculating the model."""
@@ -41,7 +43,7 @@ class zdata(dict):
         exclude = self.conf['exclude']
 
         filters = [x for x in filters if not x in exclude]
-#        filters = [(x if not in exclude) for x in filters] # if not in exclude]
+        assert filters, 'No filters specified.'
 
         return filters
 

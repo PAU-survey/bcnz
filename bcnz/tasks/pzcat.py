@@ -4,6 +4,8 @@ from __future__ import print_function
 import pdb
 
 import bcnz
+import bcnz.fit
+import bcnz.observ
 
 class pzcat:
     """Photoz catalog estimation.

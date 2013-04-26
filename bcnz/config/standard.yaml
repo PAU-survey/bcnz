@@ -19,6 +19,8 @@ standard:
   dz_faint: 0.005
   min_rms_bright: 0.0055
   min_rms_faint: 0.055
+  min_magerr: 0.0
+  max_magerr: 10.
   mag_split: 22.5
   use_split: False
   opt: True
@@ -50,6 +52,7 @@ standard:
   data_dir: 'data'
   ab_dir: 'ab'
   filter_dir: 'filters'
+  filters: ['up', 'g', 'r', 'z', 'y']
   sed_dir: 'seds'
   p_min: 0.01
   mag: True
@@ -78,7 +81,7 @@ standard:
   odds: 0.68
   min_rms: 0.05
   hdf5_node: '/cat/cat'
-  pre_mag: ''
-  pre_err: ''
+  mag_fmt: '{0}'
+  err_fmt: '{0}'
   from_bcnz: ['id', 'zb', 'zb_min', 'zb_max', 't_b', 'odds', 'z_ml', 't_ml', 'chi2', 'z_s', 'm_0']
   prior_mag: 'i'

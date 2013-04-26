@@ -22,6 +22,7 @@ class bcnz_cmd:
 
     def __call__(self):
         import bcnz
+        import bcnz.tasks
         watch = bcnz.lib.timer.watch()
 
         myconf = bcnz.lib.parser.parse_arguments()
