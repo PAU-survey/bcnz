@@ -83,7 +83,7 @@ def test_defaults(def_conf, descr):
 
         raise ValueError(msg)
 
-class main_parser:
+class bcnz_parser:
     def __init__(self, def_conf, descr):
         """Create parser for the BCNZ command line options."""
 
@@ -128,34 +128,12 @@ class main_parser:
 
         return conf
 
-class first_parser:
-    """Detect which configuration file to use."""
-
-    def __init__(self):
-        parser = argparse.ArgumentParser()
-        #parser.add_argument('-c', type=str, nargs=1, dest="config")
-        parser.add_argument('-c ', type=str, dest="config", default="standard")
-        self.parser = parser
-
-    def __call__(self):
-        args = self.parser.parse_known_args() 
-        config_file = args[0].config
-
-        return config_file
-
 def parse_arguments():
     """Parse input arguments."""
 
-    # Detects which configuration file to use.
-    config_file = first_parser()()
-
-    try:
-        def_conf = bcnz.config.conf[config_file]
-    except AttributeError:
-        raise
-
+    def_conf = bcnz.config.conf['standard']
     def_descr = bcnz.descr.standard
-    arg_parser = bcnz.lib.parser.main_parser(def_conf, def_descr)
+    arg_parser = bcnz.lib.parser.bcnz_parser(def_conf, def_descr)
     conf = arg_parser.parse_args()
 
     return conf
