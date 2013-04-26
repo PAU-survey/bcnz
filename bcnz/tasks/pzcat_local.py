@@ -14,7 +14,7 @@ import pzcat
 
 class local_task(pzcat.pzcat):
     def __init__(self, myconf, zdata, in_iter, out_table):
-        self.conf = bcnz.libconf(myconf)
+        self.config = bcnz.libconf(myconf)
         self.zdata = zdata
         self.in_iter = in_iter
         self.out_table = out_table 
@@ -22,27 +22,27 @@ class local_task(pzcat.pzcat):
     def run(self):
         self._run_iter(self.in_iter, self.out_table)
 
-def prepare_tasks(conf, zdata):
+def prepare_tasks(config, zdata):
     """Objects encapsulating the runs."""
 
     assert not (1 < len(zdata['cat_files']) and \
-                isinstance(conf['output'], types.NoneType))
+                isinstance(config['output'], types.NoneType))
 
-    if conf['output']:
+    if config['output']:
         obs_file = zdata['cat_files'][0]
-        ans = [bcnz_std.standard(conf, zdata, obs_file, conf['output'])]
+        ans = [bcnz_std.standard(config, zdata, obs_file, config['output'])]
         return ans
 
     tasks = []
     for obs_file in zdata['cat_files']:
         out_file = '%s.bcnz' % os.path.splitext(obs_file)[0]
 
-        in_fmt = conf['in_format']
-        out_fmt = conf['out_format']
-        in_iter = getattr(bcnz.io, in_fmt).read_cat(conf, zdata, obs_file)
-        out_table = getattr(bcnz.io, out_fmt).write_cat(conf, out_file)
+        in_fmt = config['in_format']
+        out_fmt = config['out_format']
+        in_iter = getattr(bcnz.io, in_fmt).read_cat(config, zdata, obs_file)
+        out_table = getattr(bcnz.io, out_fmt).write_cat(config, out_file)
 
-        tasks.append(local_task(conf, zdata, in_iter, out_table))
+        tasks.append(local_task(config, zdata, in_iter, out_table))
 
     return tasks
 
@@ -53,15 +53,15 @@ def run(task):
 
     task.run()
 
-def run_tasks(conf, zdata, tasks):
+def run_tasks(config, zdata, tasks):
     """Execute either using multiprocessing or just run tasks in serial."""
 
 #    def run(task):
 #        task.run()
 
-    use_par = conf['use_par'] and 1 < len(zdata['cat_files'])
+    use_par = config['use_par'] and 1 < len(zdata['cat_files'])
     if use_par:
-        nthr = conf['nthr']
+        nthr = config['nthr']
         ncpu = multiprocessing.cpu_count()
         nparts = nthr if nthr else ncpu
         #pdb.set_trace()
@@ -73,12 +73,12 @@ def run_tasks(conf, zdata, tasks):
 
 class pzcat_local:
     def __init__(self, myconf):
-        self.conf = bcnz.libconf(myconf)
+        self.config = bcnz.libconf(myconf)
 
     def run(self):
         # Estimate the photoz
-        zdata = bcnz.zdata.zdata(self.conf)
-        zdata= bcnz.model.add_model(self.conf, zdata)
+        zdata = bcnz.zdata.zdata(self.config)
+        zdata= bcnz.model.add_model(self.config, zdata)
 
-        tasks = prepare_tasks(self.conf, zdata)
-        run_tasks(self.conf, zdata, tasks)
+        tasks = prepare_tasks(self.config, zdata)
+        run_tasks(self.config, zdata, tasks)
