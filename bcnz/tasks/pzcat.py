@@ -11,7 +11,7 @@ class pzcat:
     """
 
     def __init__(self, myconf):
-        self.conf = bcnz.libconf(myconf)
+        self.config = bcnz.libconf(myconf)
 
     # Fields to properly implement.
     config_schema = """{}"""
@@ -32,31 +32,27 @@ class pzcat:
 
     @property
     def config_schema(self):
-        return self.conf.schema()
-#        pdb.set_trace()
+        return self.config.schema()
 
     @property
     def config_sample(self):
-        return self.conf.config_sample()
+        return self.config.config_sample()
 
-    def _run_iter(self, iter_in, out_table):
-        self.in_iter.open()
-        self.out_table.open()
-
-        if not self.zdata: 
-            zdata = bcnz.zdata.zdata(self.conf)
-            zdata = bcnz.model.add_model(self.conf, zdata)
-        else:
-            zdata = self.zdata
-
-        for data in self.in_iter:
-            data = bcnz.observ.post_pros(self.conf, self.zdata, data)
-            fit = bcnz.fit.chi2(self.conf, self.zdata, data)
+    def _run_iter(self, in_iter, out_table):
+        in_iter.open()
+        out_table.open()
+        
+        zdata = bcnz.zdata.zdata(self.config)
+        zdata = bcnz.model.add_model(self.config, zdata)
+        
+        for data in in_iter:
+            data = bcnz.observ.post_pros(self.config, zdata, data)
+            fit = bcnz.fit.chi2(self.config, zdata, data)
             for block in fit.blocks():
-                self.out_table.append(block)
-
-        self.in_iter.close()
-        self.out_table.close()
+                out_table.append(block)
+        
+        in_iter.close()
+        out_table.close()
 
     def run(self):
         """Estimate the photoz for one input file."""
