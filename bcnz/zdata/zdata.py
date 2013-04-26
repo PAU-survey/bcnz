@@ -23,7 +23,9 @@ class zdata(dict):
 
         self.check_filenames()
         self.add_texp()
-        self.obs_files()
+
+        if not self.conf['in_format'] == 'db':
+            self.obs_files()
 
     def z_binning(self):
         """Binning in redshift when calculating the model."""
