@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # encoding: UTF8
-import pdb
 
+import glob
 import os
+import pdb
 import yaml
 
 def comb(A,B):
@@ -10,16 +11,13 @@ def comb(A,B):
     for key in A.keys():
         assert A[key] == B[key], key
 
-# Horrible code. In the process of converting to YAML.
-d = os.path.dirname(__file__)
-all_pop = ['bright', 'faint', 'mice', 'des', 'sv','jcarrete']
+conf_dir = os.path.dirname(__file__)
+
 conf = {}
-for pop_name in all_pop+['standard']:
-    file_path = os.path.join(d, '{0}.yaml'.format(pop_name))
-    conf[pop_name] = yaml.load(open(file_path))[pop_name]
+for file_path in glob.glob(os.path.join(conf_dir, '*.yaml')):
+    loaded_conf = yaml.load(open(file_path))
 
-for pop_name in all_pop:
-    pop = conf['standard'].copy()
-    pop.update(conf[pop_name])
+    overlap = set(conf.keys()) & set(loaded_conf.keys())
+    assert not overlap, 'Config: {0} is defined twice.'.format(overlap)
 
-    conf[pop_name] = pop
+    conf.update(loaded_conf)
