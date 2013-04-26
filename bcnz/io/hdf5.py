@@ -50,13 +50,11 @@ class read_cat(filebase.filebase):
         self.file_name = file_name
 
         filters = zdata['filters']
-        pre_mag = self.conf['pre_mag']
-        pre_err = self.conf['pre_err']
+        mag_fmt = self.conf['mag_fmt']
+        err_fmt = self.conf['err_fmt']
 
-#        self.conv_mag = {'{}{}'.format(pre_mag, x):x for x in filters}
-#        self.conv_err = {'{}{}'.format(pre_err, x):x for x in filters}
-        self.mag_fields = [pre_mag+x for x in self.conf['filters']]
-        self.err_fields = [pre_err+x for x in self.conf['filters']]
+        self.mag_fields = [mag_fmt.format(x) for x in self.conf['filters']]
+        self.err_fields = [err_fmt.format(x) for x in self.conf['filters']]
 
         fields_in = dict(
             (x, x) for x in self.conf['order'] if not x in self.conf['from_bcnz']
@@ -111,12 +109,6 @@ class read_cat(filebase.filebase):
 
     # Python 2.x compatability
     __next__ = next
-
-"""
-        i = 0
-        yield self.catalog.read(start=i*nmax, stop=(i+1)*nmax)
-        i += 1
-"""
 
 class write_cat:
     def __init__(self, conf, out_file):

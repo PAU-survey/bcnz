@@ -50,7 +50,7 @@ standard:
   data_dir: 'data'
   ab_dir: 'ab'
   filter_dir: 'filters'
-  filters: ['u', 'g', 'r', 'z', 'y']
+  filters: ['up', 'g', 'r', 'z', 'y']
   sed_dir: 'seds'
   p_min: 0.01
   mag: True
@@ -79,7 +79,7 @@ standard:
   odds: 0.68
   min_rms: 0.05
   hdf5_node: '/cat/cat'
-  pre_mag: ''
-  pre_err: ''
+  mag_fmt: '{0}'
+  err_fmt: '{0}'
   from_bcnz: ['id', 'zb', 'zb_min', 'zb_max', 't_b', 'odds', 'z_ml', 't_ml', 'chi2', 'z_s', 'm_0']
   prior_mag: 'i'
