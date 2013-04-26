@@ -231,9 +231,13 @@ To import priors, you need the following:
             z_s = self.data['z_s'][imin:imax]
 
         # Added right before the LBNL DES conference.
-        ra = self.data['ra'][imin:imax]
-        dec = self.data['dec'][imin:imax]
-        spread_model_i = self.data['spread_model_i'][imin:imax]
+	if 'ra' in self.data:
+            ra = self.data['ra'][imin:imax]
+	if 'dec' in self.data:
+            dec = self.data['dec'][imin:imax]
+
+        if 'spread_model_i' in self.data:
+            spread_model_i = self.data['spread_model_i'][imin:imax]
 
 #        pdb.set_trace()
 
