@@ -74,7 +74,7 @@ standard:
   n_peaks: 1
   verbose: False
   min_magerr: 0.001
-  catalog: ''
+  cat: ''
   interp: 2
   prior: 'pau'
   dz: 0.01

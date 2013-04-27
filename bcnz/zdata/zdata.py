@@ -77,7 +77,7 @@ class zdata(dict):
     def obs_files(self):
         """File names with input catalogs."""
 
-        input_file = self.conf['catalog']
+        input_file = self.conf['cat']
         cat_files = glob.glob(input_file)
         msg_noinput = 'Found no input files for: {0}'.format(input_file)
 

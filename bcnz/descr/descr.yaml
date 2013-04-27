@@ -70,7 +70,7 @@ descr:
   n_peaks: 'Number of peaks to output'
   verbose: 'Output level'
   min_magerr: 'Minimum error in the magnitudes.'
-  catalog: 'Input galaxy catalog.'
+  cat: 'Input galaxy catalog.'
   interp: 'Number of interpolation between templates.'
   prior: 'Name of prior module'
   dz: 'Redshift resolution in chi2 estimation'
