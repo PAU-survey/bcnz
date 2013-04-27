@@ -198,19 +198,10 @@ To import priors, you need the following:
         iz_b = p_bayes.argmax(axis=1)
         zb = self.z[iz_b]
 
-#        pdb.set_trace()
-
         # Calculate odds.
         dz = self.odds_pre*(1.+zb)
-        zo1 = zb - dz
-        zo2 = zb + dz
-
-        odds = find_odds(p_bayes, self.z, zo1, zo2)
-
+        odds = find_odds(p_bayes, self.z, zb-dz, zb+dz)
         it_b = pb[range(len(zb)),iz_b].argmax(axis=1)
-
-
-#        import pdb; pdb.set_trace()
         interp = self.conf['interp']
         tt_b = it_b / (1. + interp)
         tt_ml = it / (1. + interp)
@@ -222,32 +213,24 @@ To import priors, you need the following:
 
         zb_min, zb_max = prob_interval(p_bayes, self.z, self.conf['odds'])
 
-        # TODO: Find a better approach.
-        z_ml = self.z[iz]
-        m_0 = self.data['m_0'][imin:imax]
-        chi2 = red_chi2
-        t_b = tt_b+1
-        t_ml = tt_ml+1
-        if 'z_s' in self.data:
-            z_s = self.data['z_s'][imin:imax]
+        # Actual number of galaxies in the block.
+        ngal = min(imax, self.data['id'].shape[0]) - imin
+        block = np.zeros(ngal, self.dtype)
+        block['id'] = self.data['id'][imin:imax]
+        block['zb'] = self.z[iz_b]
+        block['zb_min'] = zb_min
+        block['zb_max'] = zb_max
+        block['t_b'] = tt_b + 1 
+        block['odds'] = odds
+        block['z_ml'] = self.z[iz]
+        block['t_ml'] = tt_ml + 1
+        block['chi2'] = red_chi2
 
-        # Added right before the LBNL DES conference.
-	if 'ra' in self.data:
-            ra = self.data['ra'][imin:imax]
-	if 'dec' in self.data:
-            dec = self.data['dec'][imin:imax]
+        for key in ['z_s', 'ra', 'dec', 'spread_model_i', 'm_0']:
+            if key in self.conf['order']:
+                block[key] = self.data[key][imin:imax]
 
-        if 'spread_model_i' in self.data:
-            spread_model_i = self.data['spread_model_i'][imin:imax]
-
-#        pdb.set_trace()
-
-        id = self.data['id'][imin:imax]
-        loc = locals()
-        A = [loc[x] for x in self.cols]
-
-#        pdb.set_trace()
-        return np.rec.fromarrays(A, self.dtype)
+        return block
 
     def blocks(self):
         """Iterate over the different blocks."""
