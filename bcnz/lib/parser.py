@@ -96,13 +96,12 @@ class bcnz_parser:
         self.descr = descr
 
     def _create_parser(self, def_conf, descr):
-        """Actual work for creating the parser."""
+        """Add each option to the parser."""
 
         parser = argparse.ArgumentParser()
         action = conv_type
         action.def_conf = def_conf
 
-        parser.add_argument('catalog', help='Galaxy catalog.')
         for var, def_val in def_conf.items():
             arg = '-%s' % var
             nargs = '*' if (type(def_val) in comb_types) else '?'

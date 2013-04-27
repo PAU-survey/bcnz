@@ -12,7 +12,7 @@ class priors:
 
     def run(self):
         # Only working with ASCII by now.
-        cat_file = self.myconf['catalog']
+        cat_file = self.myconf['cat']
 
         ngal_priors = 100
 
