@@ -6,7 +6,7 @@
 import pdb
 import numpy as np
 
-class priors:
+class priors(object):
     def __init__(self, myconf):
         self.myconf = myconf
 

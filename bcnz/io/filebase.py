@@ -5,7 +5,7 @@ import os
 import pdb
 import shutil
 
-class filebase:
+class filebase(object):
     def setup(self):
         obj_name = bcnz.lib.obj_hash.hash_structure(self.conf)
 

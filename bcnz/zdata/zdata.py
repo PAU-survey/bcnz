@@ -10,7 +10,7 @@ import numpy as np
 
 import bcnz
 
-class zdata(dict):
+class zdata(dict, object):
     msg_filters = 'Missing filter files.'
     msg_seds = 'Missing sed files.'
 
@@ -23,9 +23,6 @@ class zdata(dict):
 
         self.check_filenames()
         self.add_texp()
-
-        if not self.conf['in_format'] == 'db':
-            self.obs_files()
 
     def z_binning(self):
         """Binning in redshift when calculating the model."""
@@ -73,15 +70,3 @@ class zdata(dict):
             zdata['texp'] = bcnz_exposure.texp(conf, zdata)
 
         return zdata
-
-    def obs_files(self):
-        """File names with input catalogs."""
-
-        input_file = self.conf['cat']
-        cat_files = glob.glob(input_file)
-        msg_noinput = 'Found no input files for: {0}'.format(input_file)
-
-        assert len(cat_files), msg_noinput
-
-        self['cat_files'] = cat_files
-

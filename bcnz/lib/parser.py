@@ -19,7 +19,7 @@ comb_types = [list, tuple, np.ndarray]
 
 # Fuctions for converting types.
 
-class conv_type(argparse.Action):
+class conv_type(argparse.Action, object):
     """Convert more complex types to the same type as defined in
        the configuration.
     """
@@ -85,7 +85,7 @@ def test_defaults(def_conf, descr):
 
         raise ValueError(msg)
 
-class bcnz_parser:
+class bcnz_parser(object):
     def __init__(self, def_conf, descr):
         """Create parser for the BCNZ command line options."""
 

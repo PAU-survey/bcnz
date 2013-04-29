@@ -3,7 +3,7 @@
 
 import time
 
-class watch:
+class watch(object):
     """Stopwatch that can disply time intervals."""
 
     def __init__(self, fmt='%H:%M:%S'):

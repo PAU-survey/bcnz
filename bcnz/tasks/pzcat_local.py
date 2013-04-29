@@ -4,6 +4,7 @@
 # Runs multiple catalog files in parallel. In the future it might
 # be replaced by another framework.
 
+import glob
 import os
 import pdb
 import multiprocessing
@@ -29,16 +30,19 @@ class local_task(pzcat.pzcat):
 def prepare_tasks(config, zdata):
     """Objects encapsulating the runs."""
 
-    assert not (1 < len(zdata['cat_files']) and \
+    cat_files = glob.glob(config['cat'])
+    msg_noinput = 'Found no input files for: {0}'.format(config['cat'])
+
+    assert not (1 < len('cat_files') and \
                 isinstance(config['output'], types.NoneType))
 
     if config['output']:
-        obs_file = zdata['cat_files'][0]
+        obs_file = cat_files[0]
         ans = [bcnz_std.standard(config, zdata, obs_file, config['output'])]
         return ans
 
     tasks = []
-    for obs_file in zdata['cat_files']:
+    for obs_file in cat_files:
         out_file = '%s.bcnz' % os.path.splitext(obs_file)[0]
 
         in_fmt = config['in_format']
@@ -60,10 +64,7 @@ def run(task):
 def run_tasks(config, zdata, tasks):
     """Execute either using multiprocessing or just run tasks in serial."""
 
-#    def run(task):
-#        task.run()
-
-    use_par = config['use_par'] and 1 < len(zdata['cat_files'])
+    use_par = config['use_par'] and 1 < len(tasks)
     if use_par:
         nthr = config['nthr']
         ncpu = multiprocessing.cpu_count()
@@ -75,7 +76,7 @@ def run_tasks(config, zdata, tasks):
         for task in tasks:
             task.run()
 
-class pzcat_local:
+class pzcat_local(object):
     def __init__(self, myconf):
         self.config = bcnz.libconf(myconf)
 
