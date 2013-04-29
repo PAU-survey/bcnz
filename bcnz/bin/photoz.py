@@ -9,9 +9,6 @@ import sys
 def setup_path():
     """To avoid name collisions between the program name."""
 
-    rm_pathes = lambda x: not (x.endswith('bcnz/bin') or x == '')
-    sys.path = list(filter(rm_pathes, sys.path))
-
     # To find the module when running from the repository.
     dir_path = os.path.join(os.path.dirname(__file__), '../..')
     sys.path.insert(0, os.path.normpath(dir_path))
@@ -21,8 +18,6 @@ class bcnz_cmd(object):
     """Run bcnz from the command line."""
 
     def __call__(self):
-        import bcnz
-        import bcnz.tasks
         watch = bcnz.lib.timer.watch()
 
         myconf = bcnz.lib.parser.parse_arguments()
@@ -33,5 +28,8 @@ class bcnz_cmd(object):
 
 if __name__ == '__main__':
     setup_path()
+    import bcnz
+    import bcnz.tasks
+
     cmd = bcnz_cmd()
     cmd()
