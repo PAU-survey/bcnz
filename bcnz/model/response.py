@@ -8,7 +8,7 @@ from scipy.integrate import trapz
 from scipy.interpolate import splev, splrep
 
 
-class sed_filters:
+class sed_filters(object):
     def find_sky_spl(self, conf):
         file_path = os.path.join(conf['data_dir'], conf['sky_spec'])
         x,y = np.loadtxt(file_path, unpack=True)

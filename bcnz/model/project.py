@@ -14,7 +14,7 @@ from scipy.ndimage.interpolation import zoom
 
 np.seterr('raise')
 
-class model_mag:
+class model_mag(object):
     def set_ninterp(self, filters):
         """Number of interpolation points for each filter."""
 

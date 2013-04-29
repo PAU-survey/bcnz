@@ -17,7 +17,7 @@ def setup_path():
     sys.path.insert(0, os.path.normpath(dir_path))
 
 
-class bcnz_cmd:
+class bcnz_cmd(object):
     """Run bcnz from the command line."""
 
     def __call__(self):

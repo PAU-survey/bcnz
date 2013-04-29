@@ -6,7 +6,8 @@ import sys
 import numpy as np
 
 np.seterr(under='ignore')
-class pau:
+
+class pau(object):
     """Priors calibrated to mocks used for the PAU survey."""
 
     def __init__(self, conf, zdata, z, m_0):

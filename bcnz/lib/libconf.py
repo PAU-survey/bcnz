@@ -8,7 +8,7 @@ import sys
 
 import bcnz
 
-class conf(dict):
+class conf(dict,object):
     msg_z = 'zmax <= zmin is not allowed.'
     msg_overwrite = 'Overwriting some input files.'
 

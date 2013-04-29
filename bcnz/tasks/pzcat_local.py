@@ -76,7 +76,7 @@ def run_tasks(config, zdata, tasks):
         for task in tasks:
             task.run()
 
-class pzcat_local:
+class pzcat_local(object):
     def __init__(self, myconf):
         self.config = bcnz.libconf(myconf)
 

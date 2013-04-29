@@ -54,7 +54,7 @@ def find_odds(p,x,xmin,xmax):
 
     return (cdf[gind,imax] - cdf[gind,imin])/cdf[:,-1]
 
-class chi2_calc:
+class chi2_calc(object):
     def __init__(self, conf, zdata, data, pop='', dz='',min_rms=''):
         assert data['mag'].shape[0], 'No galaxies'
         self.conf = conf
@@ -243,7 +243,7 @@ To import priors, you need the following:
             yield self._block(n)
 
 
-class chi2_combined:
+class chi2_combined(object):
     """Interface for combining the results for several populations."""
 
     def __init__(self, conf, zdata, f_obs, ef_obs, m_0, \

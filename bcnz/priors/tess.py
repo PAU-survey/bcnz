@@ -15,7 +15,7 @@ nell, nspr, nirr = types
 train_dm = .1
 smooth = 3
 
-class tess:
+class tess(object):
     def __init__(self, conf, zdata, m_0, m_step, ninterp):
         self.conf = conf
         self.zdata = zdata

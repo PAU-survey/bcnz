@@ -10,7 +10,7 @@ import numpy as np
 
 import bcnz
 
-class zdata(dict):
+class zdata(dict, object):
     msg_filters = 'Missing filter files.'
     msg_seds = 'Missing sed files.'
 

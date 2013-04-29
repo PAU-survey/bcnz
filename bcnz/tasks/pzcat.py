@@ -7,7 +7,7 @@ import bcnz
 import bcnz.fit
 import bcnz.observ
 
-class pzcat:
+class pzcat(object):
     """Photoz catalog estimation.
        Run the photo-z for one sample.
     """
