@@ -1,4 +1,5 @@
 standard:
+  c: ''
   in_format: 'ascii'
   out_format: 'ascii'
   use_priors: True

@@ -14,6 +14,13 @@ class conf(dict,object):
 
     def __init__(self, myconf):
         self.update(bcnz.config.conf['standard'].copy()) # HACK
+
+        if 'c' in myconf:
+            extra_conf = myconf['c']
+            assert extra_conf in bcnz.config.conf, 'No configuration for: {}'.format(extra_conf)
+
+            self.update(bcnz.config.conf[extra_conf].copy())
+
         self.update(myconf)
         self._test_zrange()
 

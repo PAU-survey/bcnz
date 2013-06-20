@@ -109,14 +109,11 @@ class bcnz_parser(object):
 
             parser.add_argument(arg, action=conv_type, help=h, nargs=nargs)
 
-        parser.add_argument('-c')
-
         return parser
 
     def parse_args(self):
         args = self.parser.parse_args()
 
-#        pdb.set_trace()
         keys = self.def_conf.keys()
         vals = [getattr(args, x) for x in keys]
 
