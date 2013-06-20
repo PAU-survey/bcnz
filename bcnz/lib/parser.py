@@ -120,11 +120,8 @@ class bcnz_parser(object):
         # Remove entries set to None.
         is_set = lambda X: not isinstance(X[1], type(None))
         to_update = dict(filter(is_set, zip(keys,vals)))
-        
-        conf = self.def_conf.copy()
-        conf.update(to_update)
 
-        return conf
+        return to_update
 
 def parse_arguments():
     """Parse input arguments."""
