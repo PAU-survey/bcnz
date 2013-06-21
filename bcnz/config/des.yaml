@@ -12,7 +12,8 @@ des:
   pr_k_t: [ 0.179,  0.014,  0.014]
   pr_fo_t: [ 0.49 ,  0.105,  0.105]
 
-  min_magerr: 0.05
+#  min_magerr: 0.05
+  min_magerr: 0.0001
   max_magerr: 0.5
   min_rms: 0.1
 
@@ -21,9 +22,10 @@ des:
   undet: 99
   zmax: 2.
   use_split: False
-  catalog: "/Users/marberi/data/des_mice/*.dat.h5"
+  cat: "/Users/marberi/data/des_mice/patch/des_patch.h5"
   columns: "/Users/marberi/photoz/run/des_data/mock.columns"
-  filters: ['des_g', 'des_r', 'des_i', 'des_z', 'des_Y']
+#  filters: ['des_g', 'des_r', 'des_i', 'des_z', 'des_Y']
+  filters: ['g', 'r', 'i', 'z', 'Y']
   data_dir: '/Users/marberi/photoz/run/des_data'
   filter_dir: 'filters/DES'
   use_cache: False
@@ -31,3 +33,8 @@ des:
   dz: 0.005
   odds: 0.68
   in_format: 'hdf5'
+
+  mag_fmt: '{0}_des_real'
+  err_fmt: '{0}_des_real_err'
+
+#  sed_fmt: 

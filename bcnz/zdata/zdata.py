@@ -57,8 +57,8 @@ class zdata(dict, object):
 
             return names
 
-        filters_db = sel_files(self, self.conf['filter_dir'], 'res')
-        seds_db = sel_files(self, self.conf['sed_dir'], 'sed')
+        filters_db = sel_files(self, self.conf['filter_dir'], self.conf['res_fmt'])
+        seds_db = sel_files(self, self.conf['sed_dir'], self.conf['sed_fmt'])
 
         assert set(self['filters']).issubset(set(filters_db)), self.msg_filters
         assert set(self['seds']).issubset(set(seds_db)), self.msg_seds

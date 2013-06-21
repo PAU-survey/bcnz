@@ -41,12 +41,13 @@ def prepare_tasks(config, zdata):
         ans = [bcnz_std.standard(config, zdata, obs_file, config['output'])]
         return ans
 
+    in_fmt = config['in_format']
+    out_fmt = config['out_format']
+
     tasks = []
     for obs_file in cat_files:
         out_file = '%s.bcnz' % os.path.splitext(obs_file)[0]
 
-        in_fmt = config['in_format']
-        out_fmt = config['out_format']
         in_iter = getattr(bcnz.io, in_fmt).read_cat(config, zdata, obs_file)
         out_table = getattr(bcnz.io, out_fmt).write_cat(config, out_file)
 

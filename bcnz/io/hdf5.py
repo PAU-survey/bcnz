@@ -59,7 +59,8 @@ class read_cat(filebase.filebase):
         fields_in = dict(
             (x, x) for x in self.conf['order'] if not x in self.conf['from_bcnz']
         )
-        fields_in['m_0'] = pre_mag+self.conf['prior_mag']
+
+        fields_in['m_0'] = mag_fmt.format(self.conf['prior_mag'])
         self.fields_in = fields_in 
 
     def open(self):

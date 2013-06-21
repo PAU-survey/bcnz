@@ -1,4 +1,6 @@
 descr:
+  res_fmt: 'File names of the filter response files.'
+  sed_fmt: 'File names of the SED files.'
   c: 'Configuration file.'
   max_magerr: 'Maximum magnitude error before removing the observation.'
   in_format: 'Format of the input files.'
