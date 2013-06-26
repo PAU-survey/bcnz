@@ -11,8 +11,8 @@ import numpy as np
 import bcnz
 
 class zdata(dict, object):
-    msg_filters = 'Missing filter files.'
-    msg_seds = 'Missing sed files.'
+    msg_filters = 'Missing filter files: {0}'
+    msg_seds = 'Missing sed files: {0}'
 
     def __init__(self, conf):
         self.conf = conf
@@ -48,20 +48,22 @@ class zdata(dict, object):
     def check_filenames(self):
         """Test if the filter and sed files are there."""
 
-        def sel_files(self, d, suf):
-            g = os.path.join(self.conf['data_dir'], d,
-                             '*.{0}'.format(suf))
+        def sel_files(self, tofind, d, fmt):
+            g = os.path.join(self.conf['data_dir'], d, fmt.replace('{0}', '*'))
 
-            names = map(os.path.basename, glob.glob(g))
-            names = map(lambda x: os.path.splitext(x)[0], names)
+            file_names = map(os.path.basename, glob.glob(g))
+            missing_files = []
+            for o in tofind:
+                file_name = fmt.format(o)
+                if not file_name in file_names:
+                    missing_files.append(file_name)
 
-            return names
+            if missing_files:
+                raise Exception('Missing files: {0}'.format(missing_files))
 
-        filters_db = sel_files(self, self.conf['filter_dir'], self.conf['res_fmt'])
-        seds_db = sel_files(self, self.conf['sed_dir'], self.conf['sed_fmt'])
+        filters_db = sel_files(self, self['filters'], self.conf['filter_dir'], self.conf['res_fmt'])
+        seds_db = sel_files(self, self['seds'], self.conf['sed_dir'], self.conf['sed_fmt'])
 
-        assert set(self['filters']).issubset(set(filters_db)), self.msg_filters
-        assert set(self['seds']).issubset(set(seds_db)), self.msg_seds
 
     def add_texp(self):
         # To not require tray configurations to always be

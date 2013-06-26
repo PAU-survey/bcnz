@@ -23,8 +23,9 @@ class sed_filters(object):
 
         spls, r_const, rlim, in_rD, in_skyD = {},{},{},{},{}
         d = os.path.join(conf['data_dir'], conf['filter_dir'])
+        fmt = conf['res_fmt']
         for filter_name in filters:
-            file_path = os.path.join(d, '%s.res' % filter_name)
+            file_path = os.path.join(d, fmt.format(filter_name))
             x,y = np.loadtxt(file_path, unpack=True)
 
             # Determines the range where the filter curve is non-zero.

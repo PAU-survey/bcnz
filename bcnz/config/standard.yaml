@@ -1,6 +1,6 @@
 standard:
-  res_fmt: '{}.res'
-  sed_fmt: '{}.res'
+  res_fmt: '{0}.res'
+  sed_fmt: '{0}.sed'
   c: ''
   in_format: 'ascii'
   out_format: 'ascii'
