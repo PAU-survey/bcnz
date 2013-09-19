@@ -63,7 +63,9 @@ class model_mag(object):
     def f_mod(self, z):
         """Model frequencies."""
 
-        dir_ab = os.path.join(self.conf['cache_dir'], 'ab')
+        dir_ab = os.path.join(os.environ['HOME'],self.conf['cache_dir'], 'ab')
+        if not os.path.exists(dir_ab):
+            os.makedirs(dir_ab)
 
         seds = self.zdata['seds']
         filters = self.zdata['filters']
@@ -95,9 +97,10 @@ class model_mag(object):
         dz_ab = self.conf['dz_ab']
 
         z_ab = np.arange(0., zmax_ab, dz_ab)
-        ab_dir = os.path.join(self.conf['cache_dir'], self.conf['ab_dir'])
+        ab_dir = os.path.join(os.environ['HOME'], self.conf['cache_dir'], self.conf['ab_dir'])
+
         if not os.path.exists(ab_dir):
-            os.mkdir(ab_dir)
+            os.makedirs(ab_dir)
 
         for filter_name in filters:
             self.proj_filter(ab_dir, z_ab, filter_name)
