@@ -12,8 +12,8 @@ class pzcat(object):
        Run the photo-z for one sample.
     """
 
-    def __init__(self, myconf):
-        self.config = bcnz.libconf(myconf)
+    def __init__(self, config):
+        self.config = bcnz.libconf(config)
 
     # Fields to properly implement.
     config_schema = """{}"""

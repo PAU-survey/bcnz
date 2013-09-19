@@ -55,7 +55,7 @@ standard:
   data_dir: 'data'
   ab_dir: 'ab'
   filter_dir: 'filters'
-  filters: ['up', 'g', 'r', 'z', 'y']
+  filters: ['u', 'g', 'r', 'z', 'y']
   sed_dir: 'seds'
   p_min: 0.01
   mag: True
