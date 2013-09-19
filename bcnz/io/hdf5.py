@@ -103,6 +103,11 @@ class read_cat(filebase.filebase):
         data['mag'] = mag
         data['emag'] = err
 
+        names = tbl_array.dtype.names
+        for key in ['z_s', 'ra', 'dec', 'spread_model_i', 'm_0']:
+            if key in names:
+                data[key] = tbl_array[key]
+
         self.i += 1
 
         return data
