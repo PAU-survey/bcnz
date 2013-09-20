@@ -15,19 +15,17 @@ def toflux(conf, zdata, data):
 
     A1 = mag == conf['unobs']
     A2 = emag == conf['unobs']
-    A3 = conf['max_magerr'] < emag
-    not_obs = np.logical_or(A1, np.logical_or(A2, A3))
+    not_obs = np.logical_or(A1, A2)
 
+    # Defines not_det as a subset of not_obs
     B1 = (mag == conf['undet'])
     B2 = (emag == conf['undet'])
-    not_det = np.logical_or(B1, B2)
-#    not_obs = np.logical_or(emag == conf['unobs'], conf['max_magerr'] < emag)
-    not_use = np.logical_or(not_det, not_obs)
-    touse = np.logical_not(not_use)
-    assert (1*touse + 1*not_det + 1*not_obs == 1).all()
+    B3 = conf['max_magerr'] < emag
+    not_det = np.logical_or(B1, np.logical_or(B2, B3))
+    not_det = np.logical_and(not_det, np.logical_not(not_obs))
 
-#    print(np.min(emag), np.max(emag))
-#    pdb.set_trace()
+    not_use = not_det 
+    touse = np.logical_not(not_use)
 
     # Clipping on mag value since some values can be unreasonable high..
     emag = np.clip(emag, conf['min_magerr'], 150.)
