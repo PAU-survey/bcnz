@@ -49,9 +49,6 @@ def toflux(conf, zdata, data):
     # expression.
     emag = np.clip(emag, conf['min_magerr'], 150.)
 
-    assert np.max(np.abs(to_use*mag)) < 30
-    assert np.max(to_use*emag) < 5.
-
     # Convert from maginitudes to fluxes
 #    X = scipy.seterr(over='ignore')
     f_obs = to_use*(10**(-0.4*mag))
