@@ -34,9 +34,18 @@ def prob_interval(p,x,plim):
     cdf = p.cumsum(axis=1)
     jmin = np.apply_along_axis(np.searchsorted,1,cdf,qmin)
     jmax = np.apply_along_axis(np.searchsorted,1,cdf,qmax)
+    jmin = np.minimum(jmin, p.shape[1] - 1)
     jmax = np.minimum(jmax, p.shape[1] - 1)
 
-    return x[jmin], x[jmax]
+    # These galaxies are very uncertain. Also set a large probability
+    # range in case someone use this to cut.
+    useless = cdf[:,-1] < 0.999
+    xa = x[jmin]
+    xb = x[jmax]
+    xa[useless] = 0.
+    xb[useless] = 10.
+
+    return xa, xb
 
 
 def find_odds(p,x,xmin,xmax):
@@ -52,7 +61,12 @@ def find_odds(p,x,xmin,xmax):
     imax = np.minimum(imax, p.shape[1] - 1)
     gind = np.arange(p.shape[0])
 
-    return (cdf[gind,imax] - cdf[gind,imin])/cdf[:,-1]
+    # The ones not being able to properly calculate the cdf normalization
+    # is known to have very high chi^2 values.
+    odds = (cdf[gind,imax] - cdf[gind,imin])/cdf[:,-1]
+    odds[cdf[:,-1] < 0.999] = 0.
+
+    return odds
 
 class chi2_calc(object):
     def __init__(self, conf, zdata, data, pop='', dz='',min_rms=''):
@@ -194,7 +208,7 @@ To import priors, you need the following:
         norm = p_bayes.sum(axis=1)
         norm = np.clip(norm, 1e-300, np.inf)
         p_bayes = (p_bayes.T / norm).T
-
+        
         iz_b = p_bayes.argmax(axis=1)
         zb = self.z[iz_b]
 
