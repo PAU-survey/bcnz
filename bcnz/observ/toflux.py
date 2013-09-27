@@ -29,6 +29,10 @@ def toflux(conf, zdata, data):
     not_use = np_or(not_use, conf['max_magerr'] < emag)
     not_use = np_or(not_use, unreal_mag < mag)
 
+    # HACK: The PAUdm can not properly select the right
+    # data..
+    not_use = np_or(not_use, mag < 0.)
+
     to_use = np.logical_not(not_use)
 
     # Note: One will get zero from filtering. I want to avoid people entering
