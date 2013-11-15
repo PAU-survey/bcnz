@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # encoding: UTF8
+
+import os
 import pdb
 import time
 try:
@@ -9,38 +11,6 @@ except ImportError:
 
 import numpy as np
 
-"""
-def create_descr(cols):
-    def colobj(i, col):
-        int_cols = ['id']
-        if col in int_cols:
-            return tables.Int64Col(pos=i)
-        else:
-            return tables.Float64Col(pos=i)
-
-    descr = dict((col, colobj(i,col)) for i,col in enumerate(cols))
-
-    return descr
-
-def create_hdf5(conf, file_path):
-
-    # Move away existing file
-    if os.path.exists(file_path):
-        dst = '%s.bak' % file_path
-        shutil.move(file_path, dst)
-
-        print('File %s exists. Moving it to %s.' % (file_path, dst))
-
-
-    cols = conf['order']+conf['others']
-    descr = create_descr(cols)
-
-    f = tables.openFile(file_path, 'w')
-    f.createGroup('/', 'bcnz')
-    f.createTable('/bcnz', 'bcnz', descr, 'BCNZ photo-z')
-
-    return f
-"""
 
 import filebase
 
@@ -116,9 +86,47 @@ class read_cat(filebase.filebase):
     # Python 2.x compatability
     __next__ = next
 
-class write_cat:
-    def __init__(self, conf, out_file):
-        pass
+
+class write_cat(filebase.filebase):
+
+    def __init__(self, conf, out_name):
+        self.conf = conf
+        self.out_name = out_name
+
+
+    def create_descr(self, cols):
+        def colobj(i, col):
+            int_cols = ['id']
+            if col in int_cols:
+                return tables.Int64Col(pos=i)
+            else:
+                return tables.Float64Col(pos=i)
+    
+        descr = dict((col, colobj(i,col)) for i,col in enumerate(cols))
+    
+        return descr
+
+    def create_hdf5(self, file_path):
+
+        assert not os.path.exists(file_path), 'File already exists: {0}'.format(file_path)
+
+
+        cols = self.conf['order'] + self.conf['others']
+        descr = self.create_descr(cols)
+
+        f = tables.openFile(file_path, 'w')
+        f.createGroup('/', 'photoz')
+        f.createTable('/photoz', 'photoz', descr, 'BCNZ photo-z')
+
+        return f
+
+    def open(self):
+        self.setup()
+
+        self.fb = self.create_hdf5(self.out_path)
 
     def append(self, cat):
         pdb.set_trace()
+
+    def close(self):
+        self.relink()

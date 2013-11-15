@@ -99,17 +99,23 @@ class read_cat(filebase.filebase):
     # Python 2.x compatability.
     next = __next__
 
-class write_cat:
+class write_cat(filebase.filebase):
     """Write ascii catalog to file."""
 
-    def __init__(self, conf, out_file):
-        self.out_file = out_file
+    def __init__(self, conf, out_name):
+        self.conf = conf
+        self.out_name = out_name
+
 
     def open(self):
-        self.fb_out = open(self.out_file, 'w')
+
+        self.setup()
+        self.fb_out = open(self.out_path, 'w')
 
     def close(self):
         self.fb_out.close()
+
+        pdb.set_trace()
 
     def fix_format(self, dtype):
         """Format string for output."""

@@ -5,6 +5,8 @@ import os
 import pdb
 import shutil
 
+import bcnz.lib
+
 class filebase(object):
     def setup(self):
         obj_name = bcnz.lib.obj_hash.hash_structure(self.conf)
@@ -43,3 +45,7 @@ class filebase(object):
         else:
             self.estimate_photoz(self.out_name)
 
+    @property
+    def out_path(self):
+        return self.obj_path if self.conf['use_cache'] else \
+               self.out_name

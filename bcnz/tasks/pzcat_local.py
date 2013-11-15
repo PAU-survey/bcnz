@@ -17,6 +17,8 @@ import bcnz.zdata
 
 import pzcat
 
+import bcnz.lib.obj_hash
+
 class local_task(pzcat.pzcat):
     def __init__(self, myconf, zdata, in_iter, out_table):
         self.config = bcnz.libconf(myconf)
@@ -24,7 +26,10 @@ class local_task(pzcat.pzcat):
         self.in_iter = in_iter
         self.out_table = out_table 
 
+#        self.conf = config
+
     def run(self):
+        print('Running photoz')
         self._run_iter(self.in_iter, self.out_table)
 
 def prepare_tasks(config, zdata):
@@ -81,10 +86,19 @@ class pzcat_local(object):
     def __init__(self, myconf):
         self.config = bcnz.libconf(myconf)
 
+        # My code needs this convention..
+        self.conf = self.config
+
+    @property
+    def hashid(self):
+        return bcnz.lib.obj_hash.hash_structure(self.conf)
+
     def run(self):
+        print('herX')
+
         # Estimate the photoz
         zdata = bcnz.zdata.zdata(self.config)
-        zdata= bcnz.model.add_model(self.config, zdata)
+        zdata = bcnz.model.add_model(self.config, zdata)
 
         tasks = prepare_tasks(self.config, zdata)
         run_tasks(self.config, zdata, tasks)
