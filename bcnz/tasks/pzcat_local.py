@@ -102,3 +102,10 @@ class pzcat_local(object):
 
         tasks = prepare_tasks(self.config, zdata)
         run_tasks(self.config, zdata, tasks)
+
+    def load(self,file_path, info):
+
+        fmt = self.conf['in_format']
+        f = getattr(bcnz.io, fmt).load_pzcat
+
+        return f(file_path)

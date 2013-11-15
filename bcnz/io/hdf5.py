@@ -130,3 +130,12 @@ class write_cat(filebase.filebase):
 
     def close(self):
         self.relink()
+
+def load_pzcat(file_path):
+    """Load the photo-z catalog to a record array."""
+
+    fb = tables.openFile(file_path)
+    cat = fb.getNode('/photoz/photoz').read()
+    fb.close()
+
+    return cat
