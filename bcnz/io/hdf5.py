@@ -114,19 +114,19 @@ class write_cat(filebase.filebase):
         cols = self.conf['order'] + self.conf['others']
         descr = self.create_descr(cols)
 
-        f = tables.openFile(file_path, 'w')
-        f.createGroup('/', 'photoz')
-        f.createTable('/photoz', 'photoz', descr, 'BCNZ photo-z')
+        fb = tables.openFile(file_path, 'w')
+        fb.createGroup('/', 'photoz')
+        self. out_cat = fb.createTable('/photoz', 'photoz', descr, 'BCNZ photo-z')
 
-        return f
+        self.fb = fb
 
     def open(self):
         self.setup()
 
-        self.fb = self.create_hdf5(self.out_path)
+        self.create_hdf5(self.out_path)
 
     def append(self, cat):
-        pdb.set_trace()
+        self.out_cat.append(cat)
 
     def close(self):
         self.relink()
