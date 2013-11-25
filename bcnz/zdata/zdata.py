@@ -59,7 +59,10 @@ class zdata(dict, object):
                     missing_files.append(file_name)
 
             if missing_files:
-                raise Exception('Missing files: {0}'.format(missing_files))
+                msg = '\nMissing files: {missing}\nFound: {found}\nGlob: {g}'.\
+                      format(missing=missing_files, found=file_names, g=g)
+
+                raise Exception(msg)
 
         filters_db = sel_files(self, self['filters'], self.conf['filter_dir'], self.conf['res_fmt'])
         seds_db = sel_files(self, self['seds'], self.conf['sed_dir'], self.conf['sed_fmt'])
