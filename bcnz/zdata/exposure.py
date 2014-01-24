@@ -48,11 +48,10 @@ def exp_in_filters(tray_conf, texp_layout, filters):
 
     return np.array(texp)
 
-def texp(conf, zdata):
+def texp(conf, filters):
     """Exposure time for each filter."""
 
     tray_path = conf['trays']
-    filters = zdata['filters']
 
     tray_conf = find_tray_config(tray_path)
     texp_layout = find_texp_layout(conf, tray_conf)

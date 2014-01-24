@@ -4,3 +4,4 @@
 import pdb
 
 from bcnz.zdata.zdata import zdata
+from bcnz.zdata import exposure
