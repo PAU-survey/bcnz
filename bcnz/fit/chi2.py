@@ -292,7 +292,6 @@ class chi2_combined(object):
         self.ind_faint= ind_faint
         self.use_ind = use_ind
 
-#        pdb.set_trace()
 
     def blocks(self):
         """Iterate over blocs."""
@@ -318,7 +317,6 @@ class chi2_combined(object):
             splitted = np.split(ind.nonzero()[0], s[1:])
 
             for i, p_block in enumerate(chi2_pop.blocks()):
-#                pdb.set_trace()
                 new_block[splitted[i]] = p_block
 
         yield new_block

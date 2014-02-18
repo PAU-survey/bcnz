@@ -66,7 +66,6 @@ class pau(object):
         p = np.einsum('mt,mtz,mt->mtz', f_t, p, inv_norm)
         p = np.swapaxes(p, 1, 2)
 
-#        pdb.set_trace()
         return p
 
     def prior_precalc(self, conf, z, m):

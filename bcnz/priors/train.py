@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+##!/usr/bin/env python
 from __future__ import print_function
 import numpy as np
 import pdb
@@ -83,7 +83,6 @@ class train(object):
         for i in range(tm_arr.shape[0]):
             spl_p_mt[i] = UnivariateSpline(m_c, tm_arr[i], s=smooth)
 
-        #pdb.set_trace()
         return spl_p_mt
 
     def find_edges(self):
@@ -117,7 +116,6 @@ class train(object):
         H = H/m_sum
 
         H = np.nan_to_num(H)
-        #pdb.set_trace()
         spl = Bspl(m_c, zs_c, H, s=smooth)
 
         return spl
@@ -161,7 +159,6 @@ class train(object):
 
             pre[spl_key] = pr_type
 
-#            pdb.set_trace()
 
         pr = np.dstack(nell*[pre[0]]+nspr*[pre[1]]+nirr*[pre[2]])
 

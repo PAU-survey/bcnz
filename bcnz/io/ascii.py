@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+##!/usr/bin/env python
 # encoding: UTF8
 
 import pdb
@@ -114,8 +114,6 @@ class write_cat(filebase.filebase):
 
     def close(self):
         self.fb_out.close()
-
-        pdb.set_trace()
 
     def fix_format(self, dtype):
         """Format string for output."""

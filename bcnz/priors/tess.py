@@ -77,7 +77,6 @@ class tess(object):
         for i in range(tm_arr.shape[0]):
             spl_p_mt[i] = UnivariateSpline(m_c, tm_arr[i], s=smooth)
 
-        #pdb.set_trace()
         return spl_p_mt
 
     def m_zs_tri(self, ind):
@@ -97,13 +96,12 @@ class tess(object):
 
         volume = np.abs(volume)
 
-        #pdb.set_trace()
 
        # neighbors
         return volume
 
     def smooth_volume(self, tess, volume):
-        pdb.set_trace()
+        pass
 
     def construct_tri(self, conf, inds):
         """Construct triangulation of the m,z space."""
@@ -147,7 +145,6 @@ class tess(object):
             pr_type = vol_inv.reshape((nm,nz))
             pr_type = (pr_type.T / pr_type.sum(axis=1)).T
 
-            pdb.set_trace()
             mt_spl = self.spl_p_mt[i]
 
             # Extrapolation or zero???? By now extrapolation...
@@ -163,12 +160,9 @@ class tess(object):
             #pre[i] = vol_inv.reshape((nm,nz))
 
 
-#            pdb.set_trace()
             pre[i] = pr_type
 
-#            pdb.set_tr
         pr = np.dstack(nell*[pre[0]]+nspr*[pre[1]]+nirr*[pre[2]])
-#        pdb.set_trace()
 
         lh *= pr
 
@@ -176,9 +170,6 @@ class tess(object):
 
         return lh
 
-#            vol =  
-#            pdb.set_trace()
-#        raise
 
 def main():
     file_name = '/Users/marberi/pau/photoz/bpz/photoz/mock_faint.cat'

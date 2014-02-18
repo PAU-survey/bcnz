@@ -75,7 +75,6 @@ def run_tasks(config, zdata, tasks):
         nthr = config['nthr']
         ncpu = multiprocessing.cpu_count()
         nparts = nthr if nthr else ncpu
-        #pdb.set_trace()
         pool = multiprocessing.Pool(processes=nparts)
         pool.map(run, tasks)
     else:

@@ -115,7 +115,6 @@ class model_mag(object):
 
         f_new = zoom(f_mod, zoom_fac, order=1)
 
-#        pdb.set_trace()
         return f_new
 
     def __call__(self):

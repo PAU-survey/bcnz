@@ -41,7 +41,6 @@ class kde(object):
         points = np.array(zip(*points))
         dt2 = time.time() - t2
 
-        pdb.set_trace()
         t3 = time.time()
         res = self.gkde.evaluate(points)
         dt3 = time.time() - t3
