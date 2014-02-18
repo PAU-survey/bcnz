@@ -36,16 +36,28 @@ def err_magnitude(conf, zdata, mag):
 
     return yerr_m_obs
 
+def texp(conf, filters):
+    """Find exposure time in each of the filters."""
+
+    texpD = {}
+    for f in ['up', 'g', 'r', 'i', 'z', 'y']:
+        texpD[f] = conf['exp_{0}'.format(f)]
+
+
+    for i, ftray in enumerate(conf['trays']):
+        exp_time = conf['exp_t{0}'.format(i+1)]
+        for f in ftray:
+            texpD[f] = exp_time
+
+    res = [texpD[x] for x in filters]
+
+    return res
+
 def add_noise(conf, zdata, data):
     """Add noise in the magnitudes."""
 
-    raise NotImplemented('Not updated with the latest changes..')
-
-    # Note that the data is still in magnitudes even if the variable names
-    # tell something else.. Yes, its confusing...
-
-    mag = data['f_obs']
-    zdata['t_exp'] = bcnz_exposure.texp(conf, zdata)
+    zdata['t_exp'] = texp(conf, zdata['filters'])
+    mag = data['mag']
     err_mag = err_magnitude(conf, zdata, mag)
 
     ngal, nfilters = err_mag.shape
@@ -55,10 +67,9 @@ def add_noise(conf, zdata, data):
             add_mag[i,j] += normal(scale=err_mag[i,j])
 
     to_use = err_mag < 0.5
-    mag = data['f_obs']
     mag += to_use*add_mag
-    data['f_obs'] = mag
-    data['ef_obs'] = np.where(to_use, err_mag, -99.)
+    data['mag'] = mag
+    data['emag'] = np.where(to_use, err_mag, -99.)
 
 
-    return zdata
+    return data

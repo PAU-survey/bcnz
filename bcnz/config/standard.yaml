@@ -16,7 +16,8 @@ standard:
   
   pr_k_t: [0.186,0.038,0.038]
   
-  use_cache: False
+#  use_cache: False
+  use_cache: True
   tblock: True
   dz_bright: 0.001
   dz_faint: 0.005
@@ -39,7 +40,26 @@ standard:
   RN: 5.
   
   trays: 'tray_matrix_42NB.txt'
-  exp_trays: [45,45,45,50,60,70]
+  exp_t1: 45
+  exp_t2: 45
+  exp_t3: 50
+  exp_t4: 60
+  exp_t5: 75
+
+  exp_up: 45
+  exp_g: 45
+  exp_r: 50
+  exp_i: 75
+  exp_z: 75
+  exp_y: 75
+  trays: 
+    [[4500, 4600, 4700, 4800, 4900, 5000, 5100, 5200],
+     [5300, 5400, 5500, 5600, 5700, 5800, 5900, 6000],
+     [6100, 6200, 6300, 6400, 6500, 6600, 6700, 6800],
+     [6900, 7000, 7100, 7200, 7300, 7400, 7500, 7600],
+     [7700, 7800, 7900, 8000, 8100, 8200, 8300, 8400]]
+
+#  exp_trays: [45,45,45,50,60,70]
   vign: [1.,0.75, 0.375]
   sky_spec: 'sky_spectrum.txt'
   
@@ -51,7 +71,7 @@ standard:
   prior: 'pau'
   train: False
   norm_flux: False
-  cache_dir: '/tmp/cache'
+  cache_dir: '/disks/shear9/marberi/cache/'
   data_dir: 'data'
   ab_dir: 'ab'
   filter_dir: 'filters'

@@ -36,6 +36,18 @@ descr:
   RN: 'Readout noise'
   
   trays: 'Tray layout.'
+  exp_t1: 'Exposure tray 1'
+  exp_t2: 'Exposure tray 2'
+  exp_t3: 'Exposure tray 3'
+  exp_t4: 'Exposure tray 4'
+  exp_t5: 'Exposure tray 5'
+  exp_up: 'Exposure band u'
+  exp_g: 'Exposure band g'
+  exp_r: 'Exposure band r'
+  exp_i: 'Exposure band i'
+  exp_z: 'Exposure band z'
+  exp_y: 'Exposure band y'
+
   exp_trays: 'Exposure in different trays'
   vign: 'Vignetting (center peripheral corner)'
   sky_spec: 'Sky spectrum.'

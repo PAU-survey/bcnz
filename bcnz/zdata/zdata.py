@@ -72,6 +72,6 @@ class zdata(dict, object):
         # To not require tray configurations to always be
         # present.
         if self.conf['add_noise']:
-            zdata['texp'] = bcnz.zdata.exposure.texp(self.conf, self['filters'])
+            self['texp'] = bcnz.zdata.exposure.texp(self.conf, self['filters'])
 
-        return zdata
+#        return zdata
