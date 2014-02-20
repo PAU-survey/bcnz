@@ -34,7 +34,8 @@ def err_magnitude(conf, zdata, mag):
 
     yerr_m_obs = np.sqrt(yerr_m_obs**2 + ynoise_ctn**2)
 
-    return yerr_m_obs
+
+    return yerr_m_obs, yStoN
 
 def texp(conf, filters):
     """Find exposure time in each of the filters."""
@@ -58,7 +59,7 @@ def add_noise(conf, zdata, data):
 
     zdata['t_exp'] = texp(conf, zdata['filters'])
     mag = data['mag']
-    err_mag = err_magnitude(conf, zdata, mag)
+    err_mag, SN = err_magnitude(conf, zdata, mag)
 
     ngal, nfilters = err_mag.shape
     add_mag = np.zeros((ngal, nfilters))
@@ -66,7 +67,8 @@ def add_noise(conf, zdata, data):
         for j in range(nfilters):
             add_mag[i,j] += normal(scale=err_mag[i,j])
 
-    to_use = err_mag < 0.5
+    to_use = np.logical_and(err_mag < 0.5, conf['sn_lim'] <= SN)
+
     mag += to_use*add_mag
     data['mag'] = mag
     data['emag'] = np.where(to_use, err_mag, -99.)

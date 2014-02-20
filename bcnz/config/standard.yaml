@@ -15,7 +15,9 @@ standard:
   pr_fo_t: [0.48,0.22,0.22]
   
   pr_k_t: [0.186,0.038,0.038]
-  
+ 
+  sn_lim: 5. 
+
 #  use_cache: False
   use_cache: True
   tblock: True
