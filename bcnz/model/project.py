@@ -112,6 +112,7 @@ class model_mag(object):
             # A change of name is needed sine HDF5 does not support
             # storing nodes with numerical names.
             try:
+                int(filter_name)
                 fname_store = 'NB{0}'.format(filter_name)
             except ValueError:
                 fname_store = filter_name
@@ -126,38 +127,53 @@ class model_mag(object):
 
         fb.close()
 
-
     # Functions used when loading the results.
-    def f_mod(self, z):
-        """Model frequencies."""
+    def _load_ab(self):
+        """Load the raw arrays from the AB files."""
 
-        dir_ab = os.path.join(os.environ['HOME'],self.conf['cache_dir'], 'ab')
-        if not os.path.exists(dir_ab):
-            os.makedirs(dir_ab)
+        ab_path = self._ab_path()
+        assert os.path.exists(ab_path), 'The import AB file does not exists.'
+
+        fb = tables.openFile(ab_path)
+        ab_grp = fb.getNode('/')
+
+        ab = {}
+        for fname_store, ab_filter_grp in ab_grp._v_children.iteritems():
+            filter_name = fname_store if not fname_store.startswith('NB') \
+                          else int(fname_store.replace('NB', ''))
+
+            for sed_name, ab_obj in ab_filter_grp._v_children.iteritems():
+                ab[filter_name, sed_name] = ab_obj.read()
+
+        fb.close()
+
+        return ab
+
+    def f_mod(self, z):
+        """Create the array with expected fluxes for different SEDS,
+           filters and redshifts.
+        """
+
 
         seds = self.zdata['seds']
         filters = self.zdata['filters']
         z = self.zdata['z']
 
+        abD = self._load_ab()
 
         # This method is not the fastest, but works slightly faster
         # than the linear interpolation in BPZ!
         f_mod = np.zeros((len(z), len(seds), len(filters)))
         for i,sed in enumerate(seds):
             for j,filter_name in enumerate(filters):
-                file_name = '%s.%s.AB' % (sed, filter_name)
-                file_path = os.path.join(dir_ab, file_name)
+                ab_array = abD[filter_name, sed]
+                spl = splrep(ab_array['z'], ab_array['ab'])
 
-                x,y = np.loadtxt(file_path, unpack=True)
-                spl = splrep(x,y)
                 y_new = splev(z, spl)
 
                 f_mod[:,i,j] = y_new
 
         return f_mod
-
-
-
 
     def interp(self, f_mod):
         """Interpolation between spectras."""
