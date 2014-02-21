@@ -16,6 +16,30 @@ import tables
 
 np.seterr('raise')
 
+
+# Functions used when loading the results.
+def _load_ab(ab_path):
+    """Load the raw arrays from the AB files."""
+
+    assert os.path.exists(ab_path), 'The import AB file does not exists.'
+
+    fb = tables.openFile(ab_path)
+    ab_grp = fb.getNode('/')
+
+    ab = {}
+    for fname_store, ab_filter_grp in ab_grp._v_children.iteritems():
+        filter_name = fname_store if not fname_store.startswith('NB') \
+                      else int(fname_store.replace('NB', ''))
+
+        for sed_name, ab_obj in ab_filter_grp._v_children.iteritems():
+            ab[filter_name, sed_name] = ab_obj.read()
+
+    fb.close()
+
+    return ab
+
+
+
 class model_mag(object):
     def set_ninterp(self, filters):
         """Number of interpolation points for each filter."""
@@ -127,27 +151,6 @@ class model_mag(object):
 
         fb.close()
 
-    # Functions used when loading the results.
-    def _load_ab(self):
-        """Load the raw arrays from the AB files."""
-
-        ab_path = self._ab_path()
-        assert os.path.exists(ab_path), 'The import AB file does not exists.'
-
-        fb = tables.openFile(ab_path)
-        ab_grp = fb.getNode('/')
-
-        ab = {}
-        for fname_store, ab_filter_grp in ab_grp._v_children.iteritems():
-            filter_name = fname_store if not fname_store.startswith('NB') \
-                          else int(fname_store.replace('NB', ''))
-
-            for sed_name, ab_obj in ab_filter_grp._v_children.iteritems():
-                ab[filter_name, sed_name] = ab_obj.read()
-
-        fb.close()
-
-        return ab
 
     def f_mod(self, z):
         """Create the array with expected fluxes for different SEDS,
@@ -159,7 +162,7 @@ class model_mag(object):
         filters = self.zdata['filters']
         z = self.zdata['z']
 
-        abD = self._load_ab()
+        abD = _load_ab(self._ab_path())
 
         # This method is not the fastest, but works slightly faster
         # than the linear interpolation in BPZ!
