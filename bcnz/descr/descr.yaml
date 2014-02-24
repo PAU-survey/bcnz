@@ -99,3 +99,6 @@ descr:
   err_fmt: 'Prefix to magnitude error field in HDF5 catalogs.'
   from_bcnz: 'Fields BCNZ can calculate.'
   prior_mag: 'Filter used to calibrate the priors.'
+
+  out_pdf: 'Output the pdf'
+  pdf_type: 'Include type information in the pdf'

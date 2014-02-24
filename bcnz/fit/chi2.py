@@ -191,6 +191,26 @@ To import priors, you need the following:
         # Using numexpr does not improve this evaluation.
         pb = -0.5*(chi2_ig_last - min_chi2)
         pb = np.exp(pb).swapaxes(0,2)
+
+        output = {}
+        if self.conf['out_pdf']:
+            dzbin = self.conf['dz']
+            # Here splitting the code in two is cleaner than doing something
+            # fancy.
+            if self.conf['pdf_type']:
+                # To avoid dividing on zero. This code might be optimized.
+                A = pb.sum(axis=1)
+                mask = A < 1e-200
+                norm = 1./(dzbin*A + 1e-200*mask)
+                norm[mask] = 0.
+
+                pdf = np.einsum('ijk,ik->ijk', pb, norm)
+            else:
+                pdf = pb.sum(axis=2)
+                norm = 1./(dzbin*pdf.sum(axis=1))
+                pdf = (pdf.T * norm).T
+
+            output['pdf'] = pdf
         
         # Add priors.
         if self.conf['use_priors']:
@@ -229,22 +249,24 @@ To import priors, you need the following:
 
         # Actual number of galaxies in the block.
         ngal = min(imax, self.data['id'].shape[0]) - imin
-        block = np.zeros(ngal, self.dtype)
-        block['id'] = self.data['id'][imin:imax]
-        block['zb'] = self.z[iz_b]
-        block['zb_min'] = zb_min
-        block['zb_max'] = zb_max
-        block['t_b'] = tt_b + 1 
-        block['odds'] = odds
-        block['z_ml'] = self.z[iz]
-        block['t_ml'] = tt_ml + 1
-        block['chi2'] = red_chi2
+        peak = np.zeros(ngal, self.dtype)
+        peak['id'] = self.data['id'][imin:imax]
+        peak['zb'] = self.z[iz_b]
+        peak['zb_min'] = zb_min
+        peak['zb_max'] = zb_max
+        peak['t_b'] = tt_b + 1 
+        peak['odds'] = odds
+        peak['z_ml'] = self.z[iz]
+        peak['t_ml'] = tt_ml + 1
+        peak['chi2'] = red_chi2
 
         for key in ['z_s', 'ra', 'dec', 'spread_model_i', 'm_0']:
             if key in self.conf['order']:
-                block[key] = self.data[key][imin:imax]
+                peak[key] = self.data[key][imin:imax]
 
-        return block
+        output['peak'] = peak
+
+        return output
 
     def blocks(self):
         """Iterate over the different blocks."""
