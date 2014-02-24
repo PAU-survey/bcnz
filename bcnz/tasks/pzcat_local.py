@@ -48,13 +48,16 @@ def prepare_tasks(config, zdata):
 
     in_fmt = config['in_format']
     out_fmt = config['out_format']
+    nz, nt, _ = zdata['f_mod'].shape
 
     tasks = []
     for obs_file in cat_files:
-        out_file = '%s.bcnz' % os.path.splitext(obs_file)[0]
+        name = os.path.splitext(obs_file)[0]
+        out_peaks = '{0}.bcnz'.format(name)
+        out_pdfs = '{0}.pdf'.format(name)
 
         in_iter = getattr(bcnz.io, in_fmt).read_cat(config, zdata, obs_file)
-        out_table = getattr(bcnz.io, out_fmt).write_cat(config, out_file)
+        out_table = getattr(bcnz.io, out_fmt).write_cat(config, out_peaks, out_pdfs, nz, nt)
 
         tasks.append(local_task(config, zdata, in_iter, out_table))
 

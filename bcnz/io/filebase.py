@@ -12,26 +12,21 @@ class filebase(object):
         obj_name = bcnz.lib.obj_hash.hash_structure(self.conf)
 
         if self.conf['cache_dir']:
-            self.cache_dir = os.path.join(self.conf['cache_dir'],\
+            self.cache_tdir = os.path.join(self.conf['cache_dir'],\
                                           'pzcat')
         else:
             root_dir = self.conf['root']
             self.cache_dir = os.path.join(root_dir, 'cache')
 
-        self.obj_path = os.path.join(self.cache_dir, obj_name)
+        cache_dir = self.conf['cache_dir'] if 'cache_dir' in self.conf \
+                    else os.path.join(self.conf['root'], 'cache')
 
-    def relink(self):
-        """Link output file name to the object file."""
-
-        if os.path.isfile(self.out_name):
-            shutil.move(self.out_name, "%s.bak" % self.out_name)
-
-        if os.path.islink(self.out_name):
-            os.remove(self.out_name)
-
-        os.symlink(self.obj_path, self.out_name)
+        self._obj_path_peaks = os.path.join(cache_dir, 'pzcat', obj_name)
+        self._obj_path_pdfs = os.path.join(cache_dir, 'pzpdf', obj_name)
 
     def run_file(self):
+        assert False, 'Is this actually in use????'
+
         if not os.path.isdir(self.cache_dir):
             os.mkdir(self.cache_dir)
 

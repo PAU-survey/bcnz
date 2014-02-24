@@ -93,10 +93,14 @@ class read_cat(filebase.filebase):
 
 class write_cat(filebase.filebase):
 
-    def __init__(self, conf, out_name):
+    def __init__(self, conf, out_peaks, out_pdfs, nz, nt):
         self.conf = conf
-        self.out_name = out_name
+        self.out_peaks = out_peaks
+        self.out_pdfs = out_pdfs
+        self.nz = nz
+        self.nt = nt
 
+        self._write_pdfs = self.conf['out_pdf']
 
     def create_descr(self, cols):
         def colobj(i, col):
@@ -110,7 +114,8 @@ class write_cat(filebase.filebase):
     
         return descr
 
-    def create_hdf5(self, file_path):
+    def _create_file_peaks(self, file_path):
+        """Initialize empty file for storing the photo-z peaks."""
 
         assert not os.path.exists(file_path), 'File already exists: {0}'.format(file_path)
 
@@ -120,20 +125,47 @@ class write_cat(filebase.filebase):
 
         fb = tables.openFile(file_path, 'w')
         fb.createGroup('/', 'photoz')
-        self. out_cat = fb.createTable('/photoz', 'photoz', descr, 'BCNZ photo-z')
+        peaks = fb.createTable('/photoz', 'photoz', descr, 'BCNZ photo-z')
 
-        self.fb = fb
+        return peaks, fb
+
+    def _create_file_pdfs(self, file_path):
+        """Initialize empty file for storing the photo-z pdfs."""
+
+        assert not os.path.exists(file_path), 'File already exists: {0}'.format(file_path)
+
+        fb = tables.openFile(file_path, 'w')
+        shape = (0, self.nz, self.nt) if self.conf['pdf_type'] else (0, self.nz)
+        pdfs = fb.createEArray('/', 'pdfs', tables.FloatAtom(), shape)
+
+        return pdfs, fb
 
     def open(self):
         self.setup()
 
-        self.create_hdf5(self.out_path)
+        if self.conf['use_cache']:
+            peaks_path = self._obj_path_peaks
+            pdfs_path = self._obj_path_pdfs
+        else:
+            peaks_path = self.out_peaks
+            pdfs_path = self.out_pdfs
 
-    def append(self, cat):
-        self.out_cat.append(cat)
+        self._peaks, self._peaks_file = self._create_file_peaks(peaks_path)
+        if self._write_pdfs:
+            self._pdfs, self._pdfs_file = self._create_file_pdfs(pdfs_path)
+
+    def append(self, output):
+        self._peaks.append(output['peaks'])
+
+        if self._write_pdfs:
+            self._pdfs.append(output['pdfs'])
 
     def close(self):
-        self.relink()
+        """Make sure the files are properly closed."""
+
+        self._peaks_file.close()
+        if self._write_pdfs:
+            self._pdfs_file.close()
 
 def load_pzcat(file_path):
     """Load the photo-z catalog to a record array."""

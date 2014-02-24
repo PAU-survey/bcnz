@@ -210,7 +210,7 @@ To import priors, you need the following:
                 norm = 1./(dzbin*pdf.sum(axis=1))
                 pdf = (pdf.T * norm).T
 
-            output['pdf'] = pdf
+            output['pdfs'] = pdf
         
         # Add priors.
         if self.conf['use_priors']:
@@ -249,22 +249,22 @@ To import priors, you need the following:
 
         # Actual number of galaxies in the block.
         ngal = min(imax, self.data['id'].shape[0]) - imin
-        peak = np.zeros(ngal, self.dtype)
-        peak['id'] = self.data['id'][imin:imax]
-        peak['zb'] = self.z[iz_b]
-        peak['zb_min'] = zb_min
-        peak['zb_max'] = zb_max
-        peak['t_b'] = tt_b + 1 
-        peak['odds'] = odds
-        peak['z_ml'] = self.z[iz]
-        peak['t_ml'] = tt_ml + 1
-        peak['chi2'] = red_chi2
+        peaks = np.zeros(ngal, self.dtype)
+        peaks['id'] = self.data['id'][imin:imax]
+        peaks['zb'] = self.z[iz_b]
+        peaks['zb_min'] = zb_min
+        peaks['zb_max'] = zb_max
+        peaks['t_b'] = tt_b + 1 
+        peaks['odds'] = odds
+        peaks['z_ml'] = self.z[iz]
+        peaks['t_ml'] = tt_ml + 1
+        peaks['chi2'] = red_chi2
 
         for key in ['z_s', 'ra', 'dec', 'spread_model_i', 'm_0']:
             if key in self.conf['order']:
-                peak[key] = self.data[key][imin:imax]
+                peaks[key] = self.data[key][imin:imax]
 
-        output['peak'] = peak
+        output['peaks'] = peaks
 
         return output
 
