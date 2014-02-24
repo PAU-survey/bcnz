@@ -68,7 +68,11 @@ class read_cat(filebase.filebase):
         err_fields = self.err_fields
         for j in range(nf):
             mag[:,j] = tbl_array[mag_fields[j]]
-            err[:,j] = tbl_array[err_fields[j]]
+
+            # In the case of adding errors, this field is not always
+            # present in the input catalog.
+            if not self.conf['add_noise']:
+                err[:,j] = tbl_array[err_fields[j]]
 
         data['mag'] = mag
         data['emag'] = err
