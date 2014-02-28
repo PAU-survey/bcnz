@@ -21,7 +21,7 @@ def texp(conf, filters):
             tall[f] = t_tray
 
     # Sorry...
-    for f in ['up', 'g', 'r', 'i', 'z', 'y']:
+    for f in ['up', 'g', 'r', 'i', 'z', 'y', 'Y', 'J', 'H']:
         tall[f] = conf['exp_{0}'.format(f)]
 
     texp = [tall[f] for f in filters]

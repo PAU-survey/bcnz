@@ -54,6 +54,13 @@ standard:
   exp_i: 75
   exp_z: 75
   exp_y: 75
+
+  # EUCLID NIR Bands (temporary exposure times)
+  exp_Y: 75
+  exp_J: 75
+  exp_H: 75
+
+
   trays: 
     [[4500, 4600, 4700, 4800, 4900, 5000, 5100, 5200],
      [5300, 5400, 5500, 5600, 5700, 5800, 5900, 6000],
