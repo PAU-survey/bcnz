@@ -6,10 +6,28 @@ import pdb
 import numpy as np
 import time
 from numpy.random import normal
+from scipy.interpolate import splev, splrep
 
 import bcnz
 
-def err_magnitude(conf, zdata, mag):
+def texp(conf, filters):
+    """Find exposure time in each of the filters."""
+
+    texpD = {}
+    for f in ['up', 'g', 'r', 'i', 'z', 'y', 'Y', 'J', 'H']:
+        texpD[f] = conf['exp_{0}'.format(f)]
+
+
+    for i, ftray in enumerate(conf['trays']):
+        exp_time = conf['exp_t{0}'.format(i+1)]
+        for f in ftray:
+            texpD[f] = exp_time
+
+    res = [texpD[x] for x in filters]
+
+    return res
+
+def err_mag(conf, zdata, mag):
     """Error in magnitudes from the telescope and sky."""
 
     in_r = zdata['in_r']
@@ -34,28 +52,37 @@ def err_magnitude(conf, zdata, mag):
 
     yerr_m_obs = np.sqrt(yerr_m_obs**2 + ynoise_ctn**2)
 
-
     return yerr_m_obs, yStoN
 
-def texp(conf, filters):
-    """Find exposure time in each of the filters."""
+def sn_spls(conf, zdata):
+    """Construct splines with magnitude errors and SN."""
 
-    texpD = {}
-    for f in ['up', 'g', 'r', 'i', 'z', 'y']:
-        texpD[f] = conf['exp_{0}'.format(f)]
+    import ipdb
+    filters = zdata['filters']
+    mag_interp = np.linspace(15., 30)
+    mag = np.tile(mag_interp, (len(filters), 1)).T
 
 
-    for i, ftray in enumerate(conf['trays']):
-        exp_time = conf['exp_t{0}'.format(i+1)]
-        for f in ftray:
-            texpD[f] = exp_time
+    merrD, sn_splD = {}, {}
+    mag_err, SN = err_mag(conf, zdata, mag)
+    for i,f in enumerate(filters):
+        merrD[f] = splrep(mag_interp, mag_err[:,i])
+        sn_splD[f] = splrep(mag_interp, SN[:,i])
 
-    res = [texpD[x] for x in filters]
+    return {'merrD': merrD, 'sn_splD': sn_splD}
 
-    return res
 
-def add_noise(conf, zdata, data):
+def noise_info(conf, zdata):
+
+    zdata['texp'] = texp(conf, zdata['filters'])
+    zdata['sn_spls'] = sn_spls(conf, zdata)
+ 
+    return noise_zdata
+
+def OLDadd_noise(conf, zdata, data):
     """Add noise in the magnitudes."""
+
+    raise NotImplentedError, 'This is moved...'
 
     zdata['t_exp'] = texp(conf, zdata['filters'])
     mag = data['mag']

@@ -2,7 +2,7 @@
 # encoding: UTF8
 
 # All the post processing after reading in the data.
-import pdb
+import ipdb
 import numpy as np
 
 import bcnz
@@ -22,6 +22,27 @@ def setid_m0s(conf, data):
 
     return data
 
+def add_noise(conf, zdata, data):
+    """Add noise in the magnitudes."""
+
+#    zdata['t_exp'] = texp(conf, zdata['filters'])
+    mag = data['mag']
+    err_mag, SN = err_magnitude(conf, zdata, mag)
+
+    ngal, nfilters = err_mag.shape
+    add_mag = np.zeros((ngal, nfilters))
+    for i in range(ngal):
+        for j in range(nfilters):
+            add_mag[i,j] += normal(scale=err_mag[i,j])
+
+    to_use = np.logical_and(err_mag < 0.5, conf['sn_lim'] <= SN)
+
+    mag += to_use*add_mag
+    data['mag'] = mag
+    data['emag'] = np.where(to_use, err_mag, -99.)
+
+
+    return data
 
 def post_pros(conf, zdata, data):
     """Post processing of the observations."""
@@ -29,7 +50,7 @@ def post_pros(conf, zdata, data):
     data = setid_m0s(conf, data)
 
     if conf['add_noise']:
-        bcnz.observ.noise.add_noise(conf, zdata, data)
+        data = add_noise(conf, zdata, data)
 
     data = bcnz.observ.toflux(conf, zdata, data)
     return data

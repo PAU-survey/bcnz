@@ -3,5 +3,3 @@
 
 from bcnz.observ.post_pros import post_pros
 from bcnz.observ.toflux import toflux
-
-from bcnz.observ import noise

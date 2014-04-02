@@ -22,6 +22,8 @@ class zdata(dict, object):
         self['seds'] = self.conf['seds']
 
         self.check_filenames()
+
+        self.update(bcnz.model.sed_filters()(conf, self))
         self.add_texp()
 
     def z_binning(self):
@@ -72,6 +74,7 @@ class zdata(dict, object):
         # To not require tray configurations to always be
         # present.
         if self.conf['add_noise']:
-            self['texp'] = bcnz.zdata.exposure.texp(self.conf, self['filters'])
+            self['t_exp'] = bcnz.zdata.noise.texp(self.conf, self['filters'])
 
-#        return zdata
+            # Passing the object itself to another function is not really normal
+            self.update(bcnz.zdata.noise.sn_spls(self.conf, self))
