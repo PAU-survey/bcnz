@@ -17,6 +17,7 @@ descr:
   pr_k_t: 'Prior parameter k_t'
 
   sn_lim: 'Limit for using magnitudes.'  
+  from_space: 'Bands observed from space.'
 
   use_cache: 'Use temporary files to save the results.'
   tblock: 'Test working with blocks'

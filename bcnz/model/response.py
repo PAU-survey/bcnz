@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
+import ipdb
 import os
 import pdb
 import numpy as np
@@ -44,6 +45,8 @@ class sed_filters(object):
 
         in_r = np.array([in_rD[x] for x in filters])
         in_sky = np.array([in_skyD[x] for x in filters])
+
+#        ipdb.set_trace()
 
         return rlim, r_const, spls, in_r, in_sky
 

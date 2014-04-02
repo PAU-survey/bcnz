@@ -52,22 +52,27 @@ def err_mag(conf, zdata, mag):
 
     yerr_m_obs = np.sqrt(yerr_m_obs**2 + ynoise_ctn**2)
 
-    return yerr_m_obs, yStoN
+    other = {'SN': yStoN, 'N_sig': yN_sig, 'N_sky': yN_sky,
+             'N_rn': conf['RN']**2.}
+
+    return yerr_m_obs, yStoN, other
 
 def sn_spls(conf, zdata):
     """Construct splines with magnitude errors and SN."""
 
     import ipdb
     filters = zdata['filters']
-    mag_interp = np.linspace(15., 30)
+    mag_interp = np.linspace(15., 35, 100)
     mag = np.tile(mag_interp, (len(filters), 1)).T
 
 
     merrD, sn_splD = {}, {}
-    mag_err, SN = err_mag(conf, zdata, mag)
+    mag_err, SN, other = err_mag(conf, zdata, mag)
     for i,f in enumerate(filters):
         merrD[f] = splrep(mag_interp, mag_err[:,i])
         sn_splD[f] = splrep(mag_interp, SN[:,i])
+
+#    ipdb.set_trace()
 
     return {'merrD': merrD, 'sn_splD': sn_splD}
 

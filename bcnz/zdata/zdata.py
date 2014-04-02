@@ -9,6 +9,7 @@ import pdb
 import numpy as np
 
 import bcnz
+import bcnz.model
 
 class zdata(dict, object):
     msg_filters = 'Missing filter files: {0}'
