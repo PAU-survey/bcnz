@@ -36,7 +36,9 @@ descr:
   aperture: 'Aperture'
   scale: 'Scale'
   n_exp: 'Number of exposures'
+  n_exp_space: 'Number of exposures from space'
   RN: 'Readout noise'
+  RN_space: 'Readout noise from space'
   dnoise: 'Dark current'
   dnoise_space: 'Dark current from space'
   

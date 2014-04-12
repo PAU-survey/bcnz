@@ -43,6 +43,10 @@ def err_mag(conf, zdata, mag):
     t_exp = np.array(t_exp)
     dnoise = np.where(from_ground, conf['dnoise'], conf['dnoise_space'])
 
+    N_rn = np.where(from_ground, conf['n_exp']*conf['RN']**2, \
+                    conf['n_exp_space']*conf['RN_space']**2)
+
+
     N_dcur = n_pix*t_exp*dnoise
 
     tel_surface = np.pi*(conf['D_tel']/2.)**2.
@@ -57,7 +61,7 @@ def err_mag(conf, zdata, mag):
     yN_sky = np.where(from_ground, yN_sky, 0.)
 
     yStoN =  np.sqrt(n_pix*conf['n_exp'])*yN_sig / \
-             np.sqrt(conf['RN']**2 + yN_sig + N_dsky + yN_sky)
+             np.sqrt(N_rn + yN_sig + N_dcur + yN_sky)
     yerr_m_obs = 2.5*np.log10(1.+ 1./yStoN)
 
     ynoise_ctn = 2.5*np.log10(1 + 0.02)

@@ -39,7 +39,9 @@ standard:
   aperture: 2.0
   scale: 0.27
   n_exp: 2.
+  n_exp_space: 2.
   RN: 5.
+  RN_space: 5.
   dnoise: 0.
   dnoise_space: 0.
   trays: 'tray_matrix_42NB.txt'
