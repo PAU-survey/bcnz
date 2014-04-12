@@ -2,7 +2,7 @@
 # encoding: UTF8
 
 import copy
-import pdb
+import ipdb
 import numpy as np
 import time
 from numpy.random import normal
@@ -36,6 +36,15 @@ def err_mag(conf, zdata, mag):
     pix_size = conf['scale']**2.
     n_pix = conf['aperture'] / pix_size
 
+    all_filters = conf['filters']
+    from_ground = np.array([(x not in conf['from_space']) for \
+                            x in all_filters]) 
+
+    t_exp = np.array(t_exp)
+    dnoise = np.where(from_ground, conf['dnoise'], conf['dnoise_space'])
+
+    N_dcur = n_pix*t_exp*dnoise
+
     tel_surface = np.pi*(conf['D_tel']/2.)**2.
     pre = (tel_surface/n_pix)*(3631.0*1.51*1e7)
 
@@ -45,15 +54,19 @@ def err_mag(conf, zdata, mag):
     # For each filter..
     yN_sky = tel_surface*pix_size*(in_sky*t_exp)
 
+    yN_sky = np.where(from_ground, yN_sky, 0.)
+
     yStoN =  np.sqrt(n_pix*conf['n_exp'])*yN_sig / \
-             np.sqrt(conf['RN']**2 + yN_sig + yN_sky)
-    ynoise_ctn = 2.5*np.log10(1 + 0.02)
+             np.sqrt(conf['RN']**2 + yN_sig + N_dsky + yN_sky)
     yerr_m_obs = 2.5*np.log10(1.+ 1./yStoN)
 
+    ynoise_ctn = 2.5*np.log10(1 + 0.02)
     yerr_m_obs = np.sqrt(yerr_m_obs**2 + ynoise_ctn**2)
 
     other = {'SN': yStoN, 'N_sig': yN_sig, 'N_sky': yN_sky,
              'N_rn': conf['RN']**2.}
+
+    ipdb.set_trace()
 
     return yerr_m_obs, yStoN, other
 

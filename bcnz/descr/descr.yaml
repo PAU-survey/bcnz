@@ -37,6 +37,8 @@ descr:
   scale: 'Scale'
   n_exp: 'Number of exposures'
   RN: 'Readout noise'
+  dnoise: 'Dark current'
+  dnoise_space: 'Dark current from space'
   
   trays: 'Tray layout.'
   exp_t1: 'Exposure tray 1'
