@@ -34,7 +34,7 @@ def err_mag(conf, zdata, mag):
     in_sky = zdata['in_sky']
     t_exp = zdata['t_exp']
 #    pix_size = conf['scale']**2.
-    n_pix = conf['aperture'] / pix_size
+#    n_pix = conf['aperture'] / pix_size
 
     all_filters = conf['filters']
     from_ground = np.array([(x not in conf['from_space']) for \
@@ -59,11 +59,15 @@ def err_mag(conf, zdata, mag):
 #    ipdb.set_trace()
 
     # Filters are second index..
-    N_sig = pre*conf['n_exp']*10**(-0.4*mag)*(in_r*t_exp)
+    n_exp = np.where(from_ground, conf['n_exp'], conf['n_exp_space'])
+    N_sig = pre*n_exp*10**(-0.4*mag)*(in_r*t_exp)
+
     # For each filter..
+    pix_size = np.where(from_ground, conf['pixscale']**2, conf['pixscale_space']**2.)
     N_sky = tel_surface*pix_size*(in_sky*t_exp)
     N_sky = np.where(from_ground, N_sky, 0.)
 
+#    ipdb.set_trace()
     SN =  np.sqrt(n_pix*conf['n_exp'])*N_sig / \
           np.sqrt(N_rn + N_sig + N_dcur + N_sky)
 
@@ -75,7 +79,7 @@ def err_mag(conf, zdata, mag):
     other = {'SN': SN, 'N_sig': N_sig, 'N_sky': N_sky,
              'N_rn': conf['RN']**2.}
 
-    ipdb.set_trace()
+#    ipdb.set_trace()
 
     return err_m_obs, SN, other
 
