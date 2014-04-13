@@ -33,7 +33,7 @@ def err_mag(conf, zdata, mag):
     in_r = zdata['in_r']
     in_sky = zdata['in_sky']
     t_exp = zdata['t_exp']
-    pix_size = conf['scale']**2.
+#    pix_size = conf['scale']**2.
     n_pix = conf['aperture'] / pix_size
 
     all_filters = conf['filters']
@@ -42,7 +42,10 @@ def err_mag(conf, zdata, mag):
 
     t_exp = np.array(t_exp)
     dnoise = np.where(from_ground, conf['dnoise'], conf['dnoise_space'])
+    n_pix = np.where(from_ground, conf['aperture'] / conf['pixscale']**2., \
+                     conf['aperture'] / conf['pixscale_space']**2.)
 
+#    ipdb.set_trace()
     N_rn = np.where(from_ground, conf['n_exp']*conf['RN']**2, \
                     conf['n_exp_space']*conf['RN_space']**2)
 
