@@ -33,6 +33,7 @@ descr:
   m_step: 'Resolution in magnitude prior interpolation'
   output: 'Output file'
   D_tel: 'Telescope diameter'
+  D_tel_space: 'Telescope diameter from space'
   aperture: 'Aperture'
   scale: 'Scale'
   n_exp: 'Number of exposures'

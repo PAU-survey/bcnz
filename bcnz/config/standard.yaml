@@ -36,6 +36,7 @@ standard:
   output: ''
   
   D_tel: 4.2
+  D_tel_space: 4.2
   aperture: 2.0
   scale: 0.27
   n_exp: 2.

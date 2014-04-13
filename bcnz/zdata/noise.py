@@ -49,30 +49,32 @@ def err_mag(conf, zdata, mag):
 
     N_dcur = n_pix*t_exp*dnoise
 
-    tel_surface = np.pi*(conf['D_tel']/2.)**2.
+    D_tel = np.where(from_ground, conf['D_tel'], conf['D_tel_space'])
+    tel_surface = np.pi*(D_tel/2.)**2.
     pre = (tel_surface/n_pix)*(3631.0*1.51*1e7)
 
+#    ipdb.set_trace()
+
     # Filters are second index..
-    yN_sig = pre*10**(-0.4*mag)*(in_r*t_exp)
-
+    N_sig = pre*conf['n_exp']*10**(-0.4*mag)*(in_r*t_exp)
     # For each filter..
-    yN_sky = tel_surface*pix_size*(in_sky*t_exp)
+    N_sky = tel_surface*pix_size*(in_sky*t_exp)
+    N_sky = np.where(from_ground, N_sky, 0.)
 
-    yN_sky = np.where(from_ground, yN_sky, 0.)
+    SN =  np.sqrt(n_pix*conf['n_exp'])*N_sig / \
+          np.sqrt(N_rn + N_sig + N_dcur + N_sky)
 
-    yStoN =  np.sqrt(n_pix*conf['n_exp'])*yN_sig / \
-             np.sqrt(N_rn + yN_sig + N_dcur + yN_sky)
-    yerr_m_obs = 2.5*np.log10(1.+ 1./yStoN)
+    err_m_obs = 2.5*np.log10(1.+ 1./SN)
+    noise_ctn = 2.5*np.log10(1 + 0.02)
 
-    ynoise_ctn = 2.5*np.log10(1 + 0.02)
-    yerr_m_obs = np.sqrt(yerr_m_obs**2 + ynoise_ctn**2)
+    err_m_obs = np.sqrt(err_m_obs**2 + noise_ctn**2)
 
-    other = {'SN': yStoN, 'N_sig': yN_sig, 'N_sky': yN_sky,
+    other = {'SN': SN, 'N_sig': N_sig, 'N_sky': N_sky,
              'N_rn': conf['RN']**2.}
 
     ipdb.set_trace()
 
-    return yerr_m_obs, yStoN, other
+    return err_m_obs, SN, other
 
 def sn_spls(conf, zdata):
     """Construct splines with magnitude errors and SN."""
