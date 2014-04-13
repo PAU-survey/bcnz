@@ -64,12 +64,13 @@ def err_mag(conf, zdata, mag):
 
     # For each filter..
     pix_size = np.where(from_ground, conf['pixscale']**2, conf['pixscale_space']**2.)
-    N_sky = tel_surface*pix_size*(in_sky*t_exp)
+    N_sky = tel_surface*n_exp*pix_size*(in_sky*t_exp)
     N_sky = np.where(from_ground, N_sky, 0.)
 
-#    ipdb.set_trace()
-    SN =  np.sqrt(n_pix*conf['n_exp'])*N_sig / \
-          np.sqrt(N_rn + N_sig + N_dcur + N_sky)
+#    SN =  np.sqrt(n_pix*conf['n_exp'])*N_sig / \
+#          np.sqrt(N_rn + N_sig + N_dcur + N_sky)
+
+    SN =  N_sig / np.sqrt(N_rn + N_sig + N_dcur + N_sky)
 
     err_m_obs = 2.5*np.log10(1.+ 1./SN)
     noise_ctn = 2.5*np.log10(1 + 0.02)
@@ -79,7 +80,7 @@ def err_mag(conf, zdata, mag):
     other = {'SN': SN, 'N_sig': N_sig, 'N_sky': N_sky,
              'N_rn': conf['RN']**2.}
 
-#    ipdb.set_trace()
+    ipdb.set_trace()
 
     return err_m_obs, SN, other
 
