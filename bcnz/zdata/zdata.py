@@ -15,7 +15,7 @@ class zdata(dict, object):
     msg_filters = 'Missing filter files: {0}'
     msg_seds = 'Missing sed files: {0}'
 
-    def __init__(self, conf):
+    def __init__(self, conf, hmm=False):
         self.conf = conf
 
         self['z_model'] = self.z_binning()

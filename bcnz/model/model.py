@@ -11,6 +11,8 @@ import bcnz
 def add_binning(conf, zdata):
     """Model redshift binning for populations."""
 
+    # Why is this here...
+
     if conf['use_split']:
         for pop in ['bright', 'faint']:
             dz = conf['dz_{0}'.format(pop)]
@@ -23,12 +25,15 @@ def add_binning(conf, zdata):
 
     return zdata
 
-def add_model(conf, zdata):
+def add_model(conf, zdata, only_initial=False):
     """Add model predictions."""
 
     zdata = add_binning(conf, zdata)
     resp_inst = bcnz.model.sed_filters()
     zdata.update(resp_inst(conf,zdata))
+    
+    if only_initial:
+        return zdata
 
     model = bcnz.model.model_mag(conf, zdata)
     model()
