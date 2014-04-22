@@ -61,6 +61,8 @@ descr:
   exp_J: 'Exposure band J'
   exp_H: 'Exposure band H'
 
+  exp_vis: 'Exposure band vis'
+
   exp_trays: 'Exposure in different trays'
   vign: 'Vignetting (center peripheral corner)'
   sky_spec: 'Sky spectrum.'

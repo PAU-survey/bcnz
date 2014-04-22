@@ -14,7 +14,7 @@ def texp(conf, filters):
     """Find exposure time in each of the filters."""
 
     texpD = {}
-    for f in ['up', 'g', 'r', 'i', 'z', 'y', 'Y', 'J', 'H']:
+    for f in ['up', 'g', 'r', 'i', 'z', 'y', 'Y', 'J', 'H', 'vis']:
         texpD[f] = conf['exp_{0}'.format(f)]
 
 
@@ -79,8 +79,6 @@ def err_mag(conf, zdata, mag):
 
     other = {'SN': SN, 'N_sig': N_sig, 'N_sky': N_sky,
              'N_rn': conf['RN']**2.}
-
-    ipdb.set_trace()
 
     return err_m_obs, SN, other
 
