@@ -143,12 +143,13 @@ class write_cat(filebase.filebase):
     def open(self):
         self.setup()
 
-        if self.conf['use_cache']:
-            peaks_path = self._obj_path_peaks
-            pdfs_path = self._obj_path_pdfs
-        else:
-            peaks_path = self.out_peaks
-            pdfs_path = self.out_pdfs
+#        if self.conf['use_cache']:
+#            peaks_path = self._obj_path_peaks
+#            pdfs_path = self._obj_path_pdfs
+#        else:
+
+        peaks_path = self.out_peaks
+        pdfs_path = self.out_pdfs
 
         self._peaks, self._peaks_file = self._create_file_peaks(peaks_path)
         if self._write_pdfs:
