@@ -50,16 +50,42 @@ class sed_filters(object):
 
         return rlim, r_const, spls, in_r, in_sky
 
-    def find_sed_spls(self, conf, seds):
-        """Create spectra splines."""
+    def _load_filters(self, conf, filters):
+        """Load filters stored in ascii files."""
 
-        spls = {}
+        print('Loading from ascii...')
+
+        res = {}
+        d = os.path.join(conf['data_dir'], conf['filter_dir'])
+        fmt = conf['res_fmt']
+        for fname in filters:
+            file_path = os.path.join(d, fmt.format(fname))
+            x,y = np.loadtxt(file_path, unpack=True)
+
+            res[fname] = x,y
+
+        return res
+
+    def _load_seds(self, conf, seds):
+        print('Loading SEDS')
+        res = {}
         d = os.path.join(conf['data_dir'], conf['sed_dir'])
         for sed in seds:
             file_path = os.path.join(d, '%s.sed' % sed)
             x,y = np.loadtxt(file_path, unpack=True)
 
-            spls[sed] = splrep(x, y)
+            res[sed] = x,y
+
+        return res
+
+    def find_sed_spls(self, conf, zdata, seds):
+        """Create spectra splines."""
+
+        sedD = zdata['sedsD'] if 'sedsD' in zdata else self._load_seds(conf, seds)
+
+        spls = {}
+        for sed in seds:
+            spls[sed] = splrep(*sedD[sed])
 
         return spls
 
@@ -67,8 +93,9 @@ class sed_filters(object):
         filters = zdata['filters']
         seds = zdata['seds']
 
+        filtersD = zdata['filtersD'] if 'filtersD' in zdata else self._load_filters(conf, filters)
         rlim, r_const, resp_spls,in_r,in_sky = self.find_response_spls(conf, filters)
-        sed_spls = self.find_sed_spls(conf, seds)
+        sed_spls = self.find_sed_spls(conf, zdata, seds)
 
         spl_data = {'resp_spls': resp_spls,
                     'sed_spls': sed_spls,
