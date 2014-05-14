@@ -72,6 +72,22 @@ def err_mag(conf, zdata, mag):
 
     SN =  N_sig / np.sqrt(N_rn + N_sig + N_dcur + N_sky)
 
+    # Adjusts the signal to noise to meet a specific criteria.
+    if conf['use_snlim_space']:
+        sn_val = conf['snlim_space']
+        sn_mag = conf['snlim_space_mag']
+        sn_ratio = np.ones(len(all_filters))
+        for i,fname in enumerate(all_filters):
+            if not fname in conf['from_space']:
+                continue
+
+            spl = splrep(mag[:,i], SN[:,i])
+            sn_ratio[i] = sn_val / splev(sn_mag, spl)
+
+        print('SN ratio', sn_ratio)
+        SN = SN * sn_ratio
+
+
     err_m_obs = 2.5*np.log10(1.+ 1./SN)
     noise_ctn = 2.5*np.log10(1 + 0.02)
 
