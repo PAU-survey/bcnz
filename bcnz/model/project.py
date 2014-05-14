@@ -5,7 +5,7 @@
 from __future__ import print_function
 import numpy as np
 import os
-import pdb
+import ipdb
 import re
 import time
 from scipy.interpolate import splrep, splev
@@ -117,7 +117,7 @@ class model_mag(object):
 
         return ab
 
-    def ensure_cached(self):
+    def ensure_cached(self, ab_in=False):
         """Create cache of the AB files unless it exists."""
 
         ab_path = self._ab_path()
@@ -125,6 +125,7 @@ class model_mag(object):
             return
 
         ab = self._all_proj()
+        ipdb.set_trace()
 
         descr = {'z': tables.FloatCol(pos=0),
                  'ab': tables.FloatCol(pos=1)}
@@ -162,7 +163,13 @@ class model_mag(object):
         filters = self.zdata['filters']
         z = self.zdata['z']
 
-        abD = _load_ab(self._ab_path())
+#        ipdb.set_trace()
+        if 'abD' in self.zdata:
+            abD = self.zdata['abD']
+        else:
+            print('LOADING AB FROM OLD FILE!!!')
+            ipdb.set_trace()
+            abD = _load_ab(self._ab_path())
 
         # This method is not the fastest, but works slightly faster
         # than the linear interpolation in BPZ!
