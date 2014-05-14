@@ -260,7 +260,7 @@ To import priors, you need the following:
         peaks['t_ml'] = tt_ml + 1
         peaks['chi2'] = red_chi2
 
-        for key in ['z_s', 'ra', 'dec', 'spread_model_i', 'm_0']:
+        for key in ['zs', 'ra', 'dec', 'spread_model_i', 'm0']:
             if key in self.conf['order']:
                 peaks[key] = self.data[key][imin:imax]
 
