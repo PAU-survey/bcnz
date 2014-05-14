@@ -1,4 +1,4 @@
-    #!/usr/bin/env python
+#!/usr/bin/env python
 # encoding: UTF8
 
 # All the post processing after reading in the data.

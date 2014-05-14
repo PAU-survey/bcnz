@@ -18,6 +18,10 @@ standard:
  
   sn_lim: 5. 
   from_space: []
+  use_snlim_space: False
+  snlim_space: 5.
+  snlim_space_mag: 24.
+
 #  use_cache: False
   use_cache: True
   tblock: True
@@ -31,7 +35,7 @@ standard:
   use_split: False
   opt: True
   others: []
-  order: ['id', 'zb', 'zb_min', 'zb_max', 't_b', 'odds', 'z_ml', 't_ml', 'chi2', 'z_s', 'm_0']
+  order: ['id', 'zb', 'zb_min', 'zb_max', 't_b', 'odds', 'z_ml', 't_ml', 'chi2', 'zs', 'm0']
   m_step: 0.1
   output: ''
   
