@@ -30,7 +30,7 @@ class read_cat(filebase.filebase):
             (x, x) for x in self.conf['order'] if not x in self.conf['from_bcnz']
         )
 
-        fields_in['m_0'] = mag_fmt.format(self.conf['prior_mag'])
+        fields_in['m0'] = mag_fmt.format(self.conf['prior_mag'])
         self.fields_in = fields_in 
 
     def open(self):
@@ -78,7 +78,7 @@ class read_cat(filebase.filebase):
         data['emag'] = err
 
         names = tbl_array.dtype.names
-        for key in ['z_s', 'ra', 'dec', 'spread_model_i', 'm_0']:
+        for key in ['zs', 'ra', 'dec', 'spread_model_i', 'm0']:
             if key in names:
                 data[key] = tbl_array[key]
 

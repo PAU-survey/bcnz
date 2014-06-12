@@ -17,8 +17,8 @@ def setid_m0s(conf, data):
 
     data['id'] = ids
 
-    if 'm_0' in data:
-        data['m_0'] += conf['delta_m_0']
+    if 'm0' in data:
+        data['m0'] += conf['delta_m0']
 
     return data
 

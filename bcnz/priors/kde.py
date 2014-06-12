@@ -13,7 +13,7 @@ class kde(object):
        calculated directly from the mocks.
     """
 
-    def __init__(self, conf, zdata, z, m_0):
+    def __init__(self, conf, zdata, z, m0):
 
         msg_test = 'This is a test implementation.'
 
@@ -25,7 +25,7 @@ class kde(object):
 
         self.gkde = gaussian_kde(cat)
         self.z = z
-        self.m_0 = m_0
+        self.m0 = m0
 #        ndes = 1 # Number of decimals
 
     def add_priors(self, m, lh):

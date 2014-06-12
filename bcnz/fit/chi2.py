@@ -143,7 +143,7 @@ To import priors, you need the following:
         prior_name = 'prior_%s' % conf['prior']
         try:
             self.priors = getattr(bcnz.priors, conf['prior'])(conf, \
-                          self.zdata, z, self.data['m_0'])
+                          self.zdata, z, self.data['m0'])
 
         except ImportError:
             raise ImportError(self.msg_import)
@@ -214,7 +214,7 @@ To import priors, you need the following:
         
         # Add priors.
         if self.conf['use_priors']:
-            m = self.data['m_0'][imin:imax]
+            m = self.data['m0'][imin:imax]
             pb = self.priors.add_priors(m, pb) # pb now include priors.
 
         p_bayes = pb.sum(axis=2)
@@ -282,8 +282,8 @@ To import priors, you need the following:
 class chi2_combined(object):
     """Interface for combining the results for several populations."""
 
-    def __init__(self, conf, zdata, f_obs, ef_obs, m_0, \
-                 z_s, inds, ngal_calc):
+    def __init__(self, conf, zdata, f_obs, ef_obs, m0, \
+                 zs, inds, ngal_calc):
 
         filters = zdata['filters']
         filter_id = filters.index('Fi')
@@ -298,8 +298,8 @@ class chi2_combined(object):
         self.zdata = zdata
         self.f_obs = f_obs
         self.ef_obs = ef_obs
-        self.m_0 = m_0
-        self.z_s = z_s
+        self.m0 = m0
+        self.zs = zs
         self.inds = inds
         self.ind_pop = {'bright': ind_bright, 'faint': ind_faint}
 
@@ -308,7 +308,7 @@ class chi2_combined(object):
         use_ind[ind_bright] = np.array(np.arange(np.sum(ind_bright)))
         use_ind[ind_faint] = np.array(np.arange(np.sum(ind_faint)))
 
-        self.ngal = len(z_s)
+        self.ngal = len(zs)
         self.ngal_calc = ngal_calc
         self.ind_bright = ind_bright
         self.ind_faint= ind_faint
@@ -323,11 +323,11 @@ class chi2_combined(object):
             min_rms = self.conf['min_rms_{}'.format(pop)]
             ind = self.ind_pop[pop]
 
-            if not len(self.m_0[ind]):
+            if not len(self.m0[ind]):
                 continue
 
             chi2_pop = chi2_calc(self.conf, self.zdata, self.f_obs[ind], self.ef_obs[ind], \
-                                 self.m_0[ind], self.z_s[ind], self.inds[ind], \
+                                 self.m0[ind], self.zs[ind], self.inds[ind], \
                                  self.ngal_calc, dz, min_rms, pop)
 
             if not 'new_block' in locals():
@@ -349,7 +349,6 @@ def chi2(conf, zdata, data):
     """
 
     if conf['use_split']:
-        #return chi2_combined(conf, zdata, f_obs, ef_obs, m_0, z_s, ids, ngal_calc)
         return chi2_combined(conf, zdata, data)
     else:
 #        dz = conf['dz']

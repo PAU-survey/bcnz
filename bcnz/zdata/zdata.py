@@ -15,17 +15,16 @@ class zdata(dict, object):
     msg_filters = 'Missing filter files: {0}'
     msg_seds = 'Missing sed files: {0}'
 
-    def __init__(self, conf, hmm=False):
+    def __init__(self, conf, minimal=False):
         self.conf = conf
-
         self['z_model'] = self.z_binning()
         self['filters'] = self.use_filters()
         self['seds'] = self.conf['seds']
 
-        self.check_filenames()
-
-        self.update(bcnz.model.sed_filters()(conf, self))
-        self.add_texp()
+        if not minimal:
+            self.check_filenames()
+            self.update(bcnz.model.sed_filters()(conf, self))
+            self.add_texp()
 
     def z_binning(self):
         """Binning in redshift when calculating the model."""

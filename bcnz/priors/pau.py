@@ -10,15 +10,15 @@ np.seterr(under='ignore')
 class pau(object):
     """Priors calibrated to mocks used for the PAU survey."""
 
-    def __init__(self, conf, zdata, z, m_0):
+    def __init__(self, conf, zdata, z, m0):
         ndes = 1 # Number of decimals
 
         for param in ['a', 'zo', 'km', 'fo_t', 'k_t']:
             setattr(self, param, conf['pr_'+param])
 
         m_step = conf['m_step']
-        m_min = np.floor(10**ndes*min(m_0)) / 10.**ndes
-        steps = np.ceil((max(m_0) - m_min) / m_step).astype(int)
+        m_min = np.floor(10**ndes*min(m0)) / 10.**ndes
+        steps = np.ceil((max(m0) - m_min) / m_step).astype(int)
 
         m = m_min + m_step * np.arange(steps+1)
         #self.pr = np.ascontiguousarray(self.prior_precalc(z, m, ninterp))
@@ -27,7 +27,7 @@ class pau(object):
         self.conf = conf
 
         self.z = z
-        self.m_0 = m_0
+        self.m0 = m0
         self.m_min = m_min
 
     def prior_basis(self, z, m):

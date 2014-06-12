@@ -22,7 +22,7 @@ train_dm = .1
 smooth = 0.5
 
 class train(object):
-    def __init__(self, conf, zdata, m_0, m_step, ninterp):
+    def __init__(self, conf, zdata, m0, m_step, ninterp):
         self.conf = conf
 
         self.read_training_set(conf)

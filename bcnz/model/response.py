@@ -16,39 +16,46 @@ class sed_filters(object):
 
         return splrep(x,y)
 
-    def find_response_spls(self, conf, filters):
+    def find_response_spls(self, conf, filters, filtersD, need_noise=True):
         """Create response splines for different filters."""
 
-        clight_AHz=2.99792458e18
-        sky_spl = self.find_sky_spl(conf)
+        assert not isinstance(filtersD, list), 'Using old interface'
 
-        spls, r_const, rlim, in_rD, in_skyD = {},{},{},{},{}
+        clight_AHz=2.99792458e18
+
+        spls, r_const, rlim, in_rD = {},{},{},{}
+        if need_noise:
+            sky_spl = self.find_sky_spl(conf)
+            in_skyD = {}
+
         d = os.path.join(conf['data_dir'], conf['filter_dir'])
         fmt = conf['res_fmt']
-        for filter_name in filters:
-            file_path = os.path.join(d, fmt.format(filter_name))
-            x,y = np.loadtxt(file_path, unpack=True)
-
+        for fname, (x,y) in filtersD.iteritems(): #filter_name in filters:
+#            file_path = os.path.join(d, fmt.format(filter_name))
+#            x,y = np.loadtxt(file_path, unpack=True)
             # Determines the range where the filter curve is non-zero.
             # Cryptic, but works.
 #            rlim[filter_name] = tuple(x[(y != 0).nonzero()[0][[0,-1]]])
-            rlim[filter_name] = (x[0], x[-1])
+            rlim[fname] = (x[0], x[-1])
 
             # Normalization and CCD effects.
             y2 = y*x
             #r_const[file_name] = 1./simps(y/x/x,x) / clight_AHz
-            r_const[filter_name] = 1./trapz(y2/x/x,x) / clight_AHz
-            spls[filter_name] = splrep(x, y2)
-            in_rD[filter_name] = trapz(y/x, x)
-            y_sky = splev(x, sky_spl)
-            in_skyD[filter_name] = trapz(y*y_sky, x)
+            r_const[fname] = 1./trapz(y2/x/x,x) / clight_AHz
+            spls[fname] = splrep(x, y2)
+            in_rD[fname] = trapz(y/x, x)
 
-        in_r = np.array([in_rD[x] for x in filters])
-        in_sky = np.array([in_skyD[x] for x in filters])
+            if need_noise:
+                y_sky = splev(x, sky_spl)
+                in_skyD[fname] = trapz(y*y_sky, x)
 
-#        ipdb.set_trace()
+        data = {'rlim': rlim, 'r_const': r_const, 'resp_spls': spls}
+        data['in_r'] = np.array([in_rD[x] for x in filters])
 
-        return rlim, r_const, spls, in_r, in_sky
+        if need_noise:
+            data['in_sky'] = np.array([in_skyD[x] for x in filters])
+
+        return data
 
     def _load_filters(self, conf, filters):
         """Load filters stored in ascii files."""
@@ -89,20 +96,31 @@ class sed_filters(object):
 
         return spls
 
-    def __call__(self, conf, zdata):
+    def __call__(self, conf, zdata, need_noise=True):
         filters = zdata['filters']
         seds = zdata['seds']
 
-        filtersD = zdata['filtersD'] if 'filtersD' in zdata else self._load_filters(conf, filters)
-        rlim, r_const, resp_spls,in_r,in_sky = self.find_response_spls(conf, filters)
-        sed_spls = self.find_sed_spls(conf, zdata, seds)
+        if 'filtersD' in zdata:
+            print('Actually using the passed data...')
 
-        spl_data = {'resp_spls': resp_spls,
-                    'sed_spls': sed_spls,
-                    'rlim': rlim,
-                    'r_const': r_const,
-                    'max_type': len(seds) - 1,
-                    'in_r': in_r,
-                    'in_sky': in_sky}
+            filtersD = zdata['filtersD']
+        else:
+            filtersD = self._load_filters(conf, filters)
+
+        spl_data = {}
+        spl_data['max_type'] = len(seds) - 1
+        spl_data['sed_spls'] = self.find_sed_spls(conf, zdata, seds)
+        spl_data.update(self.find_response_spls(conf, filters, filtersD, need_noise))
+
+#        rlim, r_const, resp_spls,in_r,in_sky = self.find_response_spls(conf, filters)
+#        sed_spls = self.find_sed_spls(conf, zdata, seds)
+#
+#        spl_data = {'resp_spls': resp_spls,
+#                    'sed_spls': sed_spls,
+#                    'rlim': rlim,
+#                    'r_const': r_const,
+#                    'max_type': len(seds) - 1,
+#                    'in_r': in_r,
+#                    'in_sky': in_sky}
 
         return spl_data

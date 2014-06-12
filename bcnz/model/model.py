@@ -30,19 +30,17 @@ def add_model(conf, zdata, only_initial=False):
 
     zdata = add_binning(conf, zdata)
     resp_inst = bcnz.model.sed_filters()
-    zdata.update(resp_inst(conf,zdata))
+#    zdata.update(resp_inst(conf,zdata))
     
     if only_initial:
         return zdata
 
     model = bcnz.model.model_mag(conf, zdata)
-    model()
-    to_iter = [('bright.f_mod', zdata['bright.z']), ('faint.f_mod', zdata['faint.z'])] \
-              if conf['use_split'] else [('f_mod', zdata['z'])]
+#    model()
 
-    for key, z in to_iter:
-        f_mod = model.f_mod(z)
-        f_mod = model.interp(f_mod)
-        zdata[key] = f_mod
+    f_mod = model.f_mod(zdata['z'])
+    f_mod = model.interp(f_mod)
+
+    zdata['f_mod'] = f_mod
 
     return zdata

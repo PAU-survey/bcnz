@@ -52,7 +52,9 @@ class model_mag(object):
         self.conf = conf
         self.zdata = zdata
 
-        self.sed_spls = zdata['sed_spls']
+        if 'sed_spls' in zdata:
+            self.sed_spls = zdata['sed_spls']
+        
         self.set_ninterp(zdata['filters'])
 
 
@@ -158,7 +160,6 @@ class model_mag(object):
            filters and redshifts.
         """
 
-
         seds = self.zdata['seds']
         filters = self.zdata['filters']
         z = self.zdata['z']
@@ -197,4 +198,6 @@ class model_mag(object):
         return f_new
 
     def __call__(self):
+        raise NotImplemented, 'If using this again, implement properly.'
+
         self.ensure_cached()

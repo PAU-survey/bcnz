@@ -111,7 +111,7 @@ standard:
   zmax: 10.
   unobs: -99.
   undet: 99.
-  delta_m_0: 0.
+  delta_m0: 0.
   n_peaks: 1
   verbose: False
   min_magerr: 0.001
@@ -124,7 +124,7 @@ standard:
   hdf5_node: '/cat/cat'
   mag_fmt: '{0}'
   err_fmt: '{0}'
-  from_bcnz: ['id', 'zb', 'zb_min', 'zb_max', 't_b', 'odds', 'z_ml', 't_ml', 'chi2', 'z_s', 'm_0']
+  from_bcnz: ['id', 'zb', 'zb_min', 'zb_max', 't_b', 'odds', 'z_ml', 't_ml', 'chi2', 'zs', 'm0']
   prior_mag: 'i'
 
   out_pdf: False
