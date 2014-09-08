@@ -73,18 +73,20 @@ def err_mag(conf, zdata, mag):
     SN =  N_sig / np.sqrt(N_rn + N_sig + N_dcur + N_sky)
 
     # Adjusts the signal to noise to meet a specific criteria.
-    if conf['use_snlim_space']:
-        sn_val = conf['snlim_space']
-        sn_mag = conf['snlim_space_mag']
+
+#    ipdb.set_trace()
+    if conf['use_snlim']:
+        sn_val = conf['snlim_sig']
+        sn_mag = [conf['snlim_'+x] for x in all_filters]
+
         sn_ratio = np.ones(len(all_filters))
         for i,fname in enumerate(all_filters):
-            if not fname in conf['from_space']:
-                continue
-
             spl = splrep(mag[:,i], SN[:,i])
-            sn_ratio[i] = sn_val / splev(sn_mag, spl)
+            sn_ratio[i] = sn_val / splev(sn_mag[i], spl)
 
-        print('SN ratio', sn_ratio)
+
+#        print('SN ratio', sn_ratio)
+#        ipdb.set_trace()
         SN = SN * sn_ratio
 
 
@@ -103,7 +105,7 @@ def sn_spls(conf, zdata):
 
     import ipdb
     filters = zdata['filters']
-    mag_interp = np.linspace(15., 35, 100)
+    mag_interp = np.linspace(10., 35, 200)
     mag = np.tile(mag_interp, (len(filters), 1)).T
 
 

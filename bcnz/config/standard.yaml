@@ -18,9 +18,8 @@ standard:
  
   sn_lim: 5. 
   from_space: []
-  use_snlim_space: False
-  snlim_space: 5.
-  snlim_space_mag: 24.
+  use_snlim: False
+  snlim_sig: 5.
 
 #  use_cache: False
   use_cache: True
@@ -69,6 +68,19 @@ standard:
   exp_J: 75
   exp_H: 75
   exp_vis: 100
+
+  # SN limits in the different bands...
+  #
+  #
+
+  snlim_g: 25.35 
+  snlim_r: 24.85
+  snlim_i: 25.05
+  snlim_z: 24.65
+
+  snlim_Y: 24.
+  snlim_J: 24.
+  snlim_H: 24.
 
   trays: 
     [[4500, 4600, 4700, 4800, 4900, 5000, 5100, 5200],

@@ -19,9 +19,8 @@ descr:
   sn_lim: 'Limit for using magnitudes.'  
   from_space: 'Bands observed from space.'
 
-  use_snlim_space: 'Use SN limit for space observations'
-  snlim_space: 'Value for SN limit for space observations'
-  snlim_space_mag: 'Magnitude for SN limit for space observations'
+  use_snlim: 'Use SN limit for observations'
+  snlim_sig: 'Value for SN limit for space observations'
 
   use_cache: 'Use temporary files to save the results.'
   tblock: 'Test working with blocks'
