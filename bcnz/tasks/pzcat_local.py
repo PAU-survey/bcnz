@@ -57,7 +57,7 @@ def prepare_tasks(config, zdata):
         out_pdfs = '{0}.pdf'.format(name)
 
         in_iter = getattr(bcnz.io, in_fmt).read_cat(config, zdata, obs_file)
-        out_table = getattr(bcnz.io, out_fmt).write_cat(config, out_peaks, out_pdfs, nz, nt)
+        out_table = getattr(bcnz.io, out_fmt).write_cat(config, zdata, out_peaks, out_pdfs, nz, nt)
 
         tasks.append(local_task(config, zdata, in_iter, out_table))
 

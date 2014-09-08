@@ -102,7 +102,7 @@ class read_cat(filebase.filebase):
 class write_cat(filebase.filebase):
     """Write ascii catalog to file."""
 
-    def __init__(self, conf, out_peaks, out_pdf, nz, zt):
+    def __init__(self, conf, zdata, out_peaks, out_pdf, nz, zt):
         self.conf = conf
         self.out_name = out_name
 

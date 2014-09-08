@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
+import ipdb
 import os
 import pdb
 import time
+
 try:
     import tables
 except ImportError:
@@ -93,8 +95,9 @@ class read_cat(filebase.filebase):
 
 class write_cat(filebase.filebase):
 
-    def __init__(self, conf, out_peaks, out_pdfs, nz, nt):
+    def __init__(self, conf, zdata, out_peaks, out_pdfs, nz, nt):
         self.conf = conf
+        self.zdata = zdata
         self.out_peaks = out_peaks
         self.out_pdfs = out_pdfs
         self.nz = nz
@@ -135,6 +138,18 @@ class write_cat(filebase.filebase):
         assert not os.path.exists(file_path), 'File already exists: {0}'.format(file_path)
 
         fb = tables.openFile(file_path, 'w')
+
+        z_mean = self.zdata['z_model']
+
+        # Technically the pdfs could have been estimated in bins with
+        # different widths.
+        dz_arr = z_mean[1:] - z_mean[:-1]
+        assert np.allclose(dz_arr, dz_arr[0])
+        z_width = dz_arr[0]*np.ones_like(z_mean)
+
+        fb.create_array('/', 'z_mean', z_mean)
+        fb.create_array('/', 'z_width', z_width)
+
         shape = (0, self.nz, self.nt) if self.conf['pdf_type'] else (0, self.nz)
         pdfs = fb.createEArray('/', 'pdfs', tables.FloatAtom(), shape)
 
