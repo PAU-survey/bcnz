@@ -2,6 +2,8 @@
 # encoding: UTF8
 # First iteration on a code to do Bayesian template 
 # fitting to determine galaxy type and redshift.
+
+import ipdb
 import pdb
 import time
 import sys
@@ -56,7 +58,13 @@ def find_odds(p,x,xmin,xmax):
     def K(xlim):
         return np.searchsorted(x, xlim)
 
+    # The clipping here is needed because the pdf is not always 0 
+    # at zero redshift, which cause funny problems in the cdf, including
+    # negative indices.
     imin = np.apply_along_axis(K, 0, xmin) - 1
+    imin = np.clip(imin, 0, np.infty).astype(np.int)
+
+#    ipdb.set_trace()
     imax = np.apply_along_axis(K, 0, xmax)
     imax = np.minimum(imax, p.shape[1] - 1)
     gind = np.arange(p.shape[0])
@@ -65,6 +73,7 @@ def find_odds(p,x,xmin,xmax):
     # is known to have very high chi^2 values.
     odds = (cdf[gind,imax] - cdf[gind,imin])/cdf[:,-1]
     odds[cdf[:,-1] < 0.999] = 0.
+
 
     return odds
 
@@ -235,6 +244,8 @@ To import priors, you need the following:
         # Calculate odds.
         dz = self.odds_pre*(1.+zb)
         odds = find_odds(p_bayes, self.z, zb-dz, zb+dz)
+
+
         it_b = pb[range(len(zb)),iz_b].argmax(axis=1)
         interp = self.conf['interp']
         tt_b = it_b / (1. + interp)
