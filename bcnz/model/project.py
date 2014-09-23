@@ -39,7 +39,6 @@ def _load_ab(ab_path):
     return ab
 
 
-
 class model_mag(object):
     def set_ninterp(self, filters):
         """Number of interpolation points for each filter."""
@@ -127,7 +126,6 @@ class model_mag(object):
             return
 
         ab = self._all_proj()
-        ipdb.set_trace()
 
         descr = {'z': tables.FloatCol(pos=0),
                  'ab': tables.FloatCol(pos=1)}
@@ -164,12 +162,9 @@ class model_mag(object):
         filters = self.zdata['filters']
         z = self.zdata['z']
 
-#        ipdb.set_trace()
         if 'abD' in self.zdata:
             abD = self.zdata['abD']
         else:
-            print('LOADING AB FROM OLD FILE!!!')
-            ipdb.set_trace()
             abD = _load_ab(self._ab_path())
 
         # This method is not the fastest, but works slightly faster
