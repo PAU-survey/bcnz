@@ -95,11 +95,10 @@ class read_cat(filebase.filebase):
 
 class write_cat(filebase.filebase):
 
-    def __init__(self, conf, zdata, out_peaks, out_pdfs, nz, nt):
+    def __init__(self, conf, zdata, out_paths, nz, nt):
         self.conf = conf
         self.zdata = zdata
-        self.out_peaks = out_peaks
-        self.out_pdfs = out_pdfs
+        self.out_paths = out_paths
         self.nz = nz
         self.nt = nt
 
@@ -130,9 +129,9 @@ class write_cat(filebase.filebase):
         fb.createGroup('/', 'photoz')
         peaks = fb.createTable('/photoz', 'photoz', descr, 'BCNZ photo-z')
 
-        return peaks, fb
+        return {'node': peaks, 'fb': fb}
 
-    def _create_file_pdfs(self, file_path):
+    def _base_pdf(self, file_path, shape):
         """Initialize empty file for storing the photo-z pdfs."""
 
         assert not os.path.exists(file_path), 'File already exists: {0}'.format(file_path)
@@ -150,38 +149,49 @@ class write_cat(filebase.filebase):
         fb.create_array('/', 'z_mean', z_mean)
         fb.create_array('/', 'z_width', z_width)
 
-        shape = (0, self.nz, self.nt) if self.conf['pdf_type'] else (0, self.nz)
         pdfs = fb.createEArray('/', 'pdfs', tables.FloatAtom(), shape)
 
-        return pdfs, fb
+        return {'node': pdfs, 'fb': fb}
+
+
+    def _create_file_pdfs(self, file_path):
+        """Initialize empty file for storing the photo-z pdfs."""
+
+        shape = (0, self.nz)
+        return self._base_pdf(file_path, shape)
+
+    def _create_file_pdfs_type(self, file_path):
+        """Initialize empty file for storing the photo-z pdfs with type info."""
+
+        shape = (0, self.nz, self.nt)
+        return self._base_pdf(file_path, shape)
 
     def open(self):
-        self.setup()
+        f_out = {'pzcat': self._create_file_peaks,
+                 'pzpdf': self._create_file_pdfs,
+                 'pzpdf_type': self._create_file_pdfs_type}
 
-#        if self.conf['use_cache']:
-#            peaks_path = self._obj_path_peaks
-#            pdfs_path = self._obj_path_pdfs
-#        else:
+        nodes = {}
+        for out, f in f_out.iteritems():
+            nodes[out] = f(self.out_paths[out])
 
-        peaks_path = self.out_peaks
-        pdfs_path = self.out_pdfs
-
-        self._peaks, self._peaks_file = self._create_file_peaks(peaks_path)
-        if self._write_pdfs:
-            self._pdfs, self._pdfs_file = self._create_file_pdfs(pdfs_path)
+        self.nodes = nodes
 
     def append(self, output):
-        self._peaks.append(output['peaks'])
+        # Assumes all opened nodes has a corresponding output. Hiding failure
+        # here can mask other errors.
+        for key, node in self.nodes.iteritems():
+            node['node'].append(output[key])
 
-        if self._write_pdfs:
-            self._pdfs.append(output['pdfs'])
 
     def close(self):
         """Make sure the files are properly closed."""
 
-        self._peaks_file.close()
-        if self._write_pdfs:
-            self._pdfs_file.close()
+        # One could also delete self.nodes, but the error messages would
+        # probably be too cryptic.
+        for node in self.nodes.itervalues():
+            node['fb'].close()
+
 
 def load_pzcat(file_path):
     """Load the photo-z catalog to a record array."""
