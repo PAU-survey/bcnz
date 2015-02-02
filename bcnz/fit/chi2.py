@@ -203,17 +203,13 @@ To import priors, you need the following:
 
         output = {}
         if self.conf['out_pdf']:
+
             dzbin = self.conf['dz']
             # Here splitting the code in two is cleaner than doing something
             # fancy.
             if self.conf['pdf_type']:
-                # To avoid dividing on zero. This code might be optimized.
-                A = pb.sum(axis=1)
-                mask = A < 1e-200
-                norm = 1./(dzbin*A + 1e-200*mask)
-                norm[mask] = 0.
-
-                pdf = np.einsum('ijk,ik->ijk', pb, norm)
+                norm = np.einsum('ijk->i', pb)
+                pdf = np.einsum('ijk,i->ijk', pb, 1/norm)
             else:
                 pdf = pb.sum(axis=2)
                 norm = 1./(dzbin*pdf.sum(axis=1))
