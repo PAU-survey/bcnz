@@ -172,8 +172,8 @@ class write_cat(filebase.filebase):
                  'pzpdf_type': self._create_file_pdfs_type}
 
         nodes = {}
-        for out, f in f_out.iteritems():
-            nodes[out] = f(self.out_paths[out])
+        for out, file_path in self.out_paths.iteritems():
+            nodes[out] = f_out[out](file_path)
 
         self.nodes = nodes
 
