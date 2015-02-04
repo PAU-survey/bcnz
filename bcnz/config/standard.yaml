@@ -140,4 +140,4 @@ standard:
   prior_mag: 'i'
 
   out_pdf: False
-  pdf_type: False
+  out_pdftype: False

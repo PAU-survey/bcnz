@@ -205,18 +205,19 @@ To import priors, you need the following:
         if self.conf['out_pdf']:
 
             dzbin = self.conf['dz']
-            # Here splitting the code in two is cleaner than doing something
-            # fancy.
-            if self.conf['pdf_type']:
-                norm = np.einsum('ijk->i', pb)
-                pdf = np.einsum('ijk,i->ijk', pb, 1/norm)
-            else:
-                pdf = pb.sum(axis=2)
-                norm = 1./(dzbin*pdf.sum(axis=1))
-                pdf = (pdf.T * norm).T
 
-            output['pdfs'] = pdf
-        
+            pdf = pb.sum(axis=2)
+            norm = 1./(dzbin*pdf.sum(axis=1))
+            pdf = (pdf.T * norm).T
+
+            output['pzpdf'] = pdf
+
+        if self.conf['out_pdftype']:
+            norm = np.einsum('ijk->i', pb)
+            pdf_type = np.einsum('ijk,i->ijk', pb, 1/norm)
+       
+            output['pzpdf_type'] = pdf_type 
+
         # Add priors.
         if self.conf['use_priors']:
             m = self.data['m0'][imin:imax]
@@ -271,7 +272,7 @@ To import priors, you need the following:
             if key in self.conf['order']:
                 peaks[key] = self.data[key][imin:imax]
 
-        output['peaks'] = peaks
+        output['pzcat'] = peaks
 
         return output
 
