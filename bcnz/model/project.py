@@ -114,6 +114,7 @@ class model_mag(object):
 
         ab = {}
         for filter_name in filters:
+            print('proj filter', filter_name)
             ab[filter_name] = self._proj_filter(z_ab, seds, filter_name)
 
         return ab
@@ -162,18 +163,20 @@ class model_mag(object):
         filters = self.zdata['filters']
         z = self.zdata['z']
 
-        if 'abD' in self.zdata:
-            abD = self.zdata['abD']
+        if 'ab_df' in self.zdata:
+            ab_df = self.zdata['ab_df']
         else:
+            raise NotImplemented('Changed format.')
             abD = _load_ab(self._ab_path())
 
         # This method is not the fastest, but works slightly faster
         # than the linear interpolation in BPZ!
+        ab_z = ab_df['z'] 
         f_mod = np.zeros((len(z), len(seds), len(filters)))
         for i,sed in enumerate(seds):
             for j,filter_name in enumerate(filters):
-                ab_array = abD[filter_name, sed]
-                spl = splrep(ab_array['z'], ab_array['ab'])
+                val = ab_df['/{0}/{1}'.format(filter_name, sed)]
+                spl = splrep(ab_z, val)
 
                 y_new = splev(z, spl)
 
