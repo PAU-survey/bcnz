@@ -78,27 +78,25 @@ def find_odds(p,x,xmin,xmax):
     return odds
 
 class chi2_calc(object):
-    def __init__(self, conf, zdata, data, pop='', dz='',min_rms=''):
+    def __init__(self, conf, zdata, data, priors=None):
         assert data['mag'].shape[0], 'No galaxies'
         self.conf = conf
         self.zdata = zdata
         self.data = data
 
-        self.dz = dz if dz else conf['dz']
-        self.min_rms = min_rms if min_rms else conf['min_rms']
+        # These was previously passed.
+        self.dz = conf['dz']
+        self.min_rms = conf['min_rms']
 
-        if conf['use_split']:
-            self.f_mod = zdata['{0}.f_mod'.format(pop)]
-            z = zdata['{0}.z'.format(pop)]
-        else:
-            self.f_mod = zdata['f_mod']
-            z = zdata['z']
+        self.f_mod = zdata['f_mod']
+        z = zdata['z']
 
         self.z = z
         self.cols, self.dtype = self.cols_dtype()
 
         # Priors
-        self.load_priors(conf, z)
+        self.priors = self.load_priors(conf, z) if priors is None else priors
+
         self.set_values()
         self.calc_P1()
 
@@ -149,10 +147,11 @@ To import priors, you need the following:
     def load_priors(self, conf, z):
         """Load the prior module."""
 
+        # This should be passed to the module. I have changed this in the 
+        # xdolphin wrapper, but not in general.
         prior_name = 'prior_%s' % conf['prior']
         try:
-            self.priors = getattr(bcnz.priors, conf['prior'])(conf, \
-                          self.zdata, z, self.data['m0'])
+            return getattr(bcnz.priors, conf['prior'])(conf, self.zdata, z, self.data['m0'])
 
         except ImportError:
             raise ImportError(self.msg_import)
@@ -351,15 +350,11 @@ class chi2_combined(object):
 
         yield new_block
 
-def chi2(conf, zdata, data):
+def chi2(config, zdata, data, priors=None):
     """Select which chi2 object to use depending on splitting in magnitudes
        or not.
     """
 
-    if conf['use_split']:
-        return chi2_combined(conf, zdata, data)
-    else:
-#        dz = conf['dz']
-#        min_rms = conf['min_rms']
+    assert not config['use_split'], 'Splitting the catalog is no longer supported.'
 
-        return chi2_calc(conf, zdata, data)
+    return chi2_calc(config, zdata, data, priors)
