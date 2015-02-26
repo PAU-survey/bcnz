@@ -26,5 +26,9 @@ class write_cat:
     def append(self, output):
         # Assumes all the entries are recordarrays. Valid for
         # now.
+        galid = output['pzcat']['id']
         for key,val in output.iteritems():
-            self._store.append(key, pd.DataFrame(val))
+            df = pd.DataFrame(val)
+            df = df.set_index(galid)
+
+            self._store.append(key, df)
