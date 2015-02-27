@@ -5,7 +5,7 @@ from __future__ import print_function
 
 import glob
 import os
-import pdb
+import ipdb
 import numpy as np
 
 import bcnz
@@ -20,6 +20,10 @@ class zdata(dict, object):
         self['z_model'] = self.z_binning()
         self['filters'] = self.use_filters()
         self['seds'] = self.conf['seds']
+
+        # Should be calculated at the same time as the binning, but
+        # this is one step forward!
+        self['dz'] = self.conf['dz']*np.ones_like(self['z_model'])
 
         if not minimal:
             self.check_filenames()
