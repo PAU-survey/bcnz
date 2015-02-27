@@ -16,6 +16,7 @@ class write_cat:
     def open(self):
         store = pd.HDFStore(self.out_paths['pzcatdf'], 'w')
         store['z'] = pd.Series(self.zdata['z'])
+        store['dz'] = pd.Series(self.zdata['dz'])
         store['seds'] = pd.Series(self.zdata['seds'])
 
         self._store = store
@@ -28,7 +29,12 @@ class write_cat:
         # now.
         galid = output['pzcat']['id']
         for key,val in output.iteritems():
-            df = pd.DataFrame(val)
-            df = df.set_index(galid)
+            if val.ndim == 3:
+                val = val.swapaxes(0,1)
+                df = pd.Panel(val, major_axis=galid)
+
+            else:
+                df = pd.DataFrame(val)
+                df = df.set_index(galid)
 
             self._store.append(key, df)
