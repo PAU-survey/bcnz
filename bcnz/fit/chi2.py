@@ -206,7 +206,7 @@ To import priors, you need the following:
             dzbin = self.conf['dz']
 
             pdf = pb.sum(axis=2)
-            norm = 1./(dz*pdf.sum(axis=1))
+            norm = 1./(dzbin*pdf.sum(axis=1))
 
             pdf = (pdf.T * norm).T
 
