@@ -206,13 +206,14 @@ To import priors, you need the following:
             dzbin = self.conf['dz']
 
             pdf = pb.sum(axis=2)
-            norm = 1./(dzbin*pdf.sum(axis=1))
+            norm = 1./(dz*pdf.sum(axis=1))
+
             pdf = (pdf.T * norm).T
 
             output['pzpdf'] = pdf
 
         if self.conf['out_pdftype']:
-            norm = np.einsum('ijk->i', pb)
+            norm = np.einsum('ijk,j->i', pb, self.zdata['dz'])
             pdf_type = np.einsum('ijk,i->ijk', pb, 1/norm)
        
             output['pzpdf_type'] = pdf_type 
