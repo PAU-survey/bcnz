@@ -10,6 +10,10 @@ descr:
   ncalc: 'Number of galaxies to calculate at once.'
   nmax: 'Number of galaxies to read at once'
   seds: 'Templates to use.'
+
+  nell: 'Number of elliptical templates'
+  nsp: 'Number of spiral templates'
+  nsb: 'Number of starburst templates'
   pr_a: 'Prior parameter a'
   pr_zo: 'Prior parameter zo'
   pr_km: 'Prior parameter km'
@@ -118,3 +122,7 @@ descr:
 
   out_pdf: 'Output the pdf'
   pdf_type: 'Include type information in the pdf'
+
+  m_int: 'Magnitude interval for priors.'
+  mN: 'Number of magnitude bins.'
+

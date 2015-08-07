@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
-import pdb
+import ipdb
 import sys
 import numpy as np
 
@@ -10,11 +10,23 @@ np.seterr(under='ignore')
 class pau(object):
     """Priors calibrated to mocks used for the PAU survey."""
 
+    # Ok, here something really escalated!
+
     def __init__(self, conf, zdata, z, m0):
         ndes = 1 # Number of decimals
 
-        for param in ['a', 'zo', 'km', 'fo_t', 'k_t']:
-            setattr(self, param, conf['pr_'+param])
+        nn = (conf['nell'], conf['nsp'], conf['nsb'])
+
+        for param in ['a', 'zo', 'km']:
+            val = np.repeat(conf['pr_'+param], nn)
+            setattr(self, param, val)
+
+        # This factors is only set for Elliptical and Spiral
+        # galaxies.
+        fo_t = np.array(conf['pr_fo_t'])
+        self.fo_t = np.repeat(fo_t / np.array(nn[:2]), nn[:2])
+        self.k_t = np.repeat(conf['pr_k_t'], nn[:2])
+        self.nn = nn
 
         m_step = conf['m_step']
         m_min = np.floor(10**ndes*min(m0)) / 10.**ndes
@@ -47,11 +59,23 @@ class pau(object):
         zmt = np.clip(h, 0.01, 15.)
         zmt_at_a = zmt**self.a
 
-        # Defined in BPZ..
+        # See Benitez 2000 for the functional form.
+        # The probabilities of the Irregulars is given by the
+        # normalization.
         f_t = np.zeros((nm, nt))
-        f_t[:,:3] = self.fo_t*np.exp(-np.outer(dm, self.k_t))
-        h = (1.-np.sum(f_t[:,:3], axis=1))/3.
-        f_t[:,3:] = np.tile(h, (nt-3,1)).T
+
+        nsplit = sum(self.nn[:2])
+        f_t[:,:nsplit] = self.fo_t*np.exp(-np.outer(dm, self.k_t))
+
+        f_irr = (1-f_t.sum(axis=1)) / self.nn[-1]
+        f_t[:,nsplit:] = np.tile(f_irr, (self.nn[-1],1)).T
+        assert np.allclose(f_t.sum(axis=1), 1.0), 'Internal error'
+
+#        ipdb.set_trace()
+#        f_t[:,:3] = self.fo_t*np.exp(-np.outer(dm, self.k_t))
+#        h = (1.-np.sum(f_t[:,:3], axis=1))/3.
+#        f_t[:,3:] = np.tile(h, (nt-3,1)).T
+
 
         # redshift - type
         zt_at_a = np.exp(np.outer(np.log(z), self.a))
