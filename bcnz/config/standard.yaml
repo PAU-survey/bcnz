@@ -25,6 +25,8 @@ standard:
   pr_fo_t: [0.35, 0.5]
   pr_k_t: [0.450,  0.147]
 
+  hh_fac: 0.
+  hz_fac: 0.
  
   sn_lim: 5. 
   from_space: []
@@ -136,7 +138,6 @@ standard:
   delta_m0: 0.
   n_peaks: 1
   verbose: False
-  min_magerr: 0.001
   cat: ''
   interp: 2
   prior: 'pau'

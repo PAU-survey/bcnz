@@ -20,6 +20,8 @@ descr:
   pr_fo_t: 'Prior parameter ko_t'
   pr_k_t: 'Prior parameter k_t'
 
+  hh_fac: 'Tweak for having the low redshift working'
+  hz_fac: 'Damping the high redshift prior dropoff'
   sn_lim: 'Limit for using magnitudes.'  
   from_space: 'Bands observed from space.'
 
