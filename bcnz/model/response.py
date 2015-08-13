@@ -69,6 +69,8 @@ class sed_filters(object):
             file_path = os.path.join(d, fmt.format(fname))
             x,y = np.loadtxt(file_path, unpack=True)
 
+            ipdb.set_trace()
+
             res[fname] = x,y
 
         return res
@@ -81,6 +83,8 @@ class sed_filters(object):
             file_path = os.path.join(d, '%s.sed' % sed)
             x,y = np.loadtxt(file_path, unpack=True)
 
+            ipdb.set_trace()
+
             res[sed] = x,y
 
         return res
@@ -92,13 +96,22 @@ class sed_filters(object):
 
         spls = {}
         for sed in seds:
-            spls[sed] = splrep(*sedD[sed])
+            x,y = sedD[sed]
+            assert (0<=y).all()
+
+            # Removing duplicates which cause problems in the spline 
+            # creation. This should have been fixed in the input.
+            x, xinds = np.unique(x, return_index=True)
+            y = y[xinds]
+
+            spls[sed] = splrep(x, y)
 
         return spls
 
     def __call__(self, conf, zdata, need_noise=True):
         filters = zdata['filters']
         seds = zdata['seds']
+
 
         if 'filtersD' in zdata:
             print('Actually using the passed data...')
