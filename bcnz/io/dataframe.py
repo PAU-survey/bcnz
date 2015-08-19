@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
+from __future__ import print_function
 import ipdb
 import pandas as pd
 
@@ -29,7 +30,7 @@ class write_cat:
         # now.
         galid = output['pzcat']['id']
         for key,val in output.iteritems():
-            if val.ndim == 3:
+            if key == 'pzpdf_type':
                 val = val.swapaxes(0,1)
                 df = pd.Panel(val, major_axis=galid)
 
@@ -37,4 +38,12 @@ class write_cat:
                 df = pd.DataFrame(val)
                 df = df.set_index(galid)
 
-            self._store.append(key, df)
+            dfname = 'default' if key == 'pzcat' else key
+
+            self._store.append(dfname, df)
+
+            
+            if key == 'pzpdf_type':
+                A = self._store[key]
+                print(min(galid), max(galid), len(A.major_axis))
+

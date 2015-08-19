@@ -269,7 +269,7 @@ To import priors, you need the following:
         peaks['chi2'] = red_chi2
 
         for key in ['zs', 'ra', 'dec', 'spread_model_i', 'm0']:
-            if key in self.conf['order']:
+            if key in self.conf['order']: # and (key in self.data):
                 peaks[key] = self.data[key][imin:imax]
 
         output['pzcat'] = peaks
