@@ -15,6 +15,7 @@ class pau(object):
     def __init__(self, conf, zdata, z, m0):
         ndes = 1 # Number of decimals
 
+        self.conf = conf
         nn = (conf['nell'], conf['nsp'], conf['nsb'])
 
         for param in ['a', 'zo', 'km']:
@@ -36,7 +37,6 @@ class pau(object):
         #self.pr = np.ascontiguousarray(self.prior_precalc(z, m, ninterp))
         self.pr = self.prior_precalc(conf, z, m)
 
-        self.conf = conf
 
         self.z = z
         self.m0 = m0
@@ -58,7 +58,7 @@ class pau(object):
         h = self.zo + np.outer(dm, self.km)
         zmt = np.clip(h, 0.01, 15.)
         zmt_at_a = zmt**self.a
-
+        zmt_at_a += self.conf['hh_fac']
         # See Benitez 2000 for the functional form.
         # The probabilities of the Irregulars is given by the
         # normalization.
@@ -76,9 +76,11 @@ class pau(object):
 #        h = (1.-np.sum(f_t[:,:3], axis=1))/3.
 #        f_t[:,3:] = np.tile(h, (nt-3,1)).T
 
+#        ipdb.set_trace()
 
         # redshift - type
         zt_at_a = np.exp(np.outer(np.log(z), self.a))
+        zt_at_a += self.conf['hz_fac']
 
         # In all the summations, m-mag,z-redshift, t-type.
         p = np.einsum('zt,mt->mtz', zt_at_a, 1./zmt_at_a)

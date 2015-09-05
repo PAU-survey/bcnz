@@ -69,7 +69,6 @@ class sed_filters(object):
             file_path = os.path.join(d, fmt.format(fname))
             x,y = np.loadtxt(file_path, unpack=True)
 
-            ipdb.set_trace()
 
             res[fname] = x,y
 
@@ -83,7 +82,6 @@ class sed_filters(object):
             file_path = os.path.join(d, '%s.sed' % sed)
             x,y = np.loadtxt(file_path, unpack=True)
 
-            ipdb.set_trace()
 
             res[sed] = x,y
 
@@ -97,7 +95,7 @@ class sed_filters(object):
         spls = {}
         for sed in seds:
             x,y = sedD[sed]
-            assert (0<=y).all()
+#            assert (0<=y).all()
 
             # Removing duplicates which cause problems in the spline 
             # creation. This should have been fixed in the input.

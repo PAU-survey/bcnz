@@ -15,7 +15,7 @@ from scipy.ndimage.interpolation import zoom
 import tables
 
 np.seterr('raise')
-
+np.seterr(under='ignore') # Caused a problem. We are only interested in the amplitude.
 
 # Functions used when loading the results.
 def _load_ab(ab_path):
@@ -45,7 +45,9 @@ class model_mag(object):
 
         # Quite high accuracy. It can be reduced, but in practice
         # you don't care since its only going to be calculated once.
-        self.ninterp = dict((name, 200) for name in filters)
+
+        # Ok, becoming paranoid. Changing 200 to 1000.
+        self.ninterp = dict((name, 1000) for name in filters)
 
     def __init__(self, conf, zdata):
         self.conf = conf
@@ -53,7 +55,7 @@ class model_mag(object):
 
         if 'sed_spls' in zdata:
             self.sed_spls = zdata['sed_spls']
-        
+       
         self.set_ninterp(zdata['filters'])
 
 
@@ -69,14 +71,13 @@ class model_mag(object):
         """Project into filter."""
 
         xrlim = self.zdata['rlim'][filter_name]
-        xedges = np.linspace(xrlim[0], xrlim[1],
-                             self.ninterp[filter_name])
+        xedges = np.linspace(xrlim[0], xrlim[1], self.ninterp[filter_name])
         
         xm = .5*(xedges[:-1] + xedges[1:])
         xw = xedges[1:] - xedges[:-1]
         
         phi_spl = self.zdata['resp_spls'][filter_name]
-        xpart = self.zdata['r_const'][filter_name]*xw*splev(xm, phi_spl)
+        xpart = self.zdata['r_const'][filter_name]*xw*splev(xm, phi_spl, ext=1)
    
         a_ab = 1./(1.+z_ab)
 
@@ -86,14 +87,20 @@ class model_mag(object):
 
             ker = np.outer(a_ab, xm)
             ker_shape = ker.shape
-            
-            hmm = splev(ker.flatten(), sed_spl).reshape(ker_shape)
+           
+            # Not completely safe... 
+            hmm = splev(ker.flatten(), sed_spl, ext=1).reshape(ker_shape)
+            xpart = np.clip(xpart, 0, np.infty)
+            hmm = np.clip(hmm, 0, np.infty)
+
             bla = np.sum(xpart * hmm, axis=1)
             AB = np.vstack([z_ab, bla]).T
 
 #            file_path = os.path.join(d, '%s.%s.AB' % (sed, filter_name))
 #            np.savetxt(file_path, AB)
             res[sed] = AB
+
+            assert (0 <= AB).all(), 'Negative fluxes'
 
         return res
 
