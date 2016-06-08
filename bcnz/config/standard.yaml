@@ -152,6 +152,7 @@ standard:
 
   out_pdf: False
   out_pdftype: False
+  out_chi2: False
 
   m_int: [20, 26]
   mN: 20
