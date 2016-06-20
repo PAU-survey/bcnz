@@ -49,7 +49,9 @@ standard:
   order: ['id', 'zb', 'zb_min', 'zb_max', 't_b', 'odds', 'z_ml', 't_ml', 'chi2', 'zs', 'm0']
   m_step: 0.1
   output: ''
-  
+
+  proj: 'standard' 
+ 
   D_tel: 4.2
   D_tel_space: 4.2
   aperture: 2.0

@@ -62,10 +62,11 @@ class model_mag(object):
     def _ab_path(self):
         """Directory where the AB files are stored."""
 
-        ab_dir = os.path.join(os.environ['HOME'], self.conf['cache_dir'], \
-                              self.conf['ab_dir'], 'the_only_ab.hdf5')
+        file_name = '{0}.hdf5'.format(self.conf['proj'])
+        ab_path = os.path.join(os.environ['HOME'], self.conf['cache_dir'], \
+                               self.conf['ab_dir'], file_name)
 
-        return ab_dir
+        return ab_path
 
     def _proj_filter(self, z_ab, seds, filter_name):
         """Project into filter."""
@@ -198,6 +199,7 @@ class model_mag(object):
         nt = self.conf['interp']*(ntypes_orig - 1) + ntypes_orig
         zoom_fac = (1, float(nt) / ntypes_orig, 1)
 
+#        ipdb.set_trace()
         f_new = zoom(f_mod, zoom_fac, order=1)
 
         return f_new
