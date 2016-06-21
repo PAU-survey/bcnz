@@ -30,16 +30,16 @@ class write_cat:
         # now.
         galid = output['pzcat']['id']
         for key,val in output.iteritems():
-            if key == 'pzpdf_type':
+            if key in ['pzpdf_type', 'chi2']:
                 val = val.swapaxes(0,1)
                 df = pd.Panel(val, major_axis=galid)
-
             else:
                 df = pd.DataFrame(val)
                 df = df.set_index(galid)
 
             dfname = 'default' if key == 'pzcat' else key
 
+            df = df.stack()
             self._store.append(dfname, df)
 
             

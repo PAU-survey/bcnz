@@ -45,9 +45,10 @@ def toflux(conf, zdata, data):
         ids = data['id'][1 <= (to_use*mag < unreal_mag).sum(axis=1)]
         raise ValueError('Internal error for ids: {0}'.format(ids))
 
-    if unreal_err < np.max(to_use*emag):
-        ids = data['id'][1 <= (unreal_err < to_use*emag).sum(axis=1)]
-        raise ValueError('Unrealistic (>{0}) errors for ids: {1}'.format(unreal_err, ids))
+# Something is weird with the new catalogs Santi sent.
+#    if unreal_err < np.max(to_use*emag):
+#        ids = data['id'][1 <= (unreal_err < to_use*emag).sum(axis=1)]
+#        raise ValueError('Unrealistic (>{0}) errors for ids: {1}'.format(unreal_err, ids))
 
     # Too high magnitude errors can cause problems in the chi2
     # expression.

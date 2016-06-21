@@ -219,7 +219,7 @@ To import priors, you need the following:
             output['pzpdf_type'] = pdf_type 
 
         if self.conf['out_chi2']:
-            outout['chi2'] = chi2
+            output['chi2'] = chi2
 
         # Add priors.
         if self.conf['use_priors']:

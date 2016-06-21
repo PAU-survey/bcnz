@@ -71,7 +71,7 @@ class zdata(dict, object):
                 raise Exception(msg)
 
         filters_db = sel_files(self, self['filters'], self.conf['filter_dir'], self.conf['res_fmt'])
-        seds_db = sel_files(self, self['seds'], self.conf['sed_dir'], self.conf['sed_fmt'])
+#        seds_db = sel_files(self, self['seds'], self.conf['sed_dir'], self.conf['sed_fmt'])
 
 
     def add_texp(self):
