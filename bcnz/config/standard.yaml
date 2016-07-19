@@ -51,6 +51,8 @@ standard:
   output: ''
 
   proj: 'standard' 
+
+  flat_prior_amp: True
  
   D_tel: 4.2
   D_tel_space: 4.2

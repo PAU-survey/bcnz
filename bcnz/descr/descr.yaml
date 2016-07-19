@@ -29,6 +29,7 @@ descr:
   snlim_sig: 'Value for SN limit for space observations'
 
   proj: 'Project in the AB cache file name'
+  flat_amp_prior: 'If using a flat prior for the amplitude'
 
   use_cache: 'Use temporary files to save the results.'
   tblock: 'Test working with blocks'
