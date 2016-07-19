@@ -71,7 +71,7 @@ def find_odds(p,x,xmin,xmax):
 
     # The ones not being able to properly calculate the cdf normalization
     # is known to have very high chi^2 values.
-    odds = (cdf[gind,imax] - cdf[gind,imin])/cdf[:,-1]
+    odds = (cdf[gind,imax] - cdf[gind,imin])/(1e-200 + cdf[:,-1])
     odds[cdf[:,-1] < 0.999] = 0.
 
 
@@ -166,6 +166,8 @@ To import priors, you need the following:
         self.l2 = self.data['f_obs']*self.h
         self.r3 = self.f_mod2**2.
 
+        self.ndeg = (self.data['emag'] != -99.).sum(axis=1)
+
     def _block(self, n):
         """Term in chi**2."""
 
@@ -183,6 +185,9 @@ To import priors, you need the following:
         else:
             D = P2**2 / (P3 + 2.0e-300)
 
+
+#        ipdb.set_trace()
+
         D = D.reshape((h.shape[0], self.nz, self.nt))
 
         # Order after: type - redshift - ig
@@ -191,14 +196,74 @@ To import priors, you need the following:
         chi2_ig_last = self.P1[imin:imax] - D
         chi2 = chi2_ig_last.swapaxes(0,2)
 
+
         chi_argmin = np.array([np.argmin(x) for x in chi2])
         iz, it = np.unravel_index(chi_argmin,  chi2.shape[1:]) #self.z_t_shape)
         min_chi2 = chi2[range(chi2.shape[0]), iz,it]
-        red_chi2 = min_chi2 / float(self.nf-1.) 
+
+        red_chi2 = min_chi2 / self.ndeg[imin:imax]
 
         # Using numexpr does not improve this evaluation.
         pb = -0.5*(chi2_ig_last - min_chi2)
         pb = np.exp(pb).swapaxes(0,2)
+
+
+        # Experimental test of using a different prior for the 
+        # amplitude.
+        if not self.conf['flat_amp_prior']:
+            shape = (h.shape[0], self.nz, self.nt)
+
+            B = P2/P3
+            B = B.reshape(shape)
+            A = P2
+            A = A.reshape(shape)
+
+            poly = [11.98045828,  -451.49542673,  4255.45338873]
+            m = np.linspace(18, 24.5)
+            m = np.linspace(17, 25.)
+            m = np.linspace(15, 30) # extreme...25.)
+            m0 = self.data['m0'][imin:imax]
+
+            from scipy.interpolate import splrep, splev 
+            from scipy.integrate import simps
+            from matplotlib import pyplot as plt
+
+            f = 10**(-0.4*m)
+            pf = (2.5/np.log(10))*np.polyval(poly, m) / f #10**(0.4*m)
+
+            # This normalization is not needed and does not
+            # solve the original problem.
+            norm = simps(pf[::-1], f[::-1])
+            spl = splrep(f[::-1], pf[::-1]/norm)
+#            spl = splrep(f, pf)
+
+
+            f0 = 10**(-0.4*m0)
+            X0 = splev(f0, spl, ext=2)
+            X1 = splev(f0, spl, der=1, ext=2)
+            X2 = splev(f0, spl, der=2, ext=2)
+
+            K0 = X0 - f0*X1 + 0.5*f0**2*X2
+            K1 = X1 - f0*X2
+            K2 = 0.5*X2
+
+            A = A.swapaxes(0, 2)
+            B = B.swapaxes(0, 2)
+
+            term = K0 + K1*B + K2/(4*A)
+
+#            ipdb.set_trace()
+#            term = X0 - f0*X1 + X1*B
+
+#            ipdb.set_trace()
+#            term = 1+(X1/X0)*B
+            A = A.swapaxes(0, 2)
+            B = B.swapaxes(0, 2)
+            term = term.swapaxes(0, 2)
+
+#            ipdb.set_trace()
+            pb = term*pb
+
 
         output = {}
         if self.conf['out_pdf']:
@@ -227,6 +292,8 @@ To import priors, you need the following:
             pb = self.priors.add_priors(m, pb) # pb now include priors.
 
         p_bayes = pb.sum(axis=2)
+
+#        ipdb.set_trace()
 
         # Only to be compatible with BPZ. The ideal case would be a
         # absolute value...
