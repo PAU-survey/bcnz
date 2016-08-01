@@ -185,9 +185,6 @@ To import priors, you need the following:
         else:
             D = P2**2 / (P3 + 2.0e-300)
 
-
-#        ipdb.set_trace()
-
         D = D.reshape((h.shape[0], self.nz, self.nt))
 
         # Order after: type - redshift - ig
@@ -196,12 +193,13 @@ To import priors, you need the following:
         chi2_ig_last = self.P1[imin:imax] - D
         chi2 = chi2_ig_last.swapaxes(0,2)
 
-
+        # Reduced chi2
         chi_argmin = np.array([np.argmin(x) for x in chi2])
         iz, it = np.unravel_index(chi_argmin,  chi2.shape[1:]) #self.z_t_shape)
         min_chi2 = chi2[range(chi2.shape[0]), iz,it]
 
         red_chi2 = min_chi2 / self.ndeg[imin:imax]
+
 
         # Using numexpr does not improve this evaluation.
         pb = -0.5*(chi2_ig_last - min_chi2)
@@ -325,6 +323,11 @@ To import priors, you need the following:
 
         zb_min, zb_max = prob_interval(p_bayes, self.z, self.conf['odds'])
 
+        # Reduced chi2 using the bayesian photo-z.
+        X = np.arange(chi2.shape[0])
+        min_chi2_b = chi2[X,iz_b,:].min(axis=1)
+        red_chi2_b = min_chi2_b / self.ndeg[imin:imax]
+
         # Actual number of galaxies in the block.
         ngal = min(imax, self.data['id'].shape[0]) - imin
         peaks = np.zeros(ngal, self.dtype)
@@ -337,6 +340,8 @@ To import priors, you need the following:
         peaks['z_ml'] = self.z[iz]
         peaks['t_ml'] = tt_ml + 1
         peaks['chi2'] = red_chi2
+        peaks['chi2_b'] = red_chi2_b
+
 
         for key in ['zs', 'ra', 'dec', 'spread_model_i', 'm0']:
             if key in self.conf['order']: # and (key in self.data):
