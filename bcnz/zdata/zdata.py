@@ -5,7 +5,6 @@ from __future__ import print_function
 
 import glob
 import os
-import ipdb
 import numpy as np
 
 import bcnz

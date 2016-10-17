@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
-import ipdb
 import os
 import pdb
 import time

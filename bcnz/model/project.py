@@ -5,7 +5,6 @@
 from __future__ import print_function
 import numpy as np
 import os
-import ipdb
 import re
 import time
 from scipy.interpolate import splrep, splev
@@ -199,7 +198,6 @@ class model_mag(object):
         nt = self.conf['interp']*(ntypes_orig - 1) + ntypes_orig
         zoom_fac = (1, float(nt) / ntypes_orig, 1)
 
-#        ipdb.set_trace()
         f_new = zoom(f_mod, zoom_fac, order=1)
 
         return f_new

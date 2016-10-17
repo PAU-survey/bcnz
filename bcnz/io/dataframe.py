@@ -2,7 +2,6 @@
 # encoding: UTF8
 
 from __future__ import print_function
-import ipdb
 import pandas as pd
 
 class write_cat:

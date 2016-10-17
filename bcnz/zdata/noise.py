@@ -2,7 +2,6 @@
 # encoding: UTF8
 
 import copy
-import ipdb
 import numpy as np
 import time
 from numpy.random import normal
@@ -45,7 +44,6 @@ def err_mag(conf, zdata, mag):
     n_pix = np.where(from_ground, conf['aperture'] / conf['pixscale']**2., \
                      conf['aperture'] / conf['pixscale_space']**2.)
 
-#    ipdb.set_trace()
     N_rn = np.where(from_ground, conf['n_exp']*conf['RN']**2, \
                     conf['n_exp_space']*conf['RN_space']**2)
 
@@ -56,7 +54,6 @@ def err_mag(conf, zdata, mag):
     tel_surface = np.pi*(D_tel/2.)**2.
     pre = (tel_surface/n_pix)*(3631.0*1.51*1e7)
 
-#    ipdb.set_trace()
 
     # Filters are second index..
     n_exp = np.where(from_ground, conf['n_exp'], conf['n_exp_space'])
@@ -74,7 +71,6 @@ def err_mag(conf, zdata, mag):
 
     # Adjusts the signal to noise to meet a specific criteria.
 
-#    ipdb.set_trace()
     if conf['use_snlim']:
         sn_val = conf['snlim_sig']
         sn_mag = [conf['snlim_'+x] for x in all_filters]
@@ -85,8 +81,6 @@ def err_mag(conf, zdata, mag):
             sn_ratio[i] = sn_val / splev(sn_mag[i], spl)
 
 
-#        print('SN ratio', sn_ratio)
-#        ipdb.set_trace()
         SN = SN * sn_ratio
 
 
@@ -103,7 +97,6 @@ def err_mag(conf, zdata, mag):
 def sn_spls(conf, zdata):
     """Construct splines with magnitude errors and SN."""
 
-    import ipdb
     filters = zdata['filters']
     mag_interp = np.linspace(10., 35, 200)
     mag = np.tile(mag_interp, (len(filters), 1)).T
@@ -115,7 +108,6 @@ def sn_spls(conf, zdata):
         merrD[f] = splrep(mag_interp, mag_err[:,i])
         sn_splD[f] = splrep(mag_interp, SN[:,i])
 
-#    ipdb.set_trace()
 
     return {'merrD': merrD, 'sn_splD': sn_splD}
 

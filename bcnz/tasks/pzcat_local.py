@@ -6,7 +6,6 @@
 
 import glob
 import os
-import pdb
 import multiprocessing
 import types
 

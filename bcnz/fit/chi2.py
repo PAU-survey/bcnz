@@ -3,7 +3,6 @@
 # First iteration on a code to do Bayesian template 
 # fitting to determine galaxy type and redshift.
 
-import ipdb
 import pdb
 import time
 import sys
@@ -64,7 +63,6 @@ def find_odds(p,x,xmin,xmax):
     imin = np.apply_along_axis(K, 0, xmin) - 1
     imin = np.clip(imin, 0, np.infty).astype(np.int)
 
-#    ipdb.set_trace()
     imax = np.apply_along_axis(K, 0, xmax)
     imax = np.minimum(imax, p.shape[1] - 1)
     gind = np.arange(p.shape[0])
