@@ -372,10 +372,16 @@ To import priors, you need the following:
         peaks['chi2'] = red_chi2
         peaks['chi2_b'] = red_chi2_b
 
+        # Here the code previously sent back several of the input
+        # parameters, most importantly 'zs'. This was done to simplify the
+        # usage when having text files, but is less useful for how the code
+        # is used by now. Propagating this is ugly and therefore dropped.
+#        for key in ['zs', 'ra', 'dec', 'spread_model_i', 'm0']:
+#            if (key in self.conf['order']) and \
+#               (key in self.data): 
+#                peaks[key] = self.data[key][imin:imax]
 
-        for key in ['zs', 'ra', 'dec', 'spread_model_i', 'm0']:
-            if key in self.conf['order']: # and (key in self.data):
-                peaks[key] = self.data[key][imin:imax]
+        peaks['m0'] = self.data['m0'][imin:imax]
 
         output['pzcat'] = peaks
 
