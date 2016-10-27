@@ -77,10 +77,9 @@ def find_odds(p,x,xmin,xmax):
 
 class chi2_calc(object):
     def __init__(self, conf, zdata, data, priors=None):
-        assert data['mag'].shape[0], 'No galaxies'
         self.conf = conf
         self.zdata = zdata
-        self.data = data
+        self.data = self.ensure_arrays(data)
 
         # These was previously passed.
         self.dz = conf['dz']
@@ -97,6 +96,19 @@ class chi2_calc(object):
 
         self.set_values()
         self.calc_P1()
+
+    def ensure_arrays(self, data):
+        """Convert to arrays if data is a dataframe."""
+    
+        import ipdb
+
+        filters = self.conf['filters']
+
+        D = {}
+        D['f_obs'] = data['flux'][filters].values
+        D['ef_obs'] = data['flux_err'][filters].values
+
+        return D
 
     def set_values(self):
         f_obs = self.data['f_obs']

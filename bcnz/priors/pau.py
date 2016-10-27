@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
-import ipdb
 import sys
 import numpy as np
 
@@ -71,12 +70,10 @@ class pau(object):
         f_t[:,nsplit:] = np.tile(f_irr, (self.nn[-1],1)).T
         assert np.allclose(f_t.sum(axis=1), 1.0), 'Internal error'
 
-#        ipdb.set_trace()
 #        f_t[:,:3] = self.fo_t*np.exp(-np.outer(dm, self.k_t))
 #        h = (1.-np.sum(f_t[:,:3], axis=1))/3.
 #        f_t[:,3:] = np.tile(h, (nt-3,1)).T
 
-#        ipdb.set_trace()
 
         # redshift - type
         zt_at_a = np.exp(np.outer(np.log(z), self.a))

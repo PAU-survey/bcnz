@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
-import ipdb
 import numpy as np
 import pandas as pd
 from scipy.ndimage.interpolation import zoom
