@@ -75,6 +75,9 @@ def find_odds(p,x,xmin,xmax):
 
     return odds
 
+import ipdb
+
+
 class chi2_calc(object):
     def __init__(self, conf, zdata, data, priors=None):
         self.conf = conf
@@ -100,13 +103,13 @@ class chi2_calc(object):
     def ensure_arrays(self, data):
         """Convert to arrays if data is a dataframe."""
     
-        import ipdb
 
         filters = self.conf['filters']
 
         D = {}
         D['f_obs'] = data['flux'][filters].values
         D['ef_obs'] = data['flux_err'][filters].values
+        D['m0'] = data['m0'].values
 
         return D
 
@@ -114,7 +117,14 @@ class chi2_calc(object):
         f_obs = self.data['f_obs']
         ef_obs = self.data['ef_obs']
 
-        obs = np.logical_and(ef_obs <= 1., ef_obs*1e-4 < f_obs)
+        #ipdb.set_trace()
+
+        # Supports using NaN to signal non-observations.
+        if np.isnan(f_obs).any():
+            obs = ~np.isnan(f_obs)
+        else:
+            obs = np.logical_and(ef_obs <= 1., ef_obs*1e-4 < f_obs)
+
         self.h = obs / ef_obs ** 2.
 
         self.nf = self.f_mod.shape[2]
@@ -176,7 +186,7 @@ To import priors, you need the following:
         self.l2 = self.data['f_obs']*self.h
         self.r3 = self.f_mod2**2.
 
-        self.ndeg = (self.data['emag'] != -99.).sum(axis=1)
+        self.ndeg = (~np.isnan(self.data['f_obs'])).sum(axis=1)
 
     def _block(self, n):
         """Term in chi**2."""
