@@ -107,11 +107,21 @@ class chi2_calc(object):
         filters = self.conf['filters']
 
         D = {}
-        D['f_obs'] = data['flux'][filters].values
-        D['ef_obs'] = data['flux_err'][filters].values
         D['m0'] = data['m0'].values
+        D['id'] = data.index
+
+        # Removing the NaNs, since they are giving problems.
+        f_obs = data['flux'][filters].values
+        ef_obs = data['flux_err'][filters].values
+
+        obs = ~np.isnan(f_obs)
+        f_obs[~obs] = 1e100
+        ef_obs[~obs] = 1e100
+        D['f_obs'] = f_obs
+        D['ef_obs'] = ef_obs
 
         return D
+
 
     def set_values(self):
         f_obs = self.data['f_obs']
@@ -380,6 +390,10 @@ To import priors, you need the following:
 
         for n in np.arange(nblocks):
             yield self._block(n)
+
+#    def result_df(self):
+#        ipdb.set_trace()
+
 
 def chi2(config, zdata, data, priors=None):
     """Select which chi2 object to use depending on splitting in magnitudes
