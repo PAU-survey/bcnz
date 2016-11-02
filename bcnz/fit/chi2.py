@@ -114,8 +114,18 @@ class chi2_calc(object):
         f_obs = data['flux'][filters].values
         ef_obs = data['flux_err'][filters].values
 
-        obs = ~np.isnan(f_obs)
-        f_obs[~obs] = 1e100
+# Note: There are corner cases where this does not make sense...
+#        # Test that the same values is masked out both places.
+#        assert (np.isnan(f_obs) == np.isnan(ef_obs)).all()
+
+        # The flux error becomes infinite for extremely high magnitude
+        # errors. They should also be suffient small to not overflow later.
+        obs = np.logical_and(~np.isnan(f_obs), ~np.isinf(ef_obs))
+        obs = np.logical_and(obs, ~np.isnan(ef_obs))
+
+        ef_obs[~obs] = 1e100
+        obs = np.logical_and(obs, ef_obs < 1e100)
+        f_obs[~obs] = 1e-4
         ef_obs[~obs] = 1e100
         D['f_obs'] = f_obs
         D['ef_obs'] = ef_obs
@@ -126,8 +136,6 @@ class chi2_calc(object):
     def set_values(self):
         f_obs = self.data['f_obs']
         ef_obs = self.data['ef_obs']
-
-        #ipdb.set_trace()
 
         # Supports using NaN to signal non-observations.
         if np.isnan(f_obs).any():
@@ -234,7 +242,6 @@ To import priors, you need the following:
         # Using numexpr does not improve this evaluation.
         pb = -0.5*(chi2_ig_last - min_chi2)
         pb = np.exp(pb).swapaxes(0,2)
-
 
         # Experimental test of using a different prior for the 
         # amplitude.
