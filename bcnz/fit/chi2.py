@@ -7,6 +7,7 @@ import pdb
 import time
 import sys
 import numpy as np
+import pandas as pd
 from scipy.ndimage.interpolation import zoom
 import scipy.stats
 
@@ -82,7 +83,13 @@ class chi2_calc(object):
     def __init__(self, conf, zdata, data, priors=None):
         self.conf = conf
         self.zdata = zdata
-        self.data = self.ensure_arrays(data)
+
+        if isinstance(data, pd.DataFrame):
+            self.data = self.ensure_arrays(data)
+            self.new_input = True
+        else:
+            self.data = data
+            self.new_input = False
 
         # These was previously passed.
         self.dz = conf['dz']
@@ -103,7 +110,6 @@ class chi2_calc(object):
     def ensure_arrays(self, data):
         """Convert to arrays if data is a dataframe."""
     
-
         filters = self.conf['filters']
 
         D = {}
@@ -138,7 +144,11 @@ class chi2_calc(object):
         ef_obs = self.data['ef_obs']
 
         # Supports using NaN to signal non-observations.
-        if np.isnan(f_obs).any():
+        if self.new_input:
+#        ipdb
+#        if np.isnan(f_obs).any():
+#            obs = ~np.isnan(f_obs)
+#        else:
             obs = ~np.isnan(f_obs)
         else:
             obs = np.logical_and(ef_obs <= 1., ef_obs*1e-4 < f_obs)
