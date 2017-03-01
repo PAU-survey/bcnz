@@ -85,6 +85,7 @@ class chi2_calc(object):
         self.zdata = zdata
 
         if isinstance(data, pd.DataFrame):
+            print('new_input')
             self.data = self.ensure_arrays(data)
             self.new_input = True
         else:
@@ -151,6 +152,7 @@ class chi2_calc(object):
 #        else:
             obs = ~np.isnan(f_obs)
         else:
+            raise
             obs = np.logical_and(ef_obs <= 1., ef_obs*1e-4 < f_obs)
 
         self.h = obs / ef_obs ** 2.

@@ -2,7 +2,6 @@
 # encoding: UTF8
 
 # All the post processing after reading in the data.
-import ipdb
 import numpy as np
 from scipy.interpolate import splev, splrep
 import bcnz
@@ -37,9 +36,6 @@ def add_noise(conf, zdata, data):
     for i,fname in enumerate(conf['filters']):
         err_mag[:,i] = splev(mag[:,i], merrD[fname], ext=2)
         SN[:,i] = splev(mag[:,i], snD[fname], ext=2)
-
-#    ipdb.set_trace()
-#    err_mag, SN = err_magnitude(conf, zdata, mag)
 
     ngal, nfilters = err_mag.shape
     add_mag = np.zeros((ngal, nfilters))
