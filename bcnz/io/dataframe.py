@@ -29,12 +29,9 @@ class write_cat:
         # now.
         galid = output['pzcat']['id']
 
-#        import ipdb
-#        ipdb.set_trace()
         for key,val in output.iteritems():
             if key in ['pzpdf_type', 'chi2']:
-                val = val.swapaxes(0,1)
-                panel = pd.Panel(val, major_axis=galid)
+                panel = pd.Panel(val, items=galid)
                 df = panel.to_frame().stack()
             else:
 
@@ -45,9 +42,3 @@ class write_cat:
             dfname = 'default' if key == 'pzcat' else key
 
             self._store.append(dfname, df)
-
-            
-#            if key == 'pzpdf_type':
-#                A = self._store[key]
-#                print(min(galid), max(galid), len(A.major_axis))
-
