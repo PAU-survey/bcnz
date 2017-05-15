@@ -47,7 +47,7 @@ class write_cat:
             self._store.append(dfname, df)
 
             
-            if key == 'pzpdf_type':
-                A = self._store[key]
-                print(min(galid), max(galid), len(A.major_axis))
+#            if key == 'pzpdf_type':
+#                A = self._store[key]
+#                print(min(galid), max(galid), len(A.major_axis))
 
