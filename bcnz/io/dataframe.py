@@ -28,17 +28,22 @@ class write_cat:
         # Assumes all the entries are recordarrays. Valid for
         # now.
         galid = output['pzcat']['id']
+
+#        import ipdb
+#        ipdb.set_trace()
         for key,val in output.iteritems():
             if key in ['pzpdf_type', 'chi2']:
                 val = val.swapaxes(0,1)
-                df = pd.Panel(val, major_axis=galid)
+                panel = pd.Panel(val, major_axis=galid)
+                df = panel.to_frame().stack()
             else:
+
                 df = pd.DataFrame(val)
                 df = df.set_index(galid)
+                df = df.stack()
 
             dfname = 'default' if key == 'pzcat' else key
 
-            df = df.stack()
             self._store.append(dfname, df)
 
             
