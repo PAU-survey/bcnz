@@ -76,7 +76,6 @@ def find_odds(p,x,xmin,xmax):
 
     return odds
 
-import ipdb
 
 
 class chi2_calc(object):
@@ -249,6 +248,9 @@ To import priors, you need the following:
 
         red_chi2 = min_chi2 / self.ndeg[imin:imax]
 
+#        import ipdb
+#        ipdb.set_trace()
+
 
         # Using numexpr does not improve this evaluation.
         pb = -0.5*(chi2_ig_last - min_chi2)
@@ -343,7 +345,7 @@ To import priors, you need the following:
 
         # Only to be compatible with BPZ. The ideal case would be a
         # absolute value...
-        pmin = self.conf['p_min']*p_bayes.max(axis=1.)
+        pmin = self.conf['p_min']*p_bayes.max(axis=1)
         for i in range(len(pmin)):
             p_bayes[i] = np.where(pmin[i] < p_bayes[i], p_bayes[i], 0.)
 
@@ -398,6 +400,10 @@ To import priors, you need the following:
         peaks['m0'] = self.data['m0'][imin:imax]
 
         output['pzcat'] = peaks
+
+        if np.isnan(output['pzcat']['m0']).any():
+            import ipdb
+            ipdb.set_trace()
 
         return output
 
