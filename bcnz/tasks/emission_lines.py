@@ -20,7 +20,7 @@ descr = {
 class emission_lines:
     """The model flux for the emission lines."""
 
-    version = 1.053
+    version = 1.054
 
     config = {'dz': 0.0005, 'ampl': 1e-16, 'EBV': 0.}
 
@@ -95,6 +95,7 @@ class emission_lines:
         """
 
         EBV = self.config['EBV']
+        ampl = self.config['ampl']
 
         flux = {}
         for key, ratio in self.ratios.items():
@@ -104,7 +105,7 @@ class emission_lines:
             k_ext = splev(lmb, ext_spl, ext=1) 
             y_ext = 10**(-0.4*EBV*k_ext)
 
-            flux[key] = (ratio*y_f*y_ext) / rconst
+            flux[key] = (ampl*ratio*y_f*y_ext) / rconst
 
         flux['lines'] = sum(flux.values())
 
