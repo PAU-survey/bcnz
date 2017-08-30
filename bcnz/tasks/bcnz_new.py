@@ -238,13 +238,17 @@ class bcnz_new:
 #        data_df = data_df[100:150]
         flux, flux_err, var_inv = self.get_arrays(data_df)
 
+#        ipdb.set_trace()
 
         t1 = time.time()
-        A = np.einsum('fzs,fzt,gf->gzst', f_mod, f_mod, var_inv)
+        A = np.einsum('gf,zsf,ztf->gzst', var_inv, f_mod, f_mod)
+
+#        A = np.einsum('fzs,fzt,gf->gzst', f_mod, f_mod, var_inv)
         print('time A',  time.time() - t1)
 
         t1 = time.time()
-        b = np.einsum('gf,fzs,gf->gzs', flux, f_mod, var_inv)
+        b = np.einsum('gf,gf,zsf->gzs', var_inv, flux, f_mod)
+#        b = np.einsum('gf,fzs,gf->gzs', flux, f_mod, var_inv)
         print('time b',  time.time() - t1)
 
         Ap = np.where(A > 0, A, 0)
@@ -267,8 +271,6 @@ class bcnz_new:
 
             m0 = b / a
             vn = m0*v
-
-            ipdb.set_trace()
 
             # Comparing with chi2 would require evaluating this in each
             # iteration..
