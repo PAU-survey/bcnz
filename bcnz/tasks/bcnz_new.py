@@ -281,20 +281,16 @@ class bcnz_new:
 #        ipdb.set_trace()
 
         print('time minimize',  time.time() - t1)
-
-        ipdb.set_trace()
-
-        F = np.einsum('fzs,gzs->gfz', f_mod, v)
-        F = xr.DataArray(F, coords=coords, dims=('gal', 'f', 'z'))
+        F = np.einsum('zsf,gzs->gzf', f_mod, v)
+        F = xr.DataArray(F, coords=coords, dims=('gal', 'z', 'band'))
 
         chi2 = var_inv*(flux - F)**2
 
-        pb = np.exp(-0.5*chi2.sum(dim='f'))
+        pb = np.exp(-0.5*chi2.sum(dim='band'))
         pb = pb / (1e-100 + pb.sum(dim='z'))
-        chi2 = chi2.sum(dim='f')
+        chi2 = chi2.sum(dim='band')
 
         norm = xr.DataArray(v, coords=coords_norm, dims=('gal','z','model'))
-
 
         return chi2, norm
 
