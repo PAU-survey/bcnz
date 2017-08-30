@@ -263,7 +263,6 @@ class bcnz_new:
 
         t1 = time.time()
         for i in range(self.config['Niter']): #1000):
-            print(i)
             a = np.einsum('gzst,gzt->gzs', Ap, v)
             c = np.einsum('gzst,gzt->gzs', An, v)
 
@@ -447,7 +446,8 @@ class bcnz_new:
         f_mod = self.model(ab, ab_el)
 
         galcat_store = self.job.galcat.get_store()
-        Rin = galcat_store.select('default', iterator=True, chunksize=10)
+        chunksize = 10
+        Rin = galcat_store.select('default', iterator=True, chunksize=chunksize)
 
         zs = False
 #        zs = self.job.zspec.result.zs
@@ -455,6 +455,8 @@ class bcnz_new:
         path = self.job.empty_file('default')
         store = pd.HDFStore(path)
         for i,galcat in enumerate(Rin):
+            print('batch', i, 'tot', i*chunksize)
+
             chi2, norm = f_algo(f_mod, galcat, zs)
             peaks = self.photoz(chi2, norm)
 
