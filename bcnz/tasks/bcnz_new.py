@@ -52,25 +52,8 @@ class bcnz_new:
         assert self.config['filters'], 'Need to set filters'
         assert self.config['seds'], 'Need to set: seds'
 
-#    def _find_models(self, ab, seds):
-#        """Find a list of models."""
-#
-#        models = []
-#        for key in ab.columns:
-#            if key == 'z':
-#                continue
-#
-#            fname, sed, ext = key
-#            if not sed in seds:
-#                continue
-#
-#            models.append((sed, ext))
-#
-#        models = list(set(models))
-#
-#        return models
-
     def rebin_redshift(self, f_mod, zgrid):
+        """Rebin the model to the grid used in the calculations."""
 
         t1 = time.time()
         z = f_mod.z.values
@@ -96,7 +79,6 @@ class bcnz_new:
 
         return fmod_new
 
-
     def _model_array(self, ab, zgrid, fL, seds):
         """Construct the model array."""
 
@@ -108,41 +90,6 @@ class bcnz_new:
         f_mod = self.rebin_redshift(f_mod, zgrid)
 
         return f_mod
-
-#        ipdb.set_trace()
-#        models = self._find_models(ab, seds)
-#
-#        f_mod = np.zeros((len(fL), len(models), len(zgrid)))
-#        for i,fname in enumerate(fL):
-#            for j,(sed,ext) in enumerate(models):
-#                key = (fname, sed, ext)
-#                spl = splrep(ab['z'], ab[key])
-#                f_mod[i,j,:] = splev(zgrid, spl)
-#
-#
-#        # Ok... this is not exactly pretty..
-#        model = list(map('_'.join, models))
-#        coords = {'f': fL, 'model': model, 'z': zgrid}
-#        f_mod = xr.DataArray(f_mod, coords=coords, dims=('f','model','z'))
-#
-#        return f_mod
-
-
-#    def _model_cont(self, ab, zgrid, fL):
-#        """Array with the model."""
-#
-#        seds = self.config['seds']
-#        f_mod = self._model_array(ab, zgrid, fL, seds)
-#
-#        return f_mod
-#
-#    def _model_lines(self, ab, zgrid, fL):
-#        return self._model_array(ab, zgrid, fL, ['lines'])
-#
-##        ipdb.set_trace()
-
-#    def select_ext(self, ab_cont, ab_lines):
-#        ipdb.set_trace()
 
     def select_lines(self, ab_lines):
 
@@ -173,25 +120,6 @@ class bcnz_new:
             fmod = fmod_cont
 
         return fmod
-
-#            ab = ab_cont
-#
-#
-#        ipdb.set_trace()
-#
-#        C = self.config
-#        zgrid = np.arange(C['zmin'], C['zmax']+C['dz'], C['dz'])
-#        fL = self.config['filters']
-#
-#        f_mod1 = self._model_normal(ab, zgrid, fL)
-#        if self.config['use_lines']:
-#            f_mod2 = self._model_lines(ab_el, zgrid, fL)
-#            f_mod = xr.concat([f_mod1, f_mod2], dim='model')
-#        else:
-#            f_mod = f_mod1
-#
-#        return f_mod
-
 
     def get_arrays(self, data_df):
         """Read in the arrays and present them as xarrays."""
@@ -235,25 +163,19 @@ class bcnz_new:
     def chi2_min(self, f_mod, data_df, zs): #, mabs_df):
         """Minimize the chi2 expression."""
 
-#        data_df = data_df[100:150]
         flux, flux_err, var_inv = self.get_arrays(data_df)
-
-#        ipdb.set_trace()
 
         t1 = time.time()
         A = np.einsum('gf,zsf,ztf->gzst', var_inv, f_mod, f_mod)
 
-#        A = np.einsum('fzs,fzt,gf->gzst', f_mod, f_mod, var_inv)
         print('time A',  time.time() - t1)
 
         t1 = time.time()
         b = np.einsum('gf,gf,zsf->gzs', var_inv, flux, f_mod)
-#        b = np.einsum('gf,fzs,gf->gzs', flux, f_mod, var_inv)
         print('time b',  time.time() - t1)
 
         Ap = np.where(A > 0, A, 0)
         An = np.where(A < 0, -A, 0)
-
 
         v = 100*np.ones_like(b)
 
@@ -262,11 +184,8 @@ class bcnz_new:
         coords_norm = {'gal': gal_id, 'z': f_mod.z, 'model': f_mod.model}
 
         t1 = time.time()
-        for i in range(self.config['Niter']): #1000):
+        for i in range(self.config['Niter']):
             a = np.einsum('gzst,gzt->gzs', Ap, v)
-            c = np.einsum('gzst,gzt->gzs', An, v)
-
-#            m0 = (-b + np.sqrt(b**2 + 4*a*c)) / (2*a)
 
             m0 = b / a
             vn = m0*v
@@ -276,8 +195,6 @@ class bcnz_new:
             adiff = np.abs(vn-v)
 
             v = vn
-
-#        ipdb.set_trace()
 
         print('time minimize',  time.time() - t1)
         F = np.einsum('zsf,gzs->gzf', f_mod, v)
