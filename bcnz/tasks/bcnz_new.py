@@ -27,7 +27,6 @@ descr = {
   'use_ext': 'If including extinction'
 }
 
-
 class bcnz_new:
 #    """Fitting the fluxes to a galaxy template."""
     """Testing adding extinction."""
@@ -183,6 +182,7 @@ class bcnz_new:
         coords = {'gal': gal_id, 'band': f_mod.band, 'z': f_mod.z}
         coords_norm = {'gal': gal_id, 'z': f_mod.z, 'model': f_mod.model}
 
+
         t1 = time.time()
         for i in range(self.config['Niter']):
             a = np.einsum('gzst,gzt->gzs', Ap, v)
@@ -210,7 +210,6 @@ class bcnz_new:
 
         return chi2, norm
 
-
     def odds_fast(self, pz, zb):
 
         # Very manual determination of the ODDS through the
@@ -231,8 +230,8 @@ class bcnz_new:
         z0 = z[0]
         bins1 = (z1 - z0) / dz - 1 # Cumsum is estimated at the end
         bins2 = (z2 - z0) / dz - 1
-        i1 = np.floor(bins1).astype(np.int)
-        i2 = np.floor(bins2).astype(np.int)
+        i1 = np.clip(np.floor(bins1), 0, np.infty).astype(np.int)
+        i2 = np.clip(np.floor(bins2), 0, np.infty).astype(np.int)
         db1 = bins1 - i1
         db2 = bins2 - i2
 
