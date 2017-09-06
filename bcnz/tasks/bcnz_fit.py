@@ -31,7 +31,7 @@ class bcnz_fit:
     """Fitting the fluxes to a galaxy template."""
 
     # New version of the bcnz core code.
-    version = 1.055
+    version = 1.056
     config = {
       'filters': [],
       'seds': [],

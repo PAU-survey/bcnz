@@ -32,7 +32,7 @@ class bcnz_new:
     """Testing adding extinction."""
 
     # New version of the bcnz core code.
-    version = 1.055
+    version = 1.056
     config = {
       'filters': [],
       'seds': [],
