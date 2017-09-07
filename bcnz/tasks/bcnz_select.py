@@ -10,7 +10,7 @@ descr = {'use_nondet': 'If including non-detections',
 class bcnz_select:
     """Selecting a subset of the fluxes to use in the fitting."""
 
-    version = 1.01
+    version = 1.02
     config = {'use_nondet': True, 'SN_lim': -100.}
 
     def limit_SN(self, cat):
@@ -36,8 +36,7 @@ class bcnz_select:
 
         cat = pd.concat({'flux': flux, 'flux_err': flux_err}, axis=1)
 
-        santi_factor = 25117800344.650097
-        cat /= santi_factor
+        assert False, 'Here I should properly set the index...'
 
         return cat
 
