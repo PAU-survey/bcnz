@@ -29,14 +29,12 @@ class bcnz_select:
     def to_outformat(self, cat_in):
         """Convert to hirarchical columns and perform some weird temporary scaling."""
         
-        cat = cat_in.reset_index()
+        cat_in = cat_in.reset_index()
 
-        flux = cat.pivot('ref_id', 'band', 'flux')
-        flux_err = cat.pivot('ref_id', 'band', 'flux_err')
+        flux = cat_in.pivot('ref_id', 'band', 'flux')
+        flux_err = cat_in.pivot('ref_id', 'band', 'flux_err')
 
         cat = pd.concat({'flux': flux, 'flux_err': flux_err}, axis=1)
-
-        assert False, 'Here I should properly set the index...'
 
         return cat
 
