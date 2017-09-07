@@ -186,13 +186,12 @@ class bcnz_converge:
         ipdb.set_trace()
 
 
-
     def chi2_min(self, f_mod, data_df, zs): #, mabs_df):
         """Minimize the chi2 expression."""
 
         flux, flux_err, var_inv = self.get_arrays(data_df)
 
-        self.get_init(f_mod)
+#        self.get_init(f_mod)
 
         t1 = time.time()
         A = np.einsum('gf,zsf,ztf->gzst', var_inv, f_mod, f_mod)
@@ -212,7 +211,6 @@ class bcnz_converge:
         coords = {'gal': gal_id, 'band': f_mod.band, 'z': f_mod.z}
         coords_norm = {'gal': gal_id, 'z': f_mod.z, 'model': f_mod.model}
 
-
         t1 = time.time()
         for i in range(self.config['Niter']):
             a = np.einsum('gzst,gzt->gzs', Ap, v)
@@ -225,6 +223,27 @@ class bcnz_converge:
             adiff = np.abs(vn-v)
 
             v = vn
+
+        print('time min 1',  time.time() - t1)
+
+        v1 = v
+
+        C = np.einsum('gzst,gzs->gzst', A,b)
+        t2 = time.time()
+        for i in range(self.config['Niter']):
+            a = np.einsum('gzst,gzt->gzs', Ap, v)
+            vn = v / a
+
+            v = v1
+
+        v2 = v
+        print('time min 2',  time.time() - t2)
+
+#        for i in range(self.config['Niter']):
+
+
+        ipdb.set_trace()
+
 
         print('time minimize',  time.time() - t1)
         F = np.einsum('zsf,gzs->gzf', f_mod, v)
