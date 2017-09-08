@@ -31,7 +31,7 @@ class bcnz_fit:
 #    """Fitting the fluxes to a galaxy template."""
     """Testing adding extinction."""
 
-    version = 1.057
+    version = 1.058
     config = {
       'filters': [],
       'seds': [],
@@ -209,6 +209,26 @@ class bcnz_fit:
 
         return chi2, norm
 
+    def best_model(self, norm, f_mod, peaks):
+        """Estimate the best fit model."""
+
+        # This should be elsewere..
+        L = [] 
+
+        fluxA = np.zeros((len(peaks), len(f_mod.band)))
+        for i,gal in enumerate(peaks.index):
+            zgal = peaks.loc[gal].zb
+            norm_gal = norm.sel(gal=gal, z=zgal).values
+            fmod_gal = f_mod.sel(z=zgal).values
+
+            fluxA[i] = np.dot(norm_gal, fmod_gal)
+
+        coords = {'gal': norm.gal, 'band': f_mod.band}
+        flux = xr.DataArray(fluxA, dims=('gal', 'band'), coords=coords)
+
+        return flux
+
+
     def odds_fast(self, pz, zb):
 
         # Very manual determination of the ODDS through the
@@ -309,15 +329,18 @@ class bcnz_fit:
 
             chi2, norm = f_algo(f_mod, galcat, zs)
             peaks = self.photoz(chi2, norm)
+            best_model = self.best_model(norm, f_mod, peaks)
 
             # Required by xarray..
             norm.name = 'norm'
             chi2.name = 'chi2'
+            best_model.name = 'best_model'
 
             # This should be configurable somewhere. It takes a lot of storage..
             store.append('default', peaks.stack()) 
 #            store.append('norm', norm.to_dataframe())
 #            store.append('chi2', chi2.to_dataframe())
+            store.append('best_model', best_model.to_dataframe())
  
 
         store.close()
