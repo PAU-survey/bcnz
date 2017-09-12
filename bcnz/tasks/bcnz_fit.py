@@ -19,18 +19,18 @@ import xdolphin as xd
 descr = {
   'filters': 'Filters to use',
   'seds': 'SEDs to use',
-  'zmin': 'Minimum redshift',
-  'zmax': 'Maximum redshift',
-  'dz': 'Grid width in redshift',
+#  'zmin': 'Minimum redshift',
+#  'zmax': 'Maximum redshift',
+#  'dz': 'Grid width in redshift',
   'chi2_algo': 'The chi2 algorithm',
-  'use_lines': 'If including emission lines',
-  'use_ext': 'If including extinction'
+#  'use_lines': 'If including emission lines',
+#  'use_ext': 'If including extinction'
 }
 
 class bcnz_fit:
-#    """Fitting the fluxes to a galaxy template."""
-    """Testing adding extinction."""
 
+    # Some of these configuration options are no longer valid and 
+    # moved into the flux_model code...
     version = 1.058
     config = {
       'filters': [],
@@ -50,74 +50,6 @@ class bcnz_fit:
         assert self.config['filters'], 'Need to set filters'
         assert self.config['seds'], 'Need to set: seds'
 
-    def rebin_redshift(self, f_mod, zgrid):
-        """Rebin the model to the grid used in the calculations."""
-
-        t1 = time.time()
-        z = f_mod.z.values
-
-        # This order is chosen for hopefully better memory access 
-        # times.
-        nz = len(zgrid)
-        nband = len(f_mod.band)
-        nmodel = len(f_mod.model)
-        A = np.ones((nz, nmodel, nband))
-
-        print('Starting to regrid')
-        for i,model in enumerate(f_mod.model.values):
-            for j,band in enumerate(f_mod.band.values):
-                y = f_mod.sel(band=band, model=model).values
-                spl = splrep(z, y)
-                A[:,i,j] = splev(zgrid, spl)
-
-        print('Time regridding', time.time() - t1)
-
-        coords = {'z': zgrid, 'band': f_mod.band, 'model': f_mod.model}
-        fmod_new = xr.DataArray(A, coords=coords, dims=('z', 'model', 'band'))
-
-        return fmod_new
-
-    def _model_array(self, ab, zgrid, fL, seds):
-        """Construct the model array."""
-
-        ab = ab.set_index(['band','sed', 'z', 'EBV'])
-        f_mod = ab.to_xarray().flux
-        f_mod = f_mod.stack(model=['sed', 'EBV'])
-
-        f_mod = f_mod.sel(band=self.config['filters'])
-        f_mod = self.rebin_redshift(f_mod, zgrid)
-
-        return f_mod
-
-    def select_lines(self, ab_lines):
-
-        # This method could be extended if wanting different templates
-        # for the different emission lines.
-        ab_lines = ab_lines[ab_lines.sed == 'lines']
-        seds = ['lines']
-
-        return ab_lines, seds
-
-    def model(self, ab_cont, ab_lines):
-
-        if not self.config['use_ext']:
-            ab_cont = ab_cont[ab_cont.EBV == 0.]
-            ab_lines = ab_lines[ab_lines.EBV == 0.]
-
-        C = self.config
-        fL = C['filters']
-
-        zgrid = np.arange(C['zmin'], C['zmax']+C['dz'], C['dz'])
-        fmod_cont = self._model_array(ab_cont, zgrid, fL, C['seds'])
-
-        if self.config['use_lines']:
-            ab_lines, seds_lines = self.select_lines(ab_lines)
-            fmod_lines = self._model_array(ab_lines, zgrid, fL, seds_lines)
-            fmod = xr.concat([fmod_cont, fmod_lines], dim='model')
-        else: 
-            fmod = fmod_cont
-
-        return fmod
 
     def get_arrays(self, data_df):
         """Read in the arrays and present them as xarrays."""
@@ -164,12 +96,16 @@ class bcnz_fit:
         flux, flux_err, var_inv = self.get_arrays(data_df)
 
         t1 = time.time()
-        A = np.einsum('gf,zsf,ztf->gzst', var_inv, f_mod, f_mod)
+#        A = np.einsum('gf,zsf,ztf->gzst', var_inv, f_mod, f_mod)
+        A = np.einsum('gf,zfs,zft->gzst', var_inv, f_mod, f_mod)
 
+        # Bad hack..
+#        A = np.clip(A, 1e-50, np.infty)
         print('time A',  time.time() - t1)
 
         t1 = time.time()
-        b = np.einsum('gf,gf,zsf->gzs', var_inv, flux, f_mod)
+#        b = np.einsum('gf,gf,zsf->gzs', var_inv, flux, f_mod)
+        b = np.einsum('gf,gf,zfs->gzs', var_inv, flux, f_mod)
         print('time b',  time.time() - t1)
 
         Ap = np.where(A > 0, A, 0)
@@ -186,6 +122,9 @@ class bcnz_fit:
         for i in range(self.config['Niter']):
             a = np.einsum('gzst,gzt->gzs', Ap, v)
 
+            if (a==0).any():
+                ipdb.set_trace()
+
             m0 = b / a
             vn = m0*v
 
@@ -196,7 +135,8 @@ class bcnz_fit:
             v = vn
 
         print('time minimize',  time.time() - t1)
-        F = np.einsum('zsf,gzs->gzf', f_mod, v)
+        # .. Also changed in last update of einsum
+        F = np.einsum('zfs,gzs->gzf', f_mod, v)
         F = xr.DataArray(F, coords=coords, dims=('gal', 'z', 'band'))
 
         chi2 = var_inv*(flux - F)**2
@@ -301,6 +241,13 @@ class bcnz_fit:
 
         return pzcat
 
+    def fix_fmod_format(self, fmod_in):
+        f_mod = fmod_in.to_xarray().f_mod
+        f_mod = f_mod.stack(model=['sed', 'EBV'])
+
+        return f_mod
+#        ipdb.set_trace()
+
     def run(self):
         self.check_conf()
 
@@ -309,11 +256,8 @@ class bcnz_fit:
         assert hasattr(self, key), 'No such key: {}'.format(key)
         f_algo = getattr(self, key)
 
-#        galcat = self.job.galcat.result
-        ab = self.job.ab.result #.unstack()
-        ab_el = self.job.ab_lines.result if hasattr(self.job, 'ab_lines') \
-                else None
-        f_mod = self.model(ab, ab_el)
+        galcat = self.job.galcat.result
+        f_mod = self.fix_fmod_format(self.job.f_mod.result)
 
         galcat_store = self.job.galcat.get_store()
         chunksize = 10
@@ -329,18 +273,21 @@ class bcnz_fit:
 
             chi2, norm = f_algo(f_mod, galcat, zs)
             peaks = self.photoz(chi2, norm)
-            best_model = self.best_model(norm, f_mod, peaks)
+#            best_model = self.best_model(norm, f_mod, peaks)
 
             # Required by xarray..
             norm.name = 'norm'
             chi2.name = 'chi2'
-            best_model.name = 'best_model'
+#            best_model.name = 'best_model'
+
+            # Storing with multiindex will give problems.
+            norm = norm.unstack(dim='model')
 
             # This should be configurable somewhere. It takes a lot of storage..
             store.append('default', peaks.stack()) 
-#            store.append('norm', norm.to_dataframe())
+            store.append('norm', norm.to_dataframe())
 #            store.append('chi2', chi2.to_dataframe())
-            store.append('best_model', best_model.to_dataframe())
+#            store.append('best_model', best_model.to_dataframe())
  
 
         store.close()
