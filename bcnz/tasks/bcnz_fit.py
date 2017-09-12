@@ -239,7 +239,7 @@ class bcnz_fit:
         pzcat['tmax'] = np.array(L)
         pzcat['chi2'] = np.array(chi2.min(dim=dims))
 
-        return pzcat
+        return pzcat, pz
 
     def fix_fmod_format(self, fmod_in):
         f_mod = fmod_in.to_xarray().f_mod
@@ -272,12 +272,13 @@ class bcnz_fit:
             print('batch', i, 'tot', i*chunksize)
 
             chi2, norm = f_algo(f_mod, galcat, zs)
-            peaks = self.photoz(chi2, norm)
+            peaks,pz = self.photoz(chi2, norm)
 #            best_model = self.best_model(norm, f_mod, peaks)
 
             # Required by xarray..
             norm.name = 'norm'
             chi2.name = 'chi2'
+            pz.name = 'pz'
 #            best_model.name = 'best_model'
 
             # Storing with multiindex will give problems.
@@ -286,6 +287,7 @@ class bcnz_fit:
             # This should be configurable somewhere. It takes a lot of storage..
             store.append('default', peaks.stack()) 
             store.append('norm', norm.to_dataframe())
+            store.append('pz', pz.to_dataframe())
 #            store.append('chi2', chi2.to_dataframe())
 #            store.append('best_model', best_model.to_dataframe())
  
