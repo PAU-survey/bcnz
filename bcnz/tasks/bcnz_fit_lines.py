@@ -51,74 +51,6 @@ class bcnz_fit_lines:
         assert self.config['filters'], 'Need to set filters'
         assert self.config['seds'], 'Need to set: seds'
 
-    def rebin_redshift(self, f_mod, zgrid):
-        """Rebin the model to the grid used in the calculations."""
-
-        t1 = time.time()
-        z = f_mod.z.values
-
-        # This order is chosen for hopefully better memory access 
-        # times.
-        nz = len(zgrid)
-        nband = len(f_mod.band)
-        nmodel = len(f_mod.model)
-        A = np.ones((nz, nmodel, nband))
-
-        print('Starting to regrid')
-        for i,model in enumerate(f_mod.model.values):
-            for j,band in enumerate(f_mod.band.values):
-                y = f_mod.sel(band=band, model=model).values
-                spl = splrep(z, y)
-                A[:,i,j] = splev(zgrid, spl)
-
-        print('Time regridding', time.time() - t1)
-
-        coords = {'z': zgrid, 'band': f_mod.band, 'model': f_mod.model}
-        fmod_new = xr.DataArray(A, coords=coords, dims=('z', 'model', 'band'))
-
-        return fmod_new
-
-    def _model_array(self, ab, zgrid, fL, seds):
-        """Construct the model array."""
-
-        ab = ab.set_index(['band','sed', 'z', 'EBV'])
-        f_mod = ab.to_xarray().flux
-        f_mod = f_mod.stack(model=['sed', 'EBV'])
-
-        f_mod = f_mod.sel(band=self.config['filters'])
-        f_mod = self.rebin_redshift(f_mod, zgrid)
-
-        return f_mod
-
-    def select_lines(self, ab_lines):
-
-        # This method could be extended if wanting different templates
-        # for the different emission lines.
-        ab_lines = ab_lines[ab_lines.sed == 'lines']
-        seds = ['lines']
-
-        return ab_lines, seds
-
-    def model(self, ab_cont, ab_lines):
-
-        if not self.config['use_ext']:
-            ab_cont = ab_cont[ab_cont.EBV == 0.]
-            ab_lines = ab_lines[ab_lines.EBV == 0.]
-
-        C = self.config
-        fL = C['filters']
-
-        zgrid = np.arange(C['zmin'], C['zmax']+C['dz'], C['dz'])
-        fmod_cont = self._model_array(ab_cont, zgrid, fL, C['seds'])
-
-        if self.config['use_lines']:
-            ab_lines, seds_lines = self.select_lines(ab_lines)
-            fmod_lines = self._model_array(ab_lines, zgrid, fL, seds_lines)
-            fmod = xr.concat([fmod_cont, fmod_lines], dim='model')
-        else: 
-            fmod = fmod_cont
-
-        return fmod
 
     def get_arrays(self, data_df):
         """Read in the arrays and present them as xarrays."""
@@ -168,6 +100,8 @@ class bcnz_fit_lines:
 #        A = np.einsum('gf,zsf,ztf->gzst', var_inv, f_mod, f_mod)
         A = np.einsum('gf,zfs,zft->gzst', var_inv, f_mod, f_mod)
 
+        # Bad hack..
+#        A = np.clip(A, 1e-50, np.infty)
         print('time A',  time.time() - t1)
 
         t1 = time.time()
@@ -188,6 +122,9 @@ class bcnz_fit_lines:
         t1 = time.time()
         for i in range(self.config['Niter']):
             a = np.einsum('gzst,gzt->gzs', Ap, v)
+
+            if (a==0).any():
+                ipdb.set_trace()
 
             m0 = b / a
             vn = m0*v
