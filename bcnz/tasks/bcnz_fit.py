@@ -118,13 +118,15 @@ class bcnz_fit:
         coords = {'gal': gal_id, 'band': f_mod.band, 'z': f_mod.z}
         coords_norm = {'gal': gal_id, 'z': f_mod.z, 'model': f_mod.model}
 
+        if (Ap < 0).any():
+            Ap = np.clip(Ap, 1e-50, np.infty)
 
         t1 = time.time()
         for i in range(self.config['Niter']):
             a = np.einsum('gzst,gzt->gzs', Ap, v)
 
-            if (a==0).any():
-                ipdb.set_trace()
+#            if (a==0).any():
+#                ipdb.set_trace()
 
             m0 = b / a
             vn = m0*v
@@ -288,7 +290,7 @@ class bcnz_fit:
 
             # This should be configurable somewhere. It takes a lot of storage..
             store.append('default', peaks.stack()) 
-            store.append('norm', norm.to_dataframe())
+#            store.append('norm', norm.to_dataframe())
             store.append('pz', pz.to_dataframe())
             store.append('best_model', best_model.to_dataframe())
  
