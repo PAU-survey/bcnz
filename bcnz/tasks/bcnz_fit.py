@@ -152,7 +152,8 @@ class bcnz_fit:
     def best_model(self, norm, f_mod, peaks):
         """Estimate the best fit model."""
 
-        # This should be elsewere..
+        # Moving this elsewhere is not as easy as it seems. The amplitude data
+        # is huge and creates problems.
         L = [] 
 
         fluxA = np.zeros((len(peaks), len(f_mod.band)))
@@ -161,7 +162,7 @@ class bcnz_fit:
             norm_gal = norm.sel(gal=gal, z=zgal).values
             fmod_gal = f_mod.sel(z=zgal).values
 
-            fluxA[i] = np.dot(norm_gal, fmod_gal)
+            fluxA[i] = np.dot(fmod_gal, norm_gal)
 
         coords = {'gal': norm.gal, 'band': f_mod.band}
         flux = xr.DataArray(fluxA, dims=('gal', 'band'), coords=coords)
@@ -273,13 +274,13 @@ class bcnz_fit:
 
             chi2, norm = f_algo(f_mod, galcat, zs)
             peaks,pz = self.photoz(chi2, norm)
-#            best_model = self.best_model(norm, f_mod, peaks)
+            best_model = self.best_model(norm, f_mod, peaks)
 
             # Required by xarray..
             norm.name = 'norm'
             chi2.name = 'chi2'
             pz.name = 'pz'
-#            best_model.name = 'best_model'
+            best_model.name = 'best_model'
 
             # Storing with multiindex will give problems.
             norm = norm.unstack(dim='model')
@@ -288,8 +289,7 @@ class bcnz_fit:
             store.append('default', peaks.stack()) 
             store.append('norm', norm.to_dataframe())
             store.append('pz', pz.to_dataframe())
-#            store.append('chi2', chi2.to_dataframe())
-#            store.append('best_model', best_model.to_dataframe())
+            store.append('best_model', best_model.to_dataframe())
  
 
         store.close()
