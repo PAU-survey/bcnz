@@ -24,14 +24,15 @@ descr = {
   'dz': 'Grid width in redshift',
   'chi2_algo': 'The chi2 algorithm',
   'use_lines': 'If including emission lines',
-  'use_ext': 'If including extinction'
+  'use_ext': 'If including extinction',
+  'nfeat': 'Number of features'
 }
 
 class bcnz_fit_and:
 #    """Fitting the fluxes to a galaxy template."""
     """Testing adding extinction."""
 
-    version = 1.057
+    version = 1.61
     config = {
       'filters': [],
       'seds': [],
@@ -43,7 +44,9 @@ class bcnz_fit_and:
       'line_weight': 2.,
       'chi2_algo': 'min',
       'use_lines': True,
-      'use_ext': False
+      'use_ext': False,
+      'nfeat': 10,
+      'renorm': False
     }
 
     def check_conf(self):
@@ -98,6 +101,30 @@ class bcnz_fit_and:
 
         return ab_lines, seds
 
+    def reduce_dim(self, f_mod):
+
+#        A = fmod.sel(z=0.01).values
+#        fmod2 = fmod.copy()
+        t1 = time.time()
+        A = np.einsum('zsf,ztf->zst', f_mod, f_mod)
+
+        eig = np.zeros(A.shape[:-1])
+        vec = np.zeros(A.shape)
+        for i,zi in enumerate(f_mod.z):
+            eig_i, vec_i = np.linalg.eig(A[i])
+
+            eig[i] = eig_i
+            vec[i] = vec_i
+
+        print('time decomposing...', time.time() - t1)
+
+#        N = 10
+#        B = vec[:,:N,:N].shape
+
+        return vec,eig
+#        return B
+
+
     def model(self, ab_cont, ab_lines):
 
         if not self.config['use_ext']:
@@ -111,14 +138,17 @@ class bcnz_fit_and:
 
         zgrid = np.arange(C['zmin'], C['zmax']+C['dz'], C['dz'])
         fmod_cont = self._model_array(ab_cont, zgrid, fL, C['seds'])
-        fmod_cont /= fmod_cont.sel(band=norm_filter)
+        if self.config['renorm']:
+            fmod_cont /= fmod_cont.sel(band=norm_filter)
 
         if self.config['use_lines']:
             ab_lines, seds_lines = self.select_lines(ab_lines)
             fmod_lines = self._model_array(ab_lines, zgrid, fL, seds_lines)
 
             # This is potentially dangerous [but might give better results..]
-            fmod_lines /= fmod_lines.max(dim=['band','z'])
+            if self.config['renorm']:
+                fmod_lines /= fmod_lines.sel(band=norm_filter)
+
             fmod = xr.concat([fmod_cont, fmod_lines], dim='model')
         else: 
             fmod = fmod_cont
@@ -166,10 +196,76 @@ class bcnz_fit_and:
 
         return chi2, norm
 
+    def dim_red(self, f_mod):
+        nfeat = self.config['nfeat']
+
+        nz, nsed, nf = f_mod.shape
+
+        nfeat = min(min(nf,nsed), nfeat)
+
+        f_out = np.zeros((nz, nfeat, nf))
+
+        t1 = time.time()
+        for i,zi in enumerate(f_mod.z):
+            f_in = f_mod.values[i]
+
+
+            U,s,V = np.linalg.svd(f_in, full_matrices=True)
+            n = U.shape[0]
+            m = V.shape[0]
+
+            S = np.zeros((nfeat,m))
+            S[:nfeat,:nfeat] = np.diag(s[:nfeat])
+
+#            ipdb.set_trace()
+
+            R = np.dot(U[:nfeat,:nfeat], np.dot(S, V))
+            f_out[i] = R
+
+        print('time dec2', time.time() - t1) 
+        new_mod = np.arange(nfeat)
+        cin = f_mod.coords
+#        ipdb.set_trace()
+        coords = {'z': f_mod.z, 'band': f_mod.band, 'model': new_mod}
+
+        f_mod_out = xr.DataArray(f_out, dims=('z', 'model', 'band'), coords=coords)
+
+        return f_mod_out
+
+    def dim_nmf(self, f_mod):
+        from sklearn.decomposition import NMF
+
+        ncomp = self.config['nfeat']
+        nz = len(f_mod.z)
+        nf = len(f_mod.band)
+
+        t1 = time.time()
+        f_out = np.zeros((nz, ncomp, nf))
+        for i,zi in enumerate(f_mod.z):
+            f_in = f_mod.values[i]
+            f_in = np.abs(f_in)
+
+            inst = NMF(n_components=10)
+            W = inst.fit_transform(f_in)
+            H = inst.components_
+
+            f_out[i] = H
+
+        print('time factorizing', time.time() - t1)
+
+        new_mod = np.arange(ncomp)
+        coords = {'z': f_mod.z, 'band': f_mod.band, 'model': new_mod}
+        fmod_out = xr.DataArray(f_out, dims=('z', 'model', 'band'), coords=coords)
+
+        return fmod_out
+
     def chi2_min(self, f_mod, data_df, zs): #, mabs_df):
         """Minimize the chi2 expression."""
 
         flux, flux_err, var_inv = self.get_arrays(data_df)
+
+#        f_mod = self.dim_red(f_mod)
+#        vec,eig = self.reduce_dim(f_mod)
 
         t1 = time.time()
         A = np.einsum('gf,zsf,ztf->gzst', var_inv, f_mod, f_mod)
@@ -182,6 +278,7 @@ class bcnz_fit_and:
 
         Ap = np.where(A > 0, A, 0)
         An = np.where(A < 0, -A, 0)
+#        ipdb.set_trace()
 
         v = 100*np.ones_like(b)
 
@@ -302,6 +399,21 @@ class bcnz_fit_and:
         ab_el = self.job.ab_lines.result if hasattr(self.job, 'ab_lines') \
                 else None
         f_mod = self.model(ab, ab_el)
+
+        # Hack to look at the model...
+        ipdb.set_trace()
+
+        X = f_mod.to_pandas()
+        X.to_hdf('/home/eriksen/fmod.h5', 'fmod')
+
+        import sys
+        sys.exit(1)
+
+        ipdb.set_trace()
+
+
+
+        f_mod = self.dim_nmf(f_mod)
 
         galcat_store = self.job.galcat.get_store()
         chunksize = 10
