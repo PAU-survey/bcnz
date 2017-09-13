@@ -22,6 +22,7 @@ class bcnz_select:
         SN_lim = SN_lim if self.config['use_nondet'] else \
                  np.clip(SN_lim, 0, np.infty)
 
+
         cat[SN < SN_lim] = np.nan
 
         return cat
@@ -42,6 +43,7 @@ class bcnz_select:
         """Apply the different cuts."""
 
         cat = cat[['flux', 'flux_err']].stack()
+
         cat = self.limit_SN(cat)
         cat = self.to_outformat(cat)
 
