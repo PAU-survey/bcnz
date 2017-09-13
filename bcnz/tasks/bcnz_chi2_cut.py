@@ -25,6 +25,7 @@ descr = {
   'chi2_algo': 'The chi2 algorithm',
 #  'use_lines': 'If including emission lines',
 #  'use_ext': 'If including extinction'
+  'max_chi2': 'Maximal chi2 value'
 }
 
 class bcnz_chi2_cut:
@@ -34,7 +35,7 @@ class bcnz_chi2_cut:
 
     # Some of these configuration options are no longer valid and 
     # moved into the flux_model code...
-    version = 1.06
+    version = 1.061
     config = {
       'filters': [],
       'seds': [],
@@ -46,7 +47,8 @@ class bcnz_chi2_cut:
       'line_weight': 2.,
       'chi2_algo': 'min',
       'use_lines': True,
-      'use_ext': False
+      'use_ext': False,
+      'max_chi2': 100.
     }
 
     def check_conf(self):
@@ -142,15 +144,20 @@ class bcnz_chi2_cut:
         F = np.einsum('zfs,gzs->gzf', f_mod, v)
         F = xr.DataArray(F, coords=coords, dims=('gal', 'z', 'band'))
 
-        chi2 = var_inv*(flux - F)**2
+        chi2_band = var_inv*(flux - F)**2
+        chi2_band = np.clip(chi2_band, 0., self.config['max_chi2'])
+        max_chi2 = self.config['max_chi2']
 
-        pb = np.exp(-0.5*chi2.sum(dim='band'))
+        # Another test...
+        chi2_band.values = np.where(chi2_band < 5., chi2_band, 0.)
+
+        pb = np.exp(-0.5*chi2_band.sum(dim='band'))
         pb = pb / (1e-100 + pb.sum(dim='z'))
-        chi2 = chi2.sum(dim='band')
+        chi2 = chi2_band.sum(dim='band')
 
         norm = xr.DataArray(v, coords=coords_norm, dims=('gal','z','model'))
 
-        return chi2, norm
+        return chi2, norm, chi2_band
 
     def best_model(self, norm, f_mod, peaks):
         """Estimate the best fit model."""
@@ -275,13 +282,13 @@ class bcnz_chi2_cut:
         for i,galcat in enumerate(Rin):
             print('batch', i, 'tot', i*chunksize)
 
-            chi2, norm = f_algo(f_mod, galcat, zs)
+            chi2, norm,chi2_band = f_algo(f_mod, galcat, zs)
             peaks,pz = self.photoz(chi2, norm)
             best_model = self.best_model(norm, f_mod, peaks)
 
             # Required by xarray..
             norm.name = 'norm'
-            chi2.name = 'chi2'
+            chi2_band.name = 'chi2'
             pz.name = 'pz'
             best_model.name = 'best_model'
 
@@ -293,6 +300,7 @@ class bcnz_chi2_cut:
             store.append('norm', norm.to_dataframe())
             store.append('pz', pz.to_dataframe())
             store.append('best_model', best_model.to_dataframe())
- 
+
+            store.append('chi2', chi2_band.to_dataframe()) 
 
         store.close()
