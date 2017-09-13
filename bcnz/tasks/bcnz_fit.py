@@ -28,10 +28,11 @@ descr = {
 }
 
 class bcnz_fit:
+    """Fitting a linear combination to the observations."""
 
     # Some of these configuration options are no longer valid and 
     # moved into the flux_model code...
-    version = 1.058
+    version = 1.06
     config = {
       'filters': [],
       'seds': [],
