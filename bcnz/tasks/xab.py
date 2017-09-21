@@ -3,6 +3,7 @@
 
 from __future__ import print_function
 
+import ipdb
 import time
 import numpy as np
 import pandas as pd
@@ -21,7 +22,7 @@ descr = {
 class xab:
     """The model fluxes."""
 
-    version = 1.06
+    version = 1.10
     config = {\
       'zmax_ab': 12.,
       'dz_ab': 0.001,
@@ -86,13 +87,13 @@ class xab:
         extD = self.ext_spls(ext)
         z = np.arange(0., self.config['zmax_ab'], self.config['dz_ab'])
 
+        # Test...
         df = pd.DataFrame()
-        df['z'] = z
 
         int_method = self.config['int_method']
         a = 1./(1+z)
-        for fname in filters.index.unique():
-            sub_f = filters.ix[fname]
+        for band in filters.index.unique():
+            sub_f = filters.ix[band]
 
             # Define a higher resolution grid.
             _tmp = sub_f.lmb
@@ -107,7 +108,7 @@ class xab:
 
             for sed in seds.index.unique():
                 t1 = time.time()
-                print('calc', fname, sed)
+                print('calc', band, sed)
 
                 y_sed = splev(X, sedD[sed])
                 for ext_key, ext_spl in iter(extD.items()):
@@ -118,33 +119,61 @@ class xab:
                     Y = y_ext*y_sed*y_f*lmb
 
                     if int_method == 'simps':
-                        ans = r_const[fname]*simps(Y, lmb, axis=1)
+                        ans = r_const[band]*simps(Y, lmb, axis=1)
                     elif int_method == 'sum':
-                        ans = r_const[fname]*int_dz*Y.sum(axis=1)
+                        ans = r_const[band]*int_dz*Y.sum(axis=1)
 
-                    key = (fname, sed, ext_key)
-                    df[key] = ans
+                    # This might be overkill in terms of storage, but information in
+                    # the columns is a pain..
+                    part = pd.DataFrame({'z': z, 'flux': ans})
+                    part['band'] = band 
+                    part['sed'] = sed
+                    part['ext'] = ext_key
+                    part['EBV'] = EBV
+
+                    df = df.append(part, ignore_index=True)
 
                     t2 = time.time()
                     print('time', t2-t1)
 
         return df
 
+    def convert_flux(self, ab):
+        """Convert fluxes into the PAU units."""
+
+        # Later we might want to store fluxes in different systems, but
+        # this is all we currently need.
+
+        # Here f is the flux estimated by the integral. The factor of 48.6
+        # comes from assuming the templates being in erg s^-1 cm^-2 Hz^-1.
+        # m_ab = -2.5*log10(f) - 48.6
+        # m_ab = -2.5*log10(f_PAU) - 26.
+
+        fac = 10**(0.4*(48.6-26.))
+        ab['flux'] *= fac
+
+        ipdb.set_trace()
+
+        return ab
+
+    def ab(self, filters, seds, ext):
+        """Estimate model fluxes."""
+
+        r_const = self.r_const(filters)
+        ab = self.calc_ab(filters, seds, ext, r_const)
+        ab = self.convert_flux(ab)
+
+        return ab, r_const
 
     def run(self):
         filters = self.job.filters.result
         seds = self.job.seds.result
         ext = self.job.ext.result if hasattr(self.job, 'ext') else None
 
-        r_const = self.r_const(filters)
-        ab = self.calc_ab(filters, seds, ext, r_const)
+        ab, r_const = self.ab(filters, seds, ext)
 
         path_out = self.job.empty_file('default')
         store_out = pd.HDFStore(path_out, 'w')
         store_out['default'] = ab.stack()
         store_out['r_const'] = r_const
         store_out.close()
-
-#        ipdb.set_trace()
-
-#        self.job.result = ab.stack()
