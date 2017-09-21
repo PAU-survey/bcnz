@@ -15,53 +15,51 @@ descr = {
   'dz_ab': 'Redshift resolution in the AB files',
   'int_dz': 'Resolution when integrating',
   'int_method': 'Integration method',
+  'normalize': 'DEPRECATED???',
   'EBV': 'Extinction amplitude'
 }
 
 class xab:
-    """TODO"""
+    """The model fluxes."""
 
     version = 1.06
     config = {\
       'zmax_ab': 12.,
-      'dz_ab': 0.01,
+      'dz_ab': 0.001,
       'int_dz': 1.,
       'int_method': 'simps',
       'normalize': True,
-      'new_formula': False,
-      'EBV': 0.5
+      'EBV': 0.0
     }
 
     def _calc_r_const(self, filters):
         """Normalization factor for each filter."""
 
-        clight_AHz=2.99792458e18
+        # 2.5*log10(clight_AHz) = 46.19205, which you often see applied to
+        # magnitudes.
+        clight_AHz = 2.99792458e18
+
         r_const = pd.Series()
         fL = filters.index.unique()
         for fname in fL:
             sub = filters.ix[fname]
-            x = sub.lmb
-            y = sub.y
-
-            y2 = y*x
-            if self.config['new_formula']:
-                r_const[fname] = 1./trapz(y2,x)
-            else:
-                r_const[fname] = 1./trapz(y2/x/x,x) / clight_AHz
+            r_const[fname] = 1./simps(sub.y / sub.lmb, sub.lmb) / clight_AHz
 
         return r_const
 
     def r_const(self, filters):
+        """TODO: Remove."""
+
         # Testing if the normalization actually makes a difference.
         clight_AHz=2.99792458e18
 
         if self.config['normalize']:
             r_const = self._calc_r_const(filters)
         else:
+            assert NotImplementedError('Why is this implemented? Remove if possible!')
+
             r_const = {}
 
-#            
-#            ipdb.set_trace()
             for f in filters.index.unique():
                 r_const[f] = 1. / clight_AHz
 
