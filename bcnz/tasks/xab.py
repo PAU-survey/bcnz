@@ -15,7 +15,6 @@ descr = {
   'dz_ab': 'Redshift resolution in the AB files',
   'int_dz': 'Resolution when integrating',
   'int_method': 'Integration method',
-  'normalize': 'DEPRECATED???',
   'EBV': 'Extinction amplitude'
 }
 
@@ -28,11 +27,10 @@ class xab:
       'dz_ab': 0.001,
       'int_dz': 1.,
       'int_method': 'simps',
-      'normalize': True,
       'EBV': 0.0
     }
 
-    def _calc_r_const(self, filters):
+    def r_const(self, filters):
         """Normalization factor for each filter."""
 
         # 2.5*log10(clight_AHz) = 46.19205, which you often see applied to
@@ -46,25 +44,6 @@ class xab:
             r_const[fname] = 1./simps(sub.y / sub.lmb, sub.lmb) / clight_AHz
 
         return r_const
-
-    def r_const(self, filters):
-        """TODO: Remove."""
-
-        # Testing if the normalization actually makes a difference.
-        clight_AHz=2.99792458e18
-
-        if self.config['normalize']:
-            r_const = self._calc_r_const(filters)
-        else:
-            assert NotImplementedError('Why is this implemented? Remove if possible!')
-
-            r_const = {}
-
-            for f in filters.index.unique():
-                r_const[f] = 1. / clight_AHz
-
-        return r_const
-
 
     def sed_spls(self, seds):
         """Create a spline of all the SEDs."""
@@ -158,7 +137,6 @@ class xab:
         ext = self.job.ext.result if hasattr(self.job, 'ext') else None
 
         r_const = self.r_const(filters)
-
         ab = self.calc_ab(filters, seds, ext, r_const)
 
         path_out = self.job.empty_file('default')
