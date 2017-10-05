@@ -139,7 +139,10 @@ class bcnz_fit:
 
         print('time minimize',  time.time() - t1)
         # .. Also changed in last update of einsum
-        F = np.einsum('zfs,gzs->gzf', f_mod, v)
+
+#        F = np.einsum('zfs,gzs->gzf', f_mod, v)
+        F = np.einsum('zsf,gzs->gzf', f_mod, v)
+
         F = xr.DataArray(F, coords=coords, dims=('gal', 'z', 'band'))
 
         chi2 = var_inv*(flux - F)**2
@@ -249,7 +252,10 @@ class bcnz_fit:
         f_mod = fmod_in.to_xarray().f_mod
         f_mod = f_mod.stack(model=['sed', 'EBV'])
 
-        return f_mod
+        f_mod_full = f_mod
+        f_mod = f_mod_full.sel(band=self.config['filters'])
+
+        return f_mod, f_mod_full
 #        ipdb.set_trace()
 
     def run(self):
@@ -261,7 +267,7 @@ class bcnz_fit:
         f_algo = getattr(self, key)
 
         galcat = self.job.galcat.result
-        f_mod = self.fix_fmod_format(self.job.f_mod.result)
+        f_mod, f_mod_full = self.fix_fmod_format(self.job.f_mod.result)
 
         galcat_store = self.job.galcat.get_store()
         chunksize = 10
@@ -269,21 +275,29 @@ class bcnz_fit:
 
         zs = False
 #        zs = self.job.zspec.result.zs
-
+        towrite = ['best_model', 'chi2']
         path = self.job.empty_file('default')
         store = pd.HDFStore(path)
         for i,galcat in enumerate(Rin):
             print('batch', i, 'tot', i*chunksize)
 
+#            ipdb.set_trace()
             chi2, norm = f_algo(f_mod, galcat, zs)
             peaks,pz = self.photoz(chi2, norm)
-            best_model = self.best_model(norm, f_mod, peaks)
+            best_model = self.best_model(norm, f_mod_full, peaks)
+
+            #ipdb.set_trace()
+            if 'best_model' in towrite:
+                best_model.name = 'best_model'
+                store.append('best_model', best_model.to_dataframe())
+
+            if 'chi2' in towrite:
+                chi2.name = 'chi2'
+                store.append('chi2', chi2.to_dataframe())
 
             # Required by xarray..
             norm.name = 'norm'
-            chi2.name = 'chi2'
             pz.name = 'pz'
-            best_model.name = 'best_model'
 
             # Storing with multiindex will give problems.
             norm = norm.unstack(dim='model')
@@ -292,7 +306,6 @@ class bcnz_fit:
             store.append('default', peaks.stack()) 
 #            store.append('norm', norm.to_dataframe())
             store.append('pz', pz.to_dataframe())
-            store.append('best_model', best_model.to_dataframe())
  
 
         store.close()
