@@ -17,9 +17,10 @@ class ab_comb:
         # This task used to have more logic when the xab had a weird
         # format...
         for key, job in self.job.depend.items():
-            cat = job.result.unstack()
-            df = df.append(cat, ignore_index=True)
+            print('adding', key)
 
+            cat = job.result
+            df = df.append(cat, ignore_index=True)
 
         # These are already available from EBV = 0.
         df = df[df.ext != 'none']

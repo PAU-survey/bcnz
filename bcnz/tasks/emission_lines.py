@@ -20,7 +20,7 @@ descr = {
 class emission_lines:
     """The model flux for the emission lines."""
 
-    version = 1.054
+    version = 1.056
 
     config = {'dz': 0.0005, 'ampl': 1e-16, 'EBV': 0.}
 
@@ -31,8 +31,8 @@ class emission_lines:
       'Hbeta': 0.61,
       'Halpha': 1.77,
       'Lyalpha':  2.,
-      'NII_1': 0.3 * 0.35 * 1.77, # Relative to Halpha.
-      'NII_2': 0.35 * 1.77 # Relative to Halpha.
+      'NII_1': 0.3 * 0.35 * 1.77, # Paper gave lines relative to Halpha.
+      'NII_2': 0.35 * 1.77
     }
 
     line_loc = {
@@ -111,37 +111,55 @@ class emission_lines:
 
         return flux
 
+#    def _fix_dict(self, oldD, fname, ext_name):
+#
+#        # The model is expected to not be a hirarchical data
+#        # frame...
+#        newD = {}
+#        for key, val in oldD.items():
+#            newD[((fname, key, ext_name),)] = pd.Series(val)
+#
+#        return newD
 
-    def _fix_dict(self, oldD, fname, ext_name):
+    def _new_fix(self, oldD, z, band, ext_name, EBV):
         """Dictionary suitable for concatination."""
 
-        # The model is expected to not be a hirarchical data
-        # frame...
-        newD = {}
-        for key, val in oldD.items():
-            newD[((fname, key, ext_name),)] = pd.Series(val)
+        df = pd.DataFrame()
 
-        return newD
+        # Ok, there is probably a much better way of doing this...
+        F = pd.DataFrame(oldD)
+        F.index = z
+        F.index.name = 'z'
+        F.columns.name = 'sed'
+
+        F = F.stack()
+        F.name = 'flux'
+        F = F.reset_index()
+        F = F.rename(columns={0: 'flux'})
+        F['band'] = band
+        F['ext'] = ext_name
+        F['EBV'] = EBV
+
+        return F
 
 
     def get_result(self, filtersD, rconstD, extD):
-        fnameL = filtersD.keys()
+        bandL = filtersD.keys()
         extL = extD.keys()
 
         z = np.arange(0., 2., self.config['dz'])
-        D = {}
+
+        df = pd.DataFrame()
         for fname, f_spl in filtersD.items():
             rconst = rconstD[fname]     
 
             for ext_name, ext_spl in extD.items():
                 part = self._find_flux(z, f_spl, rconst, ext_spl)
-                part = self._fix_dict(part, fname, ext_name)
-                D.update(part)
+                part = self._new_fix(part, z, fname, ext_name, self.config['EBV'])
 
-        res = pd.concat(D, axis=1)
-        res['z'] = z
+                df = df.append(part, ignore_index=True)
 
-        return res
+        return df
 
     def run(self):
         filters = self.job.filters.result
