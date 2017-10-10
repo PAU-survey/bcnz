@@ -32,7 +32,7 @@ class bcnz_fit:
 
     # Some of these configuration options are no longer valid and 
     # moved into the flux_model code...
-    version = 1.06
+    version = 1.07
     config = {
       'filters': [],
       'seds': [],
@@ -140,8 +140,9 @@ class bcnz_fit:
         print('time minimize',  time.time() - t1)
         # .. Also changed in last update of einsum
 
-#        F = np.einsum('zfs,gzs->gzf', f_mod, v)
-        F = np.einsum('zsf,gzs->gzf', f_mod, v)
+        F = np.einsum('zfs,gzs->gzf', f_mod, v)
+#        ipdb.set_trace()
+#        F = np.einsum('zsf,gzs->gzf', f_mod, v)
 
         F = xr.DataArray(F, coords=coords, dims=('gal', 'z', 'band'))
 
@@ -174,6 +175,20 @@ class bcnz_fit:
         flux = xr.DataArray(fluxA, dims=('gal', 'band'), coords=coords)
 
         return flux
+
+    def best_norm(self, norm, peaks):
+        """Select the best norm."""
+
+        # Ok, this is not pretty..
+        L = []
+        for gal,zb in zip(peaks.index, peaks.zb):
+            L.append(norm.sel(gal=gal, z=zb).values)
+
+        A = np.array(L)
+        coords = {'gal': norm.gal, 'model': norm.model}
+        best_model = xr.DataArray(A, dims=('gal', 'model'), coords=coords)
+
+        return best_model
 
 
     def odds_fast(self, pz, zb):
@@ -275,7 +290,7 @@ class bcnz_fit:
 
         zs = False
 #        zs = self.job.zspec.result.zs
-        towrite = ['best_model', 'chi2']
+        towrite = ['best_model', 'chi2', 'norm']
         path = self.job.empty_file('default')
         store = pd.HDFStore(path)
         for i,galcat in enumerate(Rin):
@@ -284,16 +299,21 @@ class bcnz_fit:
 #            ipdb.set_trace()
             chi2, norm = f_algo(f_mod, galcat, zs)
             peaks,pz = self.photoz(chi2, norm)
-            best_model = self.best_model(norm, f_mod_full, peaks)
 
             #ipdb.set_trace()
             if 'best_model' in towrite:
+                best_model = self.best_model(norm, f_mod_full, peaks)
                 best_model.name = 'best_model'
                 store.append('best_model', best_model.to_dataframe())
 
             if 'chi2' in towrite:
                 chi2.name = 'chi2'
                 store.append('chi2', chi2.to_dataframe())
+
+            if 'norm' in towrite:
+                best_norm = self.best_norm(norm, peaks)
+                best_norm = best_norm.unstack(dim='model')
+                store.append('best_norm', best_norm.to_dataframe('best_model'))
 
             # Required by xarray..
             norm.name = 'norm'
