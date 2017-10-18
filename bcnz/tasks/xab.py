@@ -22,7 +22,7 @@ descr = {
 class xab:
     """The model fluxes."""
 
-    version = 1.10
+    version = 1.11
     config = {\
       'zmax_ab': 12.,
       'dz_ab': 0.001,
@@ -42,7 +42,7 @@ class xab:
         fL = filters.index.unique()
         for fname in fL:
             sub = filters.ix[fname]
-            r_const[fname] = 1./simps(sub.y / sub.lmb, sub.lmb) / clight_AHz
+            r_const[fname] = 1./simps(sub.resp / sub.lmb, sub.lmb) / clight_AHz
 
         return r_const
 
@@ -52,7 +52,7 @@ class xab:
         sedD = {}
         for sed in seds.index.unique():
             sub_sed = seds.ix[sed]
-            spl_sed = splrep(sub_sed.lmb, sub_sed.y)
+            spl_sed = splrep(sub_sed.lmb, sub_sed.resp)
 
             sedD[sed] = spl_sed
 
@@ -92,7 +92,9 @@ class xab:
 
         int_method = self.config['int_method']
         a = 1./(1+z)
-        for band in filters.index.unique():
+        for i,band in enumerate(filters.index.unique()):
+            print('# band', i, 'band', band)
+
             sub_f = filters.ix[band]
 
             # Define a higher resolution grid.
@@ -101,14 +103,13 @@ class xab:
             lmb = np.arange(_tmp.min(), _tmp.max(), int_dz)
 
             # Evaluate the filter on this grid.
-            spl_f = splrep(sub_f.lmb, sub_f.y)
+            spl_f = splrep(sub_f.lmb, sub_f.resp)
             y_f = splev(lmb, spl_f, ext=1)
 
             X = np.outer(a, lmb)
 
             for sed in seds.index.unique():
                 t1 = time.time()
-                print('calc', band, sed)
 
                 y_sed = splev(X, sedD[sed])
                 for ext_key, ext_spl in iter(extD.items()):
@@ -134,7 +135,6 @@ class xab:
                     df = df.append(part, ignore_index=True)
 
                     t2 = time.time()
-                    print('time', t2-t1)
 
         return df
 
@@ -149,10 +149,11 @@ class xab:
         # m_ab = -2.5*log10(f) - 48.6
         # m_ab = -2.5*log10(f_PAU) - 26.
 
-        fac = 10**(0.4*(48.6-26.))
-        ab['flux'] *= fac
+#        if self.config['flux_unit'] == 'PAU':
+#        fac = 10**(0.4*(48.6-26.))
+#        ab['flux'] *= fac
 
-        ipdb.set_trace()
+#        ipdb.set_trace()
 
         return ab
 
