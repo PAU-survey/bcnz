@@ -3,6 +3,9 @@
 
 import ipdb
 import numpy as np
+import pandas as pd
+import xarray as xr
+from sklearn.neighbors import KDTree
 
 descr = {
   'cut_frac': 'Fraction removed using a photo-z cut',
@@ -17,9 +20,10 @@ class zero_point_cal:
 
     # One could divide this into two parts, one which is estimating the 
     # zero-points and another applying it.
-    version = 1.0
+    version = 1.04
     config = {'cut_frac': 0., 'Rmin': 0., 'Rmax': 10,
-              'weight': False, 'median': False}
+              'weight': False, 'median': False,
+              'Nneigh': 10}
 
     def get_zp(self, data, model, pzcat):
         """Get the zero-points."""
@@ -39,24 +43,39 @@ class zero_point_cal:
                             (R < self.config['Rmax']), R, np.nan)
 
 
-        if self.config['weight']:
-            weights = 1. / flux_err**2.
-            weights /= weights.sum(dim='ref_id')
+        col_train = -2.5*np.log(flux.sel(band='cfht_g') / flux.sel(band='cfht_r'))
+        Atrain = np.array([col_train.values]).T
 
-            zp = (R*weights).sum(dim='ref_id')
-        else:
-            zp = R.median(dim='ref_id') if self.config['median'] else \
-                 R.mean(dim='ref_id')
+        N = self.config['Nneigh']
+        tree = KDTree(Atrain)
+
+        col_fit = -2.5*np.log10(data.flux.cfht_g / data.flux.cfht_r)
+        Afit = np.array([col_fit.values]).T
+
+        # Just skipping the first neighbor in case one is using the same
+        # catalog for training.
+        dist, ind = tree.query(Afit, k=N+1)
+        ind = col_train.ref_id[ind].values
+
+        tmp = np.zeros((N,)+data.flux.shape)
+        for i in range(N):
+            tmp[i] = R.sel(ref_id=ind[:,i+1]).values
+
+        dims = ('i', 'ref_id', 'band')
+        coords = {'ref_id': data.index, 'band': R.band, 'i': np.arange(N)}
+
+        zp = xr.DataArray(tmp, dims=dims, coords=coords)
+        zp = zp.median(dim='i') if self.config['median'] else \
+             zp.mean(dim='i')
 
         return zp
 
-    def calibrate_flux(self, data, model, pzcat):
-        """Calibrate the input fluxes."""
 
+    def calibrate_flux(self, data, model, pzcat):
         zp = self.get_zp(data, model, pzcat)
         flux = data.flux.stack().to_xarray()
-        flux = flux*zp
 
+        flux = flux*zp
         data['flux'] = flux.to_dataframe('flux').unstack()['flux']
 
         return data
