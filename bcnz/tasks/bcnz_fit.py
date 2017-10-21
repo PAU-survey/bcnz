@@ -32,7 +32,7 @@ class bcnz_fit:
 
     # Some of these configuration options are no longer valid and 
     # moved into the flux_model code...
-    version = 1.07
+    version = 1.08
     config = {
       'filters': [],
       'seds': [],
@@ -43,7 +43,6 @@ class bcnz_fit:
       'Niter': 200,
       'line_weight': 2.,
       'chi2_algo': 'min',
-      'use_lines': True,
       'use_ext': False
     }
 
@@ -205,10 +204,10 @@ class bcnz_fit:
         z1 = np.clip(z1, z[0], z[-1])
         z2 = np.clip(z2, z[0], z[-1])
 
-
         # This assumes a regular grid.
-        dz = self.config['dz']
         z0 = z[0]
+        dz = float(z[1] - z[0])
+#        dz = self.config['dz']
         bins1 = (z1 - z0) / dz - 1 # Cumsum is estimated at the end
         bins2 = (z2 - z0) / dz - 1
         i1 = np.clip(np.floor(bins1), 0, np.infty).astype(np.int)
