@@ -207,7 +207,6 @@ class bcnz_fit:
         # This assumes a regular grid.
         z0 = z[0]
         dz = float(z[1] - z[0])
-#        dz = self.config['dz']
         bins1 = (z1 - z0) / dz - 1 # Cumsum is estimated at the end
         bins2 = (z2 - z0) / dz - 1
         i1 = np.clip(np.floor(bins1), 0, np.infty).astype(np.int)
@@ -229,9 +228,11 @@ class bcnz_fit:
         odds = cdf2 - cdf1
 
         # This version is similar to BPZ / BCNzv1
-        old_odds = C(i2+1) - C(i1)
+        #old_odds = C(i2+1) - C(i1)
 
-        return old_odds, odds
+
+
+        return odds
 
     def photoz(self, chi2, norm):
         pzcat = pd.DataFrame(index=chi2.gal)
@@ -248,9 +249,7 @@ class bcnz_fit:
         zb = pz.z[izmin]
         pzcat['zb'] = zb
 
-        old_odds, odds = self.odds_fast(pz, zb)
-        pzcat['odds_old'] = old_odds
-        pzcat['odds'] = odds
+        pzcat['odds'] = self.odds_fast(pz, zb)
 
         # Ok, this should be written better...
         L = []
