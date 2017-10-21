@@ -230,9 +230,10 @@ class bcnz_fit:
         # This version is similar to BPZ / BCNzv1
         #old_odds = C(i2+1) - C(i1)
 
+        pz_width = 0.5*(cumsum.z[(cumsum > 0.84).argmax(axis=1)].values - \
+                        cumsum.z[(cumsum > 0.16).argmax(axis=1)].values)
 
-
-        return odds
+        return odds, pz_width
 
     def photoz(self, chi2, norm):
         pzcat = pd.DataFrame(index=chi2.gal)
@@ -249,7 +250,10 @@ class bcnz_fit:
         zb = pz.z[izmin]
         pzcat['zb'] = zb
 
-        pzcat['odds'] = self.odds_fast(pz, zb)
+
+        odds, pz_width = self.odds_fast(pz, zb)
+        pzcat['odds'] = odds
+        pzcat['pz_width'] = pz_width
 
         # Ok, this should be written better...
         L = []
