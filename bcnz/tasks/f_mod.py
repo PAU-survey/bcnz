@@ -118,8 +118,19 @@ class f_mod:
 
     def select_lines(self, ab_lines):
 
-        has_X = self.config['sep_lines'] 
-        if has_X:
+        sep_lines = self.config['sep_lines'] 
+        if sep_lines.lower() == 'all':
+            # ab_lines is a view from selecting based on the EBV parameter.
+            ab_lines = ab_lines.copy()
+
+            seds_in = list(ab_lines.sed.unique())
+            mapping = dict([(x,'line_'+x) for x in seds_in if not x=='lines'])
+            ab_lines['sed'] = ab_lines.sed.replace(mapping)
+
+            seds = list(mapping.values())
+            seds.sort()
+
+        elif sep_lines == 'O':
             lines_O = ['OII', 'OIII_1', 'OIII_2']
 
             ab_O = ab_lines[ab_lines.sed.isin(lines_O)]
