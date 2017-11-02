@@ -42,7 +42,7 @@ class xab:
         fL = filters.index.unique()
         for fname in fL:
             sub = filters.ix[fname]
-            r_const[fname] = 1./simps(sub.resp / sub.lmb, sub.lmb) / clight_AHz
+            r_const[fname] = 1./simps(sub.response / sub.lmb, sub.lmb) / clight_AHz
 
         return r_const
 
@@ -52,7 +52,7 @@ class xab:
         sedD = {}
         for sed in seds.index.unique():
             sub_sed = seds.ix[sed]
-            spl_sed = splrep(sub_sed.lmb, sub_sed.resp)
+            spl_sed = splrep(sub_sed.lmb, sub_sed.response)
 
             sedD[sed] = spl_sed
 
@@ -103,7 +103,7 @@ class xab:
             lmb = np.arange(_tmp.min(), _tmp.max(), int_dz)
 
             # Evaluate the filter on this grid.
-            spl_f = splrep(sub_f.lmb, sub_f.resp)
+            spl_f = splrep(sub_f.lmb, sub_f.response)
             y_f = splev(lmb, spl_f, ext=1)
 
             X = np.outer(a, lmb)
