@@ -11,7 +11,7 @@ class bcnz_select:
     """Selecting a subset of the fluxes to use in the fitting."""
 
     version = 1.02
-    config = {'use_nondet': True, 'SN_lim': -100.}
+    config = {'SN_lim': -100., 'SN_cap': 10000}
 
     def limit_SN(self, cat):
         """Limit based on SN."""
@@ -19,11 +19,12 @@ class bcnz_select:
         SN = cat['flux'] / cat['flux_err']
 
         SN_lim = self.config['SN_lim']
-        SN_lim = SN_lim if self.config['use_nondet'] else \
-                 np.clip(SN_lim, 0, np.infty)
-
-
         cat[SN < SN_lim] = np.nan
+
+        SN_cap = self.config['SN_cap']
+        new_SN = np.clip(SN, -np.infty, SN_cap)
+
+        cat['flux_err'] = cat.flux / SN
 
         return cat
 
@@ -42,7 +43,8 @@ class bcnz_select:
     def get_cat(self, cat):
         """Apply the different cuts."""
 
-        cat = cat[['flux', 'flux_err']].stack()
+        if 2 < len(cat.columns):
+            cat = cat[['flux', 'flux_err']].stack()
 
         cat = self.limit_SN(cat)
         cat = self.to_outformat(cat)
@@ -51,4 +53,5 @@ class bcnz_select:
 
     def run(self):
         cat = self.job.input.result
+
         self.job.result = self.get_cat(cat)

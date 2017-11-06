@@ -54,9 +54,9 @@ class emission_lines:
         rconstD = {}
         for fname in filters.index.unique():
             sub = filters.ix[fname]
-            splD[fname] = splrep(sub.lmb, sub.resp)
+            splD[fname] = splrep(sub.lmb, sub.response)
 
-            rconstD[fname] = simps(sub.resp/sub.lmb, sub.lmb)
+            rconstD[fname] = simps(sub.response/sub.lmb, sub.lmb)
 
         return splD, rconstD
 
