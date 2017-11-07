@@ -13,6 +13,7 @@ descr = {
   'Rmax': 'Cut in maximum value of R',
   'median': 'If using the median instead of the mean',
   'weight': 'How to weight the zero-point from different galaxies',
+  'norm_first': 'If first doing a relative calibration of NB and BB'
 }
 
 class zero_point_cal:
@@ -20,10 +21,11 @@ class zero_point_cal:
 
     # One could divide this into two parts, one which is estimating the 
     # zero-points and another applying it.
-    version = 1.04
+    version = 1.05
     config = {'cut_frac': 0., 'Rmin': 0., 'Rmax': 10,
               'weight': False, 'median': False,
-              'Nneigh': 10}
+              'Nneigh': 10,
+              'norm_first': True}
 
     def get_zp(self, data, model, pzcat):
         """Get the zero-points."""
@@ -50,10 +52,17 @@ class zero_point_cal:
         tree = KDTree(Atrain)
 
         col_fit = -2.5*np.log10(data.flux.cfht_g / data.flux.cfht_r)
+
+        assert isinstance(col_fit, pd.Series), 'Fix the code replacing Nan'
+        col_fit = col_fit.fillna(col_fit.median())
+
         Afit = np.array([col_fit.values]).T
 
         # Just skipping the first neighbor in case one is using the same
         # catalog for training.
+
+#        ipdb.set_trace()
+
         dist, ind = tree.query(Afit, k=N+1)
         ind = col_train.ref_id[ind].values
 
@@ -70,8 +79,41 @@ class zero_point_cal:
 
         return zp
 
+    def first_normalization(self, data, model):
+        # 
+
+        flux = data['flux'].stack().to_xarray()
+        flux_err = data['flux_err'].stack().to_xarray()
+
+        new_bands = ['cfht_u', 'cfht_g', 'cfht_r', 'cfht_i', 'cfht_z']
+        new_bands = ['cfht_g', 'cfht_r', 'cfht_i']
+
+        f_mod = model.sel(band=new_bands)
+        flux = flux.sel(band=new_bands)
+        flux_err = flux_err.sel(band=new_bands)
+        var_inv = 1. / flux_err**2.
+
+        S = (var_inv*flux**2).sum(dim='band')
+        X = (var_inv*flux*f_mod).sum(dim='band')
+        M = (var_inv*f_mod**2).sum(dim='band')
+
+        norm = (X / M).to_series()
+        NB = list(map('NB{}'.format, 455+10*np.arange(40)))
+
+        xflux = data['flux'].copy()
+        xflux_err = data['flux_err'].copy()
+
+        xflux[NB] = xflux[NB].mul(norm, axis='rows')
+        xflux_err[NB] = xflux_err[NB].mul(norm, axis='rows')
+
+        new_data = pd.concat({'flux': xflux, 'flux_err': xflux_err}, axis=1)
+
+        return new_data
 
     def calibrate_flux(self, data, model, pzcat):
+        if self.config['norm_first']:
+            data = self.first_normalization(data, model)
+   
         zp = self.get_zp(data, model, pzcat)
         flux = data.flux.stack().to_xarray()
 
@@ -87,4 +129,5 @@ class zero_point_cal:
 
         pzcat = self.job.model.result.unstack() # This is the photo-z job..
         data = self.job.flux.result
+
         self.job.result = self.calibrate_flux(data, model, pzcat)
