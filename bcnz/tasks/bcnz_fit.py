@@ -31,6 +31,7 @@ descr = {
   'chi2_algo': 'The chi2 algorithm',
 #  'use_lines': 'If including emission lines',
 #  'use_ext': 'If including extinction'
+  'width_frac': 'Percentage on each side'
 }
 
 class bcnz_fit:
@@ -49,7 +50,8 @@ class bcnz_fit:
       'Niter': 200,
       'line_weight': 2.,
       'chi2_algo': 'min',
-      'use_ext': False
+      'use_ext': False,
+      'width_frac': 0.01
     }
 
     def check_conf(self):
@@ -195,48 +197,6 @@ class bcnz_fit:
 
         return best_model
 
-
-#    def odds(self, pz, zb, odds_lim):
-#        """ODDS quality paramter."""
-#
-#        # Very manual determination of the ODDS through the
-#        # cumsum function. xarray is n version 0.9.5 not
-#        # supporting integration.
-##        odds_lim = self.config['odds_lim']
-#        z1 = zb - odds_lim*(1.+zb)
-#        z2 = zb + odds_lim*(1.+zb)
-#
-#        # When the galaxy is close to the end of the grid.
-#        z = pz.z.values
-#        z1 = np.clip(z1, z[0], z[-1])
-#        z2 = np.clip(z2, z[0], z[-1])
-#
-#        # This assumes a regular grid.
-#        z0 = z[0]
-#        dz = float(z[1] - z[0])
-#        bins1 = (z1 - z0) / dz - 1 # Cumsum is estimated at the end
-#        bins2 = (z2 - z0) / dz - 1
-#        i1 = np.clip(np.floor(bins1), 0, np.infty).astype(np.int)
-#        i2 = np.clip(np.floor(bins2), 0, np.infty).astype(np.int)
-#        db1 = bins1 - i1
-#        db2 = bins2 - i2
-#
-#        # Here the cdf is estimated using linear interpolation
-#        # between the points. This is done because the cdf is
-#        # changing rapidly for a large sample of galaxies.
-#        cumsum = pz.cumsum(dim='z')
-#        E = np.arange(len(pz))
-#
-#        def C(zbins):
-#            return cumsum.isel_points(gal=E, z=zbins).values
-#
-#        cdf1 = db1*C(i1+1) + (1.-db1)*C(i1)
-#        cdf2 = db2*C(i2+1) + (1.-db2)*C(i2)
-#        odds = cdf2 - cdf1
-#
-#        return odds
-
-
     def photoz(self, chi2, norm):
         pzcat = pd.DataFrame(index=chi2.gal)
 
@@ -253,7 +213,7 @@ class bcnz_fit:
         pzcat['zb'] = zb
 
         pzcat['odds'] = libpzqual.odds(pz, zb, self.config['odds_lim'])
-        pzcat['pz_width'] = libpzqual.pz_width(pz, zb)
+        pzcat['pz_width'] = libpzqual.pz_width(pz, zb, self.config['width_frac'])
 
         # Ok, this should be written better...
         L = []
