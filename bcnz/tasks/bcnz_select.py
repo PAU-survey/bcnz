@@ -10,7 +10,7 @@ descr = {'use_nondet': 'If including non-detections',
 class bcnz_select:
     """Selecting a subset of the fluxes to use in the fitting."""
 
-    version = 1.02
+    version = 1.03
     config = {'SN_lim': -100., 'SN_cap': 10000}
 
     def limit_SN(self, cat):
@@ -24,7 +24,7 @@ class bcnz_select:
         SN_cap = self.config['SN_cap']
         new_SN = np.clip(SN, -np.infty, SN_cap)
 
-        cat['flux_err'] = cat.flux / SN
+        cat['flux_err'] = cat.flux / new_SN
 
         return cat
 
