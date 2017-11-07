@@ -16,6 +16,12 @@ from scipy.integrate import trapz, simps
 from matplotlib import pyplot as plt
 import xdolphin as xd
 
+import sys
+sys.path.append('/home/eriksen/source/bcnz/bcnz/tasks')
+import libpzqual
+
+#import .libpzqual
+
 descr = {
   'filters': 'Filters to use',
   'seds': 'SEDs to use',
@@ -32,7 +38,7 @@ class bcnz_fit:
 
     # Some of these configuration options are no longer valid and 
     # moved into the flux_model code...
-    version = 1.08
+    version = 1.09
     config = {
       'filters': [],
       'seds': [],
@@ -190,50 +196,46 @@ class bcnz_fit:
         return best_model
 
 
-    def odds_fast(self, pz, zb):
+#    def odds(self, pz, zb, odds_lim):
+#        """ODDS quality paramter."""
+#
+#        # Very manual determination of the ODDS through the
+#        # cumsum function. xarray is n version 0.9.5 not
+#        # supporting integration.
+##        odds_lim = self.config['odds_lim']
+#        z1 = zb - odds_lim*(1.+zb)
+#        z2 = zb + odds_lim*(1.+zb)
+#
+#        # When the galaxy is close to the end of the grid.
+#        z = pz.z.values
+#        z1 = np.clip(z1, z[0], z[-1])
+#        z2 = np.clip(z2, z[0], z[-1])
+#
+#        # This assumes a regular grid.
+#        z0 = z[0]
+#        dz = float(z[1] - z[0])
+#        bins1 = (z1 - z0) / dz - 1 # Cumsum is estimated at the end
+#        bins2 = (z2 - z0) / dz - 1
+#        i1 = np.clip(np.floor(bins1), 0, np.infty).astype(np.int)
+#        i2 = np.clip(np.floor(bins2), 0, np.infty).astype(np.int)
+#        db1 = bins1 - i1
+#        db2 = bins2 - i2
+#
+#        # Here the cdf is estimated using linear interpolation
+#        # between the points. This is done because the cdf is
+#        # changing rapidly for a large sample of galaxies.
+#        cumsum = pz.cumsum(dim='z')
+#        E = np.arange(len(pz))
+#
+#        def C(zbins):
+#            return cumsum.isel_points(gal=E, z=zbins).values
+#
+#        cdf1 = db1*C(i1+1) + (1.-db1)*C(i1)
+#        cdf2 = db2*C(i2+1) + (1.-db2)*C(i2)
+#        odds = cdf2 - cdf1
+#
+#        return odds
 
-        # Very manual determination of the ODDS through the
-        # cumsum function. xarray is n version 0.9.5 not
-        # supporting integration.
-        odds_lim = self.config['odds_lim']
-        z1 = zb - odds_lim*(1.+zb)
-        z2 = zb + odds_lim*(1.+zb)
-
-        # When the galaxy is close to the end of the grid.
-        z = pz.z.values
-        z1 = np.clip(z1, z[0], z[-1])
-        z2 = np.clip(z2, z[0], z[-1])
-
-        # This assumes a regular grid.
-        z0 = z[0]
-        dz = float(z[1] - z[0])
-        bins1 = (z1 - z0) / dz - 1 # Cumsum is estimated at the end
-        bins2 = (z2 - z0) / dz - 1
-        i1 = np.clip(np.floor(bins1), 0, np.infty).astype(np.int)
-        i2 = np.clip(np.floor(bins2), 0, np.infty).astype(np.int)
-        db1 = bins1 - i1
-        db2 = bins2 - i2
-
-        # Here the cdf is estimated using linear interpolation
-        # between the points. This is done because the cdf is
-        # changing rapidly for a large sample of galaxies.
-        cumsum = pz.cumsum(dim='z')
-        E = np.arange(len(pz))
-
-        def C(zbins):
-            return cumsum.isel_points(gal=E, z=zbins).values
-
-        cdf1 = db1*C(i1+1) + (1.-db1)*C(i1)
-        cdf2 = db2*C(i2+1) + (1.-db2)*C(i2)
-        odds = cdf2 - cdf1
-
-        # This version is similar to BPZ / BCNzv1
-        #old_odds = C(i2+1) - C(i1)
-
-        pz_width = 0.5*(cumsum.z[(cumsum > 0.84).argmax(axis=1)].values - \
-                        cumsum.z[(cumsum > 0.16).argmax(axis=1)].values)
-
-        return odds, pz_width
 
     def photoz(self, chi2, norm):
         pzcat = pd.DataFrame(index=chi2.gal)
@@ -250,10 +252,8 @@ class bcnz_fit:
         zb = pz.z[izmin]
         pzcat['zb'] = zb
 
-
-        odds, pz_width = self.odds_fast(pz, zb)
-        pzcat['odds'] = odds
-        pzcat['pz_width'] = pz_width
+        pzcat['odds'] = libpzqual.odds(pz, zb, self.config['odds_lim'])
+        pzcat['pz_width'] = libpzqual.pz_width(pz, zb)
 
         # Ok, this should be written better...
         L = []
