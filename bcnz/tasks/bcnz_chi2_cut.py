@@ -35,7 +35,7 @@ class bcnz_chi2_cut:
 
     # Some of these configuration options are no longer valid and 
     # moved into the flux_model code...
-    version = 1.061
+    version = 1.062
     config = {
       'filters': [],
       'seds': [],
@@ -145,10 +145,9 @@ class bcnz_chi2_cut:
         F = xr.DataArray(F, coords=coords, dims=('gal', 'z', 'band'))
 
         chi2_band = var_inv*(flux - F)**2
-        chi2_band = np.clip(chi2_band, 0., self.config['max_chi2'])
-        max_chi2 = self.config['max_chi2']
 
         # Another test...
+        max_chi2 = self.config['max_chi2']
         chi2_band.values = np.where(chi2_band < 5., chi2_band, 0.)
 
         pb = np.exp(-0.5*chi2_band.sum(dim='band'))

@@ -4,6 +4,8 @@
 # Library containing the methods for estimating photo-z quality
 # paramters.
 
+import numpy as np
+
 def odds(pz, zb, odds_lim):
     """ODDS quality paramter."""
 
@@ -43,7 +45,7 @@ def odds(pz, zb, odds_lim):
 
     return odds
 
-def pz_width(pz, zb):
+def pz_width(pz, zb, width_frac):
     """Estimate the pz_width quality parameter."""
 
     # The redshift width with a fraction frac (see below) of the pdf on
@@ -53,7 +55,7 @@ def pz_width(pz, zb):
     # cumsum to estimate pz_width, since a discrete pz_width is problematic
     # when cutting.
 
-    frac = 0.01
+    frac = width_frac #0.01
     cumsum = pz.cumsum(dim='z')
     ind1 = (cumsum > frac).argmax(axis=1) - 1
     ind2 = (cumsum > 1-frac).argmax(axis=1) -1

@@ -16,11 +16,22 @@ class ab_comb:
 
         # This task used to have more logic when the xab had a weird
         # format...
+#        for key, job in self.job.depend.items():
+#            print('adding', key)
+#            cat = job.result
+#            df = df.append(cat, ignore_index=True)
+
+#        D = {}
+        L = []
         for key, job in self.job.depend.items():
             print('adding', key)
+            if job.name == 'emission_lines':
+                L.append(job.result)
+            else:
+                L.append(job.result.unstack())
 
-            cat = job.result
-            df = df.append(cat, ignore_index=True)
+        df = pd.concat(L)
+
 
         # These are already available from EBV = 0.
         df = df[df.ext != 'none']

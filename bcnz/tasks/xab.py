@@ -74,6 +74,7 @@ class xab:
         for law in ['calzetti']:
             extD[law] = splrep(ext.lmb, ext[law])
 
+        # Note: This is actually not a good idea.. remove later.
         ones = np.zeros_like(ext.lmb)
         extD['none'] = splrep(ext.lmb, ones)
 

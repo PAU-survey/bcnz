@@ -68,6 +68,13 @@ class f_mod:
     def _model_array(self, ab, zgrid, seds):
         """Construct the model array."""
 
+        # Not sure why I get this input..
+        if isinstance(ab, pd.Series):
+            ab = ab.unstack()
+
+        # These should not actually be here..
+        ab = ab[ab.ext != 'none']
+
         ab = ab.set_index(['band','sed', 'z', 'EBV'])
         f_mod = ab.to_xarray().flux
 
@@ -119,7 +126,7 @@ class f_mod:
     def select_lines(self, ab_lines):
 
         sep_lines = self.config['sep_lines'] 
-        if sep_lines.lower() == 'all':
+        if sep_lines == 'all':
             # ab_lines is a view from selecting based on the EBV parameter.
             ab_lines = ab_lines.copy()
 

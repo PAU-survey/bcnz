@@ -42,7 +42,7 @@ class bcnz_line_priors:
 
     # Some of these configuration options are no longer valid and 
     # moved into the flux_model code...
-    version = 1.11
+    version = 1.12
     config = {
       'filters': [],
       'seds': [],
@@ -110,6 +110,8 @@ class bcnz_line_priors:
 #        A = np.einsum('gf,zsf,ztf->gzst', var_inv, f_mod, f_mod)
         A_cont = np.einsum('gf,zfs,zft->gzst', var_inv, f_mod_cont, f_mod_cont)
         A_lines = np.einsum('gf,zfs,zft->gzst', var_inv, f_mod_lines, f_mod_lines)
+
+        ipdb.set_trace()
 
         # Bad hack..
 #        A = np.clip(A, 1e-50, np.infty)
@@ -353,8 +355,22 @@ class bcnz_line_priors:
         f_mod_cont = f_mod.sel(sed=seds_cont)
         f_mod_line = f_mod.sel(sed=seds_line)
 
+        DD = f_mod_line.sum(dim='sed')
+        FF = np.array([DD.values])
+        dims = DD.dims + ('sed',)
+        coords = {'sed': ['lines'], 'z': DD.z.values, 'band': DD.band.values, 'EBV': DD.EBV.values}
+
+
+        ipdb.set_trace()
+
+        DD = xr.DataArray(FF, dims=dims, coords=coords)
+
+
+        ipdb.set_trace()
+
         f_mod_cont = f_mod_cont.stack(model=['sed', 'EBV'])
         f_mod_line = f_mod_line.stack(model=['sed', 'EBV'])
+
 
         return f_mod_cont, f_mod_line, f_mod_full
 

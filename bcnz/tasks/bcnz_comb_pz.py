@@ -21,6 +21,7 @@ descr = {'norm_nb': 'Normalize the NB p(z)',
          'use_chi2': 'Convert to chi2',
          'z_bias': 'Bias to correct for.',
          'k': 'Weight between the NB and BB terms',
+         'width_frac': 'Fraction on each side',
          'odds_lim': 'Limit within to calculate ODDS'}
 
 class bcnz_comb_pz:
@@ -29,7 +30,7 @@ class bcnz_comb_pz:
     # This code is on purpose written for combining two
     # catalogs.. beyond this the configuration of how
     # to postprocess the p(z) distributions become tricky.
-    version = 1.10
+    version = 1.11
     config = {'norm_nb': False,
               'norm_bb': False,
               'bb_minval': 0,
@@ -37,7 +38,8 @@ class bcnz_comb_pz:
               'use_chi2': True,
               'z_bias': 0.,
               'k': 0.5,
-              'odds_lim': 0.1}
+              'width_frac': 0.01,
+              'odds_lim': 0.01}
 
     def get_pz(self, pzjob):
         with pzjob.get_store() as store:
@@ -53,7 +55,7 @@ class bcnz_comb_pz:
         if self.config['norm_nb']: 
             pz_bb /= pz_bb.max(dim='z')
 
-        pz_bb += self.config['bb_minval']
+        pz_bb += pz_bb.max()*self.config['bb_minval']
         pz_bb = pz_bb**self.config['bb_exp']
 
         return pz_nb, pz_bb
@@ -114,8 +116,8 @@ class bcnz_comb_pz:
 
         cat = pd.DataFrame(index=pz.gal)
         cat['zb'] = zb
-        cat['pz_width'] = libpzqual.pz_width(pz, zb)
-        cat['odds'] = libpzqual.odds(pz, zb)
+        cat['pz_width'] = libpzqual.pz_width(pz, zb, self.config['width_frac'])
+        cat['odds'] = libpzqual.odds(pz, zb, self.config['odds_lim'])
 
         return pz,cat
 

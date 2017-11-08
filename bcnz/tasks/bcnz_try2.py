@@ -38,7 +38,7 @@ class bcnz_try2:
 
     # Some of these configuration options are no longer valid and 
     # moved into the flux_model code...
-    version = 1.09
+    version = 1.13
     config = {
       'filters': [],
       'seds': [],
@@ -136,20 +136,21 @@ class bcnz_try2:
 
         # This should be optimized later...
         Q = np.diag(isline*(1./self.config['line_pr']**2))
+        Q[ind_Halpha, ind_Halpha] = 0.
 
         b_add = isline / self.config['line_pr']**2.
-
-
+        b_add[ind_Halpha] = 0.
 
         t1 = time.time()
         for i in range(self.config['Niter']):
-            k0 = v[:,:,ind_Halpha]
-            b_eff = b + np.einsum('gz,s->gzs', k0**(-1), b_add)
+            k0 = v[:,:,ind_Halpha] + 1e-100
+#            b_eff = b + np.einsum('gz,s->gzs', k0**(-1), b_add)
+            b_eff = b
             A_eff = A + np.einsum('gz,st->gzst', k0**(-2), Q)
 
             a = np.einsum('gzst,gzt->gzs', A_eff, v)
 
-            m0 = b_eff / a
+            m0 = b_eff / (a + 1e-100)
             vn = m0*v
 
             # Comparing with chi2 would require evaluating this in each

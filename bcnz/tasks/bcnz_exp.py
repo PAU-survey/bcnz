@@ -42,6 +42,7 @@ class bcnz_exp:
       'dz': 0.01,
       'odds_lim': 0.01,
       'Niter': 200,
+      'line_frac': 0.2,
       'line_weight': 1.,
       'chi2_algo': 'min',
       'use_ext': False
@@ -155,12 +156,11 @@ class bcnz_exp:
 
 
         # Not sure which you should trust the most...
-        has_lines = model_lines > 0.3*model_lines.max(dim='band')
+        frac = self.config['line_frac']
+        has_lines = model_lines > frac*model_lines.max(dim='band')
 
         weight = self.config['line_weight']
         assert (0 <= weight) and (weight < 1.), 'Otherwise this is wrong..'
-
-        ipdb.set_trace()
 
         chi2 = ~has_lines*(1.-weight)*chi2 + has_lines*weight*chi2
 
@@ -299,7 +299,7 @@ class bcnz_exp:
         pzcat['zb'] = zb
 
         pzcat['odds'] = self.odds(pz, zb)
-        pzcat['pz_width'] = self.pz_width(pz, zb)
+#        pzcat['pz_width'] = self.pz_width(pz, zb)
 
         # Ok, this should be written better...
         L = []
