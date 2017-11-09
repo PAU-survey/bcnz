@@ -21,11 +21,17 @@ class zero_point_cal:
 
     # One could divide this into two parts, one which is estimating the 
     # zero-points and another applying it.
-    version = 1.05
+    version = 1.07
     config = {'cut_frac': 0., 'Rmin': 0., 'Rmax': 10,
               'weight': False, 'median': False,
               'Nneigh': 10,
+              'bands': [],
+              'use_col': True,
+              'norm_dist': False,
               'norm_first': True}
+
+    def check_config(self):
+        assert self.config['bands'], 'Empty list of bands'
 
     def get_zp(self, data, model, pzcat):
         """Get the zero-points."""
@@ -45,25 +51,26 @@ class zero_point_cal:
                             (R < self.config['Rmax']), R, np.nan)
 
 
-        col_train = -2.5*np.log(flux.sel(band='cfht_g') / flux.sel(band='cfht_r'))
-        Atrain = np.array([col_train.values]).T
+        bands = self.config['bands']
+        train = flux.sel(band=bands).values
+        pred = data.flux[bands].values
+
+        if self.config['use_col']:
+            train = np.log10(train[:,1:] / train[:,:-1])
+            pred = np.log10(pred[:,1:] / pred[:,:-1])
+
+        # So the different distances have more meaning..
+        if self.config['norm_dist']:
+            train = (train - train.mean(axis=0)) / np.sqrt(train.var(axis=0))
+            pred = (pred - pred.mean(axis=0)) / np.sqrt(pred.var(axis=0))
 
         N = self.config['Nneigh']
-        tree = KDTree(Atrain)
-
-        col_fit = -2.5*np.log10(data.flux.cfht_g / data.flux.cfht_r)
-
-        assert isinstance(col_fit, pd.Series), 'Fix the code replacing Nan'
-        col_fit = col_fit.fillna(col_fit.median())
-
-        Afit = np.array([col_fit.values]).T
+        tree = KDTree(train)
 
         # Just skipping the first neighbor in case one is using the same
         # catalog for training.
 
-#        ipdb.set_trace()
-
-        dist, ind = tree.query(Afit, k=N+1)
+        dist, ind = tree.query(pred, k=N+1)
         ind = col_train.ref_id[ind].values
 
         tmp = np.zeros((N,)+data.flux.shape)
@@ -80,7 +87,6 @@ class zero_point_cal:
         return zp
 
     def first_normalization(self, data, model):
-        # 
 
         flux = data['flux'].stack().to_xarray()
         flux_err = data['flux_err'].stack().to_xarray()
@@ -123,6 +129,8 @@ class zero_point_cal:
         return data
 
     def run(self):
+        self.check_config()
+
         with self.job.model.get_store() as store:
             model = store['best_model'].to_xarray().best_model
             model = model.rename({'gal': 'ref_id'})
