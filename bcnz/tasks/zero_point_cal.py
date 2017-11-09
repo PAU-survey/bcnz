@@ -52,7 +52,8 @@ class zero_point_cal:
 
 
         bands = self.config['bands']
-        train = flux.sel(band=bands).values
+        flux_train = flux
+        train = flux_train.sel(band=bands).values
         pred = data.flux[bands].values
 
         if self.config['use_col']:
@@ -71,7 +72,7 @@ class zero_point_cal:
         # catalog for training.
 
         dist, ind = tree.query(pred, k=N+1)
-        ind = col_train.ref_id[ind].values
+        ind = flux_train.ref_id[ind].values
 
         tmp = np.zeros((N,)+data.flux.shape)
         for i in range(N):
