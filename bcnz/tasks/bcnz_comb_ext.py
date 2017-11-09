@@ -14,7 +14,7 @@ sys.path.append('/home/eriksen/source/bcnz/bcnz/tasks')
 import libpzqual
 
 class bcnz_comb_ext:
-    version = 1.07
+    version = 1.10
     config = {'use_pz': False, 'flat_priors': True,
               'odds_lim': 0.01, 'width_frac': 0.01}
 
@@ -149,10 +149,10 @@ class bcnz_comb_ext:
 
 
         # Estimate best model..
-        self.job.result = pzcat.stack()
         _models = self.load_models()
         best_model = self.get_best_model(cat_in, _models)
 
+        print('here...')
         path_out = self.job.empty_file('default')
         store = pd.HDFStore(path_out, 'w')
         store['pzcat'] = pzcat.stack()
