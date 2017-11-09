@@ -14,7 +14,7 @@ sys.path.append('/home/eriksen/source/bcnz/bcnz/tasks')
 import libpzqual
 
 class bcnz_comb_ext:
-    version = 1.12
+    version = 1.16
     config = {'use_pz': False, 'flat_priors': True,
               'odds_lim': 0.01, 'width_frac': 0.01}
 
@@ -81,10 +81,12 @@ class bcnz_comb_ext:
         chi2_in = -2.*np.log(pz)
 
         chi2_tmp = chi2_in.min(dim=['z'])
-        delta_chi2 = chi2_in + (chi2_min - chi2_tmp)
+        chi2 = chi2_in + (chi2_min - chi2_tmp)
 
-        pz_ebv = np.exp(-0.5*delta_chi2)
+        pz_ebv = np.exp(-0.5*chi2)
 
+#        pz_ebv = pz_ebv / pz_ebv.sum(dim='z')
+#        pz /= pz.sum(dim='')
         pz = (pz_ebv*priors).sum(dim='EBV')
 
         # Had 2 galaxies of 500 being Nan..
