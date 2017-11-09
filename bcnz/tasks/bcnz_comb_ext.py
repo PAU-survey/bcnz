@@ -14,7 +14,7 @@ sys.path.append('/home/eriksen/source/bcnz/bcnz/tasks')
 import libpzqual
 
 class bcnz_comb_ext:
-    version = 1.10
+    version = 1.12
     config = {'use_pz': False, 'flat_priors': True,
               'odds_lim': 0.01, 'width_frac': 0.01}
 
@@ -134,6 +134,7 @@ class bcnz_comb_ext:
         tosel = tosel.set_index(['gal', 'EBV'])
 
         nbest = tosel[[]].join(F)
+        nbest = nbest.reset_index().set_index(['gal', 'band'])
 
         return nbest
 
@@ -155,6 +156,6 @@ class bcnz_comb_ext:
         print('here...')
         path_out = self.job.empty_file('default')
         store = pd.HDFStore(path_out, 'w')
-        store['pzcat'] = pzcat.stack()
+        store['default'] = pzcat.stack()
         store['best_model'] = best_model
         store.close()
