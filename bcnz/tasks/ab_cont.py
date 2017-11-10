@@ -157,9 +157,9 @@ class ab_cont:
     def run(self):
         filters = self.job.filters.result
         seds = self.job.seds.result
-        ext = self.job.ext.result
+        extinction = self.job.extinction.result
 
-        ab, r_const = self.ab(filters, seds, ext)
+        ab, r_const = self.ab(filters, seds, extinction)
 
         path_out = self.job.empty_file('default')
         store_out = pd.HDFStore(path_out, 'w')
