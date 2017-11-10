@@ -6,7 +6,7 @@ import pandas as pd
 from scipy.interpolate import splrep, splev, splint
 
 from astropy import units
-from specutils import extinction
+from specutils import extinction as extmod
 
 descr = {
   'rv_cal': 'The Rv factor in k(lambda) for Calzetti',
@@ -49,7 +49,7 @@ class extinction:
 
         part = pd.DataFrame()
         for model in models:
-            part[model] = extinction.extinction(lmb, model=model, a_v=a_v, r_v=r_v)
+            part[model] = extmod.extinction(lmb, model=model, a_v=a_v, r_v=r_v)
 
         return part
 
