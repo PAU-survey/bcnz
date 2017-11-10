@@ -31,7 +31,8 @@ descr = {
   'chi2_algo': 'The chi2 algorithm',
 #  'use_lines': 'If including emission lines',
 #  'use_ext': 'If including extinction'
-  'width_frac': 'Percentage on each side'
+  'width_frac': 'Percentage on each side',
+  'towrite': 'The fields to write'
 }
 
 class bcnz_fit:
@@ -51,7 +52,8 @@ class bcnz_fit:
       'line_weight': 2.,
       'chi2_algo': 'min',
       'use_ext': False,
-      'width_frac': 0.01
+      'width_frac': 0.01,
+      'towrite': ['best_model']
     }
 
     def check_conf(self):
@@ -98,7 +100,7 @@ class bcnz_fit:
 
         return chi2, norm
 
-    def chi2_min(self, f_mod, data_df, zs): #, mabs_df):
+    def chi2_min(self, f_mod, data_df):
         """Minimize the chi2 expression."""
 
         flux, flux_err, var_inv = self.get_arrays(data_df)
@@ -221,6 +223,9 @@ class bcnz_fit:
         flux_band = flux_band / flux_band.sum(dim='sed')
         iband_sed = flux_band.sed[flux_band.argmax(dim='sed')]
 
+        # Ugly hack since appending with different lengths give problems.
+        iband_sed = [str(x).ljust(5) for x in iband_sed.values]
+
         return iband_sed
 
 
@@ -279,21 +284,17 @@ class bcnz_fit:
         chunksize = 10
         Rin = galcat_store.select('default', iterator=True, chunksize=chunksize)
 
-        zs = False
-        towrite = ['best_model', 'chi2', 'norm']
+        towrite = self.config['towrite']
         path = self.job.empty_file('default')
         store = pd.HDFStore(path)
         for i,galcat in enumerate(Rin):
             print('batch', i, 'tot', i*chunksize)
 
-            chi2, norm = f_algo(f_mod, galcat, zs)
-
+            chi2, norm = f_algo(f_mod, galcat)
             peaks, pz = self.photoz(chi2, norm)
             best_model = self.best_model(norm, f_mod_full, peaks)
 
             peaks['sed_iband'] = self.sed_iband(norm, f_mod_full, peaks)
-
-            ipdb.set_trace()
 
             if 'best_model' in towrite:
                 store.append('best_model', best_model.to_dataframe('best_model'))
