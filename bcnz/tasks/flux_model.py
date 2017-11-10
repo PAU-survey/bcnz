@@ -19,7 +19,7 @@ descr = {
   'sep_lines': 'Lines with separate model'
 }
 
-class f_mod:
+class flux_model:
     """Combined model for all the fluxes."""
 
     version = 1.03
