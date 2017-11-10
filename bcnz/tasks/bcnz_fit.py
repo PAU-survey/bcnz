@@ -166,8 +166,8 @@ class bcnz_fit:
     def best_model(self, norm, f_mod, peaks):
         """Estimate the best fit model."""
 
-        # Moving this elsewhere is not as easy as it seems. The amplitude data
-        # is huge and creates problems.
+        # Moving this to a separate task  is not as easy as it seems. The amplitude 
+        # data is huge and creates problems.
         L = [] 
 
         fluxA = np.zeros((len(peaks), len(f_mod.band)))
@@ -186,6 +186,7 @@ class bcnz_fit:
     def best_norm(self, norm, peaks):
         """Select the best norm."""
 
+        # Not pretty... I often have a problem with selecing pairs..
         # Ok, this is not pretty..
         L = []
         for gal,zb in zip(peaks.index, peaks.zb):
@@ -197,7 +198,35 @@ class bcnz_fit:
 
         return best_model
 
+    def sed_iband(self, norm, f_mod, peaks):
+        """Find the sed contribut most to the cfht_i band."""
+
+        # Here the choice of cfht_i remains to be tested using
+        # data...
+
+        # We are not interested in which extinction the galaxy has.
+        norm = norm.unstack(dim='model').sum(dim='EBV')
+        f_mod = f_mod.unstack(dim='model').sum(dim='EBV')
+
+        coords = {'gal': norm.gal, 'sed': f_mod.sed}
+        flux_band = np.zeros((len(coords['gal']), len(coords['sed'])))
+        flux_band = xr.DataArray(flux_band, dims=('gal', 'sed'), coords=coords)
+        for i,(gal,zb) in enumerate(zip(peaks.index, peaks.zb)):
+            zgal = peaks.loc[gal].zb
+            norm_gal = norm.sel(gal=gal, z=zgal)
+            fmod_gal = f_mod.sel(z=zgal, band='cfht_i')
+
+            flux_band[i] = fmod_gal*norm_gal
+
+        flux_band = flux_band / flux_band.sum(dim='sed')
+        iband_sed = flux_band.sed[flux_band.argmax(dim='sed')]
+
+        return iband_sed
+
+
     def photoz(self, chi2, norm):
+        """Defines many of the quantities entering in the calogues."""
+
         pzcat = pd.DataFrame(index=chi2.gal)
 
         has_sed = 'sed' in chi2.dims
@@ -214,13 +243,13 @@ class bcnz_fit:
         pzcat['pz_width'] = libpzqual.pz_width(pz, zb, self.config['width_frac'])
         pzcat['zb_bpz2'] = libpzqual.zb_bpz2(pz)
 
+#        # Ok, this should be written better...
+#        L = []
+#        for i,iz in enumerate(izmin):
+#            L.append(norm.values[i,iz].argmax())
+#
+#        pzcat['tmax'] = np.array(L)
 
-        # Ok, this should be written better...
-        L = []
-        for i,iz in enumerate(izmin):
-            L.append(norm.values[i,iz].argmax())
-
-        pzcat['tmax'] = np.array(L)
         pzcat['chi2'] = np.array(chi2.min(dim=dims))
 
         return pzcat, pz
@@ -258,13 +287,16 @@ class bcnz_fit:
         for i,galcat in enumerate(Rin):
             print('batch', i, 'tot', i*chunksize)
 
-#            ipdb.set_trace()
             chi2, norm = f_algo(f_mod, galcat, zs)
-            peaks,pz = self.photoz(chi2, norm)
 
-            #ipdb.set_trace()
+            peaks, pz = self.photoz(chi2, norm)
+            best_model = self.best_model(norm, f_mod_full, peaks)
+
+            peaks['sed_iband'] = self.sed_iband(norm, f_mod_full, peaks)
+
+            ipdb.set_trace()
+
             if 'best_model' in towrite:
-                best_model = self.best_model(norm, f_mod_full, peaks)
                 best_model.name = 'best_model'
                 store.append('best_model', best_model.to_dataframe())
 
@@ -284,9 +316,7 @@ class bcnz_fit:
             # Storing with multiindex will give problems.
             norm = norm.unstack(dim='model')
 
-            # This should be configurable somewhere. It takes a lot of storage..
-            store.append('default', peaks.stack()) 
-#            store.append('norm', norm.to_dataframe())
+            store.append('default', peaks)
             store.append('pz', pz.to_dataframe())
  
 
