@@ -2,9 +2,25 @@
 # encoding: UTF8
 
 # Library containing the methods for estimating photo-z quality
-# paramters.
+# parameters.
 
+import ipdb
 import numpy as np
+
+def zb(pz):
+    """The traditional bayesian photo-z."""
+
+    izmin = pz.argmax(dim='z')
+    zb = pz.z[izmin]
+
+    return zb
+
+def zb_bpz2(pz):
+    """A new photo-z estimate included in BPZ2."""
+
+    zbx = (pz*pz.z).sum(dim='z') / pz.sum(dim='z')
+
+    return zbx
 
 def odds(pz, zb, odds_lim):
     """ODDS quality paramter."""

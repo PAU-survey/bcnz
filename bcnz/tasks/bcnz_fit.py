@@ -39,7 +39,7 @@ class bcnz_fit:
 
     # Some of these configuration options are no longer valid and 
     # moved into the flux_model code...
-    version = 1.09
+    version = 1.10
     config = {
       'filters': [],
       'seds': [],
@@ -208,12 +208,12 @@ class bcnz_fit:
         pz = pzt.sum('sed') if has_sed else pzt
         pz = pz / pz.sum(dim='z')
 
-        izmin = pz.argmax(dim='z')
-        zb = pz.z[izmin]
+        zb = libpzqual.zb(pz)
         pzcat['zb'] = zb
-
         pzcat['odds'] = libpzqual.odds(pz, zb, self.config['odds_lim'])
         pzcat['pz_width'] = libpzqual.pz_width(pz, zb, self.config['width_frac'])
+        pzcat['zb_bpz2'] = libpzqual.zb_bpz2(pz)
+
 
         # Ok, this should be written better...
         L = []
