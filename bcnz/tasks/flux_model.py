@@ -35,8 +35,7 @@ class flux_model:
     }
 
     def check_config(self):
-#        assert self.config['filters'], 'Need to check filters'
-        assert self.config['seds'], 'Need to check seds'
+        assert self.config['seds'], 'Config missing: seds'
 
     def rebin_redshift(self, f_mod, zgrid):
         """Rebin the model to the grid used in the calculations."""
@@ -191,8 +190,6 @@ class flux_model:
         return fmod
 
     def run(self):
-        self.check_config()
-
         ab = self.job.ab.result
         ab_el = self.job.ab_lines.result
 

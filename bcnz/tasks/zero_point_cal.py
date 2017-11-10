@@ -130,8 +130,6 @@ class zero_point_cal:
         return data
 
     def run(self):
-        self.check_config()
-
         with self.job.model.get_store() as store:
             model = store['best_model'].to_xarray().best_model
             model = model.rename({'gal': 'ref_id'})
