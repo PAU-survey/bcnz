@@ -13,7 +13,7 @@ descr = {
   'rv_rest': 'The Rv factor in k(lambda) for the rest'
 }
 
-class ext:
+class extinction:
     """Estimate the expected extinction in different filters."""
 
     version = 1.24
