@@ -26,8 +26,7 @@ class bcnz_comb_ext:
                 continue
 
             EBV = dep.f_mod.ab.config['EBV']
-
-            D[EBV] = dep.result.unstack()
+            D[EBV] = dep.result
 
         cat_out = pd.concat(D, axis=0, names=['EBV']).reset_index()
 
@@ -158,6 +157,6 @@ class bcnz_comb_ext:
         print('here...')
         path_out = self.job.empty_file('default')
         store = pd.HDFStore(path_out, 'w')
-        store['default'] = pzcat.stack()
+        store['default'] = pzcat
         store['best_model'] = best_model
         store.close()

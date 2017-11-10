@@ -126,7 +126,4 @@ class bcnz_comb_pz:
         pz_bb,cat_bb = self.get_pz(self.job.pzcat_bb)
 
         pz,cat = self.combine_pz(pz_nb, pz_bb, cat_nb, cat_bb)
-        cat = cat.stack()
-
         self.job.result = cat
-#        ipdb.set_trace()
