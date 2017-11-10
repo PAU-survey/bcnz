@@ -280,7 +280,6 @@ class bcnz_fit:
         Rin = galcat_store.select('default', iterator=True, chunksize=chunksize)
 
         zs = False
-#        zs = self.job.zspec.result.zs
         towrite = ['best_model', 'chi2', 'norm']
         path = self.job.empty_file('default')
         store = pd.HDFStore(path)
@@ -297,27 +296,18 @@ class bcnz_fit:
             ipdb.set_trace()
 
             if 'best_model' in towrite:
-                best_model.name = 'best_model'
-                store.append('best_model', best_model.to_dataframe())
+                store.append('best_model', best_model.to_dataframe('best_model'))
 
             if 'chi2' in towrite:
-                chi2.name = 'chi2'
-                store.append('chi2', chi2.to_dataframe())
+                store.append('chi2', chi2.to_dataframe('chi2'))
 
             if 'norm' in towrite:
                 best_norm = self.best_norm(norm, peaks)
                 best_norm = best_norm.unstack(dim='model')
                 store.append('best_norm', best_norm.to_dataframe('best_model'))
 
-            # Required by xarray..
-            norm.name = 'norm'
-            pz.name = 'pz'
-
-            # Storing with multiindex will give problems.
-            norm = norm.unstack(dim='model')
-
             store.append('default', peaks)
-            store.append('pz', pz.to_dataframe())
+            store.append('pz', pz.to_dataframe('pz'))
  
 
         store.close()
