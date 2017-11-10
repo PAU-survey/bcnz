@@ -16,18 +16,20 @@ descr = {
   'dz_ab': 'Redshift resolution in the AB files',
   'int_dz': 'Resolution when integrating',
   'int_method': 'Integration method',
+  'ext_law': 'Extinction law',
   'EBV': 'Extinction amplitude'
 }
 
-class xab:
-    """The model fluxes."""
+class ab_continuum:
+    """The model fluxes for the continuum."""
 
-    version = 1.11
+    version = 1.12
     config = {\
       'zmax_ab': 12.,
       'dz_ab': 0.001,
       'int_dz': 1.,
       'int_method': 'simps',
+      'ext_law': 'calzetti',
       'EBV': 0.0
     }
 
@@ -58,34 +60,20 @@ class xab:
 
         return sedD
 
-    def ext_spls(self, ext):
-        """Splines for the extinction."""
+    def ext_spl(self, ext):
+        """Spline for the extinction."""
 
-        extD = {}
+        ext_spl = splrep(ext.lmb, ext[self.config['ext_law']])
 
-        # Bad hack...
-        if isinstance(ext, type(None)):
-            lmb = np.linspace(3000, 15000)
-            ones = np.zeros_like(lmb)
-            extD['none'] = splrep(lmb, ones)
+        return ext_spl
 
-            return extD
-
-        for law in ['calzetti']:
-            extD[law] = splrep(ext.lmb, ext[law])
-
-        # Note: This is actually not a good idea.. remove later.
-        ones = np.zeros_like(ext.lmb)
-        extD['none'] = splrep(ext.lmb, ones)
-
-        return extD
 
 
     def calc_ab(self, filters, seds, ext, r_const):
         """Estimate the fluxes for all filters and SEDs."""
 
         sedD = self.sed_spls(seds)
-        extD = self.ext_spls(ext)
+        ext_spl = self.ext_spl(ext)
         z = np.arange(0., self.config['zmax_ab'], self.config['dz_ab'])
 
         # Test...
@@ -113,29 +101,28 @@ class xab:
                 t1 = time.time()
 
                 y_sed = splev(X, sedD[sed])
-                for ext_key, ext_spl in iter(extD.items()):
-                    k_ext = splev(X, ext_spl)
-                    EBV = self.config['EBV']
-                    y_ext = 10**(-0.4*EBV*k_ext)
+                k_ext = splev(X, ext_spl)
+                EBV = self.config['EBV']
+                y_ext = 10**(-0.4*EBV*k_ext)
 
-                    Y = y_ext*y_sed*y_f*lmb
+                Y = y_ext*y_sed*y_f*lmb
 
-                    if int_method == 'simps':
-                        ans = r_const[band]*simps(Y, lmb, axis=1)
-                    elif int_method == 'sum':
-                        ans = r_const[band]*int_dz*Y.sum(axis=1)
+                if int_method == 'simps':
+                    ans = r_const[band]*simps(Y, lmb, axis=1)
+                elif int_method == 'sum':
+                    ans = r_const[band]*int_dz*Y.sum(axis=1)
 
-                    # This might be overkill in terms of storage, but information in
-                    # the columns is a pain..
-                    part = pd.DataFrame({'z': z, 'flux': ans})
-                    part['band'] = band 
-                    part['sed'] = sed
-                    part['ext'] = ext_key
-                    part['EBV'] = EBV
+                # This might be overkill in terms of storage, but information in
+                # the columns is a pain..
+                part = pd.DataFrame({'z': z, 'flux': ans})
+                part['band'] = band 
+                part['sed'] = sed
+                part['ext_law'] = self.config['ext_law']
+                part['EBV'] = EBV
 
-                    df = df.append(part, ignore_index=True)
+                df = df.append(part, ignore_index=True)
 
-                    t2 = time.time()
+                t2 = time.time()
 
         return df
 
@@ -170,12 +157,12 @@ class xab:
     def run(self):
         filters = self.job.filters.result
         seds = self.job.seds.result
-        ext = self.job.ext.result if hasattr(self.job, 'ext') else None
+        ext = self.job.ext.result
 
         ab, r_const = self.ab(filters, seds, ext)
 
         path_out = self.job.empty_file('default')
         store_out = pd.HDFStore(path_out, 'w')
-        store_out['default'] = ab.stack()
+        store_out['default'] = ab
         store_out['r_const'] = r_const
         store_out.close()
