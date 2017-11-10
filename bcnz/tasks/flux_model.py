@@ -67,13 +67,6 @@ class flux_model:
     def _model_array(self, ab, zgrid, seds):
         """Construct the model array."""
 
-        # Not sure why I get this input..
-        if isinstance(ab, pd.Series):
-            ab = ab.unstack()
-
-        # These should not actually be here..
-        ab = ab[ab.ext != 'none']
-
         ab = ab.set_index(['band','sed', 'z', 'EBV'])
         f_mod = ab.to_xarray().flux
 
