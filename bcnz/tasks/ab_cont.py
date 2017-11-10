@@ -20,7 +20,7 @@ descr = {
   'EBV': 'Extinction amplitude'
 }
 
-class ab_continuum:
+class ab_cont:
     """The model fluxes for the continuum."""
 
     version = 1.12
