@@ -66,6 +66,7 @@ class bcnz_fit:
 
         # Seperating this book keeping also makes it simpler to write
         # up different algorithms.
+
         filters = self.config['filters']
         dims = ('gal', 'band')
         flux = xr.DataArray(data_df['flux'][filters], dims=dims)
@@ -134,9 +135,6 @@ class bcnz_fit:
         for i in range(self.config['Niter']):
             a = np.einsum('gzst,gzt->gzs', Ap, v)
 
-#            if (a==0).any():
-#                ipdb.set_trace()
-
             m0 = b / a
             vn = m0*v
 
@@ -147,12 +145,8 @@ class bcnz_fit:
             v = vn
 
         print('time minimize',  time.time() - t1)
-        # .. Also changed in last update of einsum
 
         F = np.einsum('zfs,gzs->gzf', f_mod, v)
-#        ipdb.set_trace()
-#        F = np.einsum('zsf,gzs->gzf', f_mod, v)
-
         F = xr.DataArray(F, coords=coords, dims=('gal', 'z', 'band'))
 
         chi2 = var_inv*(flux - F)**2
@@ -161,7 +155,8 @@ class bcnz_fit:
         pb = pb / (1e-100 + pb.sum(dim='z'))
         chi2 = chi2.sum(dim='band')
 
-        norm = xr.DataArray(v, coords=coords_norm, dims=('gal','z','model'))
+        norm = xr.DataArray(v, coords=coords_norm, dims=\
+                            ('gal','z','model'))
 
         return chi2, norm
 
@@ -290,23 +285,30 @@ class bcnz_fit:
         for i,galcat in enumerate(Rin):
             print('batch', i, 'tot', i*chunksize)
 
+            index_name = galcat.index.name
+
             chi2, norm = f_algo(f_mod, galcat)
             peaks, pz = self.photoz(chi2, norm)
             best_model = self.best_model(norm, f_mod_full, peaks)
 
             peaks['sed_iband'] = self.sed_iband(norm, f_mod_full, peaks)
+            peaks.index.name = index_name
 
             if 'best_model' in towrite:
+                best_model = best_model.rename({'gal': index_name})
                 store.append('best_model', best_model.to_dataframe('best_model'))
 
             if 'chi2' in towrite:
+                chi2 = chi2.rename({'gal': index_name})
                 store.append('chi2', chi2.to_dataframe('chi2'))
 
             if 'norm' in towrite:
+                best_norm = best_norm.rename({'best_norm': index_name})
                 best_norm = self.best_norm(norm, peaks)
                 best_norm = best_norm.unstack(dim='model')
                 store.append('best_norm', best_norm.to_dataframe('best_model'))
 
+            pz = pz.rename({'gal': index_name})
             store.append('default', peaks)
             store.append('pz', pz.to_dataframe('pz'))
  
