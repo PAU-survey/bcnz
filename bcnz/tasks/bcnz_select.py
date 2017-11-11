@@ -10,7 +10,7 @@ descr = {'use_nondet': 'If including non-detections',
 class bcnz_select:
     """Selecting a subset of the fluxes to use in the fitting."""
 
-    version = 1.03
+    version = 1.04
     config = {'SN_lim': -100., 'SN_cap': 10000}
 
     def limit_SN(self, cat):

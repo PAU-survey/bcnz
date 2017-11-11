@@ -40,7 +40,7 @@ class bcnz_fit:
 
     # Some of these configuration options are no longer valid and 
     # moved into the flux_model code...
-    version = 1.10
+    version = 1.11
     config = {
       'filters': [],
       'seds': [],
@@ -158,6 +158,8 @@ class bcnz_fit:
         norm = xr.DataArray(v, coords=coords_norm, dims=\
                             ('gal','z','model'))
 
+#        ipdb.set_trace()
+
         return chi2, norm
 
     def best_model(self, norm, f_mod, peaks):
@@ -243,13 +245,6 @@ class bcnz_fit:
         pzcat['pz_width'] = libpzqual.pz_width(pz, zb, self.config['width_frac'])
         pzcat['zb_bpz2'] = libpzqual.zb_bpz2(pz)
 
-#        # Ok, this should be written better...
-#        L = []
-#        for i,iz in enumerate(izmin):
-#            L.append(norm.values[i,iz].argmax())
-#
-#        pzcat['tmax'] = np.array(L)
-
         pzcat['chi2'] = np.array(chi2.min(dim=dims))
 
         return pzcat, pz
@@ -273,7 +268,7 @@ class bcnz_fit:
         f_algo = getattr(self, key)
 
         galcat = self.job.galcat.result
-        f_mod, f_mod_full = self.fix_fmod_format(self.job.f_mod.result)
+        f_mod, f_mod_full = self.fix_fmod_format(self.job.model.result)
 
         galcat_store = self.job.galcat.get_store()
         chunksize = 10
@@ -291,7 +286,7 @@ class bcnz_fit:
             peaks, pz = self.photoz(chi2, norm)
             best_model = self.best_model(norm, f_mod_full, peaks)
 
-            peaks['sed_iband'] = self.sed_iband(norm, f_mod_full, peaks)
+#            peaks['sed_iband'] = self.sed_iband(norm, f_mod_full, peaks)
             peaks.index.name = index_name
 
             if 'best_model' in towrite:
