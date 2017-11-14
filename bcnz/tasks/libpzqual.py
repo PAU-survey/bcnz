@@ -6,6 +6,7 @@
 
 import ipdb
 import numpy as np
+import xarray as xr
 
 def zb(pz):
     """The traditional bayesian photo-z."""
