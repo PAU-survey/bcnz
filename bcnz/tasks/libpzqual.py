@@ -93,3 +93,30 @@ def pz_width(pz, zb, width_frac):
                     - dz1.values)
 
     return pz_width
+
+# Ok, this should be elsewhere...
+def get_arrays(data_df, filters):
+    """Read in the arrays and present them as xarrays."""
+
+    # Seperating this book keeping also makes it simpler to write
+    # up different algorithms.
+
+#    filters = self.config['filters']
+    dims = ('gal', 'band')
+    flux = xr.DataArray(data_df['flux'][filters], dims=dims)
+    flux_err = xr.DataArray(data_df['flux_err'][filters], dims=dims)
+
+    # Not exacly the best, but Numpy had problems with the fancy
+    # indexing.
+    to_use = ~np.isnan(flux_err)
+
+    # This gave problems in cases where all measurements was removed..
+    flux.values = np.where(to_use, flux.values, 1e-100) #0.) 
+
+    var_inv = 1./(flux_err + 1e-100)**2
+    var_inv.values = np.where(to_use, var_inv, 1e-100)
+    flux_err.values = np.where(to_use, flux_err, 1e-100)
+
+
+    return flux, flux_err, var_inv
+
