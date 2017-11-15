@@ -162,8 +162,8 @@ class emission_lines:
         return df
 
     def run(self):
-        filters = self.job.filters.result
-        ext = self.job.ext.result if hasattr(self.job, 'ext') else None
+        filters = self.input.filters.result
+        extinction = self.input.extinction.result
 
-        X = self.get_splines(filters, ext)
-        self.job.result = self.get_result(*X)
+        X = self.get_splines(filters, extinction)
+        self.ouput.result = self.get_result(*X)
