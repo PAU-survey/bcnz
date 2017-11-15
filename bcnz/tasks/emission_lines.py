@@ -15,14 +15,16 @@ from scipy.integrate import simps
 descr = {
   'dz': 'Redshift steps',
   'ampl': 'Added amplitude',
-  'EBV': 'Extinction coefficient'}
+  'EBV': 'Extinction coefficient',
+  'ext_law': 'Extinction law'}
 
 class emission_lines:
     """The model flux for the emission lines."""
 
     version = 1.056
 
-    config = {'dz': 0.0005, 'ampl': 1e-16, 'EBV': 0.}
+    config = {'dz': 0.0005, 'ampl': 1e-16, 'EBV': 0.,
+              'ext_law': 'calzetti'}
 
     ratios = {
       'OII': 1.0,
@@ -60,34 +62,12 @@ class emission_lines:
 
         return splD, rconstD
 
-    def _ext_spls(self, ext):
-        """Splines for the extinction."""
+    def ext_spl(self, ext):
+        """Spline for the extinction."""
 
-        extD = {}
+        ext_spl = splrep(ext.lmb, ext[self.config['ext_law']])
 
-        # Bad hack...
-        if isinstance(ext, type(None)):
-            lmb = np.linspace(3000, 15000)
-            ones = np.zeros_like(lmb)
-            extD['none'] = splrep(lmb, ones)
-
-            return extD
-
-        for law in ['calzetti']:
-            extD[law] = splrep(ext.lmb, ext[law])
-
-        ones = np.zeros_like(ext.lmb)
-        extD['none'] = splrep(ext.lmb, ones)
-
-        return extD
-
-    def get_splines(self, filters, ext):
-        """All the splines needed."""
-
-        splD, rconstD = self._filter_spls(filters)
-        extD = self._ext_spls(ext)
-
-        return splD, rconstD, extD
+        return ext_spl
 
     def _find_flux(self, z, f_spl, rconst, ext_spl):
         """Estimate the flux in the emission lines relative
@@ -111,17 +91,7 @@ class emission_lines:
 
         return flux
 
-#    def _fix_dict(self, oldD, fname, ext_name):
-#
-#        # The model is expected to not be a hirarchical data
-#        # frame...
-#        newD = {}
-#        for key, val in oldD.items():
-#            newD[((fname, key, ext_name),)] = pd.Series(val)
-#
-#        return newD
-
-    def _new_fix(self, oldD, z, band, ext_name, EBV):
+    def _new_fix(self, oldD, z, band, ext_law, EBV):
         """Dictionary suitable for concatination."""
 
         df = pd.DataFrame()
@@ -137,15 +107,17 @@ class emission_lines:
         F = F.reset_index()
         F = F.rename(columns={0: 'flux'})
         F['band'] = band
-        F['ext'] = ext_name
+        F['ext'] = ext_law
         F['EBV'] = EBV
 
         return F
 
 
-    def get_result(self, filtersD, rconstD, extD):
+    def get_model(self, filtersD, rconstD, ext_spl):
+        """Get the model fluxes for the emission lines."""
+
+        ext_law = self.config['ext_law']
         bandL = filtersD.keys()
-        extL = extD.keys()
 
         z = np.arange(0., 2., self.config['dz'])
 
@@ -153,17 +125,23 @@ class emission_lines:
         for fname, f_spl in filtersD.items():
             rconst = rconstD[fname]     
 
-            for ext_name, ext_spl in extD.items():
-                part = self._find_flux(z, f_spl, rconst, ext_spl)
-                part = self._new_fix(part, z, fname, ext_name, self.config['EBV'])
+            part = self._find_flux(z, f_spl, rconst, ext_spl)
+            part = self._new_fix(part, z, fname, ext_law, self.config['EBV'])
 
-                df = df.append(part, ignore_index=True)
+            df = df.append(part, ignore_index=True)
 
         return df
+
+
+    def entry(self, filters, extinction):
+        filtersD, rconstD = self._filter_spls(filters)
+        ext_spl = self.ext_spl(extinction)
+        model = self.get_model(filtersD, rconstD, ext_spl)
+
+        return model
 
     def run(self):
         filters = self.input.filters.result
         extinction = self.input.extinction.result
 
-        X = self.get_splines(filters, extinction)
-        self.ouput.result = self.get_result(*X)
+        self.output.result = self.entry(filters, extinction)
