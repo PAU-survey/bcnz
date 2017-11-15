@@ -267,15 +267,15 @@ class bcnz_fit:
         assert hasattr(self, key), 'No such key: {}'.format(key)
         f_algo = getattr(self, key)
 
-        galcat = self.job.galcat.result
-        f_mod, f_mod_full = self.fix_fmod_format(self.job.model.result)
+        galcat = self.input.galcat.result
+        f_mod, f_mod_full = self.fix_fmod_format(self.input.model.result)
 
-        galcat_store = self.job.galcat.get_store()
+        galcat_store = self.input.galcat.get_store()
         chunksize = 10
         Rin = galcat_store.select('default', iterator=True, chunksize=chunksize)
 
         towrite = self.config['towrite']
-        path = self.job.empty_file('default')
+        path = self.output.empty_file('default')
         store = pd.HDFStore(path)
         for i,galcat in enumerate(Rin):
             print('batch', i, 'tot', i*chunksize)

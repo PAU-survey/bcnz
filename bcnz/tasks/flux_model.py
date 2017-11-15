@@ -183,11 +183,11 @@ class flux_model:
         return fmod
 
     def run(self):
-        ab = self.job.ab.result
-        ab_el = self.job.ab_lines.result
+        ab = self.input.ab.result
+        ab_el = self.input.ab_lines.result
 
         f_mod = self.model(ab, ab_el)
         f_mod = f_mod.unstack(dim='model')
         f_mod = f_mod.to_dataframe(name='f_mod')
 
-        self.job.result = f_mod
+        self.output.result = f_mod

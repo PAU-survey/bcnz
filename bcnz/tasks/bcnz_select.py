@@ -52,6 +52,6 @@ class bcnz_select:
         return cat
 
     def run(self):
-        cat = self.input.result
+        cat = self.input.input.result
 
         self.output.result = self.get_cat(cat)
