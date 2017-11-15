@@ -68,7 +68,6 @@ class ab_cont:
         return ext_spl
 
 
-
     def calc_ab(self, filters, seds, ext, r_const):
         """Estimate the fluxes for all filters and SEDs."""
 
@@ -145,7 +144,7 @@ class ab_cont:
 
         return ab
 
-    def ab(self, filters, seds, ext):
+    def entry(self, filters, seds, ext):
         """Estimate model fluxes."""
 
         r_const = self.r_const(filters)
@@ -155,13 +154,13 @@ class ab_cont:
         return ab, r_const
 
     def run(self):
-        filters = self.job.filters.result
-        seds = self.job.seds.result
-        extinction = self.job.extinction.result
+        filters = self.input.filters.result
+        seds = self.input.seds.result
+        extinction = self.input.extinction.result
 
-        ab, r_const = self.ab(filters, seds, extinction)
+        ab, r_const = self.entry(filters, seds, extinction)
 
-        path_out = self.job.empty_file('default')
+        path_out = self.output.empty_file('default')
         store_out = pd.HDFStore(path_out, 'w')
         store_out['default'] = ab
         store_out['r_const'] = r_const

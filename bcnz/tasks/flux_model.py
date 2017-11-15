@@ -70,8 +70,7 @@ class flux_model:
         ab = ab.set_index(['band','sed', 'z', 'EBV'])
         f_mod = ab.to_xarray().flux
 
-        f_mod = f_mod.sel(sed=seds) #, band=fL)
-#        f_mod = f_mod.sel(band=self.config['filters'])
+        f_mod = f_mod.sel(sed=seds)
         f_mod = f_mod.stack(model=['sed', 'EBV'])
 
         f_mod = self.rebin_redshift(f_mod, zgrid)
