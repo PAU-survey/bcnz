@@ -20,12 +20,13 @@ class bcnz_comb_ext:
 
     def load_catalogs(self):
         D = {}
-        for key,dep in self.job.depend.items():
+        for key,dep in self.input.depend.items():
             # Since it also has to depend on the galaxy catalogs.
             if not key.startswith('pzcat_'):
                 continue
 
-            EBV = dep.f_mod.ab.config['EBV']
+            # A bit of a hack...
+            EBV = self.job.depend[key].model.ab.config['EBV']
             D[EBV] = dep.result
 
         cat_out = pd.concat(D, axis=0, names=['EBV']).reset_index()
@@ -36,7 +37,7 @@ class bcnz_comb_ext:
         print('Start loading pz..')
 
         df = pd.DataFrame()
-        for key,dep in self.job.depend.items():
+        for key,dep in self.input.depend.items():
             print('loading', key)
 
             # Since it also has to depend on the galaxy catalogs.
@@ -44,12 +45,13 @@ class bcnz_comb_ext:
                 continue
 
             part = dep.get_store()['pz'].reset_index()
-            part['EBV'] = dep.f_mod.ab.config['EBV']
+            EBV = self.job.depend[key].model.ab.config['EBV']
+            part['EBV'] = EBV
 
             df = df.append(part, ignore_index=True)
 
         # This part will complain if the EBV is not unique among the runs...
-        pz = df.set_index(['gal', 'z', 'EBV']).to_xarray().pz    
+        pz = df.set_index(['ref_id', 'z', 'EBV']).to_xarray().pz    
 
         print('Finish loading pz..')
 
@@ -68,13 +70,13 @@ class bcnz_comb_ext:
             priors = E.rename({'index': 'EBV'})
 
             # Priors from the catalogue itself...
-            E = cat_in.loc[cat_in.groupby('gal').chi2.idxmin()].EBV.value_counts().to_xarray()
+            E = cat_in.loc[cat_in.groupby('ref_id').chi2.idxmin()].EBV.value_counts().to_xarray()
             priors = E.rename({'index': 'EBV'})
 
 
         priors = priors / float(priors.sum())
 
-        chi2_min = cat_in[['gal', 'EBV', 'chi2']].set_index(['gal', 'EBV']).to_xarray().chi2
+        chi2_min = cat_in[['ref_id', 'EBV', 'chi2']].set_index(['ref_id', 'EBV']).to_xarray().chi2
 
         pz = np.clip(pz_in, 1e-100, np.infty)
         chi2_in = -2.*np.log(pz)
@@ -97,7 +99,8 @@ class bcnz_comb_ext:
         zb = pz.z[izmin]
 
 
-        pzcat = pd.DataFrame(index=pz.gal)
+        pzcat = pd.DataFrame(index=pz.ref_id)
+        pz = pz.rename({'ref_id': 'gal'})
         pzcat['odds'] = libpzqual.odds(pz, zb, self.config['odds_lim'])
         pzcat['pz_width'] = libpzqual.pz_width(pz, zb, self.config['width_frac'])
         pzcat['zb'] = zb
@@ -107,14 +110,14 @@ class bcnz_comb_ext:
 
     def combine_cat(self, cat_in):
 
-        cat_out = cat_in.loc[cat_in.groupby('gal').chi2.idxmin()]
+        cat_out = cat_in.loc[cat_in.groupby('ref_id').chi2.idxmin()]
 
         return cat_out
 
     def load_models(self):
         D = {}
 
-        for key,dep in self.job.depend.items():
+        for key,dep in self.input.depend.items():
             print('loading', key)
 
             # Since it also has to depend on the galaxy catalogs.
@@ -123,19 +126,20 @@ class bcnz_comb_ext:
 
             best_model = dep.get_store()['best_model'] #.reset_index()
 
-            EBV = dep.f_mod.ab.config['EBV']
+            EBV = self.job.depend[key].model.ab.config['EBV']
+#            EBV = dep.f_mod.ab.config['EBV']
             D[EBV] = best_model
 
         return D
 
     def get_best_model(self, cat_in, D): #best_models):
-        F = pd.concat(D, names=['EBV']).reset_index().set_index(['gal', 'EBV'])
+        F = pd.concat(D, names=['EBV']).reset_index().set_index(['ref_id', 'EBV'])
 
-        tosel = cat_in.loc[cat_in.groupby('gal').chi2.idxmin()]
-        tosel = tosel.set_index(['gal', 'EBV'])
+        tosel = cat_in.loc[cat_in.groupby('ref_id').chi2.idxmin()]
+        tosel = tosel.set_index(['ref_id', 'EBV'])
 
         nbest = tosel[[]].join(F)
-        nbest = nbest.reset_index().set_index(['gal', 'band'])
+        nbest = nbest.reset_index().set_index(['ref_id', 'band'])
 
         return nbest
 
@@ -143,7 +147,7 @@ class bcnz_comb_ext:
         if not self.config['use_pz']:
             cat_in = self.load_catalogs()
             pzcat = self.combine_cat(cat_in)
-            pzcat = pzcat.set_index('gal')
+            pzcat = pzcat.set_index('ref_id')
         else:
             cat_in = self.load_catalogs()
             pdf_in = self.load_pdf()
@@ -155,7 +159,7 @@ class bcnz_comb_ext:
         best_model = self.get_best_model(cat_in, _models)
 
         print('here...')
-        path_out = self.job.empty_file('default')
+        path_out = self.output.empty_file('default')
         store = pd.HDFStore(path_out, 'w')
         store['default'] = pzcat
         store['best_model'] = best_model
