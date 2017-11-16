@@ -41,8 +41,8 @@ class bcnz_comb_pz:
               'width_frac': 0.01,
               'odds_lim': 0.01}
 
-    def get_pz(self, pzjob):
-        with pzjob.get_store() as store:
+    def get_pz(self, pzinput):
+        with pzinput.get_store() as store:
             pz = store['pz'].to_xarray().pz
             cat = store['default'].unstack()
 
@@ -75,8 +75,8 @@ class bcnz_comb_pz:
             pz_out[i] = splev(z_eval, spl, ext=1)
 
         print('time regridding', time.time() - t1)
-        coords = {'gal': pz_old.gal, 'z': z_highres}
-        pz_out = xr.DataArray(pz_out, dims=('gal','z'), coords=coords)
+        coords = {'ref_id': pz_old.ref_id, 'z': z_highres}
+        pz_out = xr.DataArray(pz_out, dims=('ref_id','z'), coords=coords)
 
         norm = pz_out.sum(dim='z')
         norm = norm[norm != 0]
@@ -91,7 +91,7 @@ class bcnz_comb_pz:
         pz_bb = self.regrid_pz(pz_bb, pz_nb.z)
 
         if self.config['use_chi2']:
-            cat_bb.index.name = 'gal'
+            cat_bb.index.name = 'ref_id'
 
             width = 0.001 # HACK..
             chi_bb = -2.*np.log(width*pz_bb+1e-100)
@@ -114,16 +114,19 @@ class bcnz_comb_pz:
         zb = pz.z[pz.argmax(dim='z')]
         pz /= pz.sum(dim='z')
 
-        cat = pd.DataFrame(index=pz.gal)
+        cat = pd.DataFrame(index=pz.ref_id)
         cat['zb'] = zb
+
+        pz = pz.rename({'ref_id': 'gal'})
         cat['pz_width'] = libpzqual.pz_width(pz, zb, self.config['width_frac'])
         cat['odds'] = libpzqual.odds(pz, zb, self.config['odds_lim'])
+        pz = pz.rename({'gal': 'ref_id'})
 
         return pz,cat
 
     def run(self):
-        pz_nb,cat_nb = self.get_pz(self.job.pzcat_nb)
-        pz_bb,cat_bb = self.get_pz(self.job.pzcat_bb)
+        pz_nb,cat_nb = self.get_pz(self.input.pzcat_nb)
+        pz_bb,cat_bb = self.get_pz(self.input.pzcat_bb)
 
         pz,cat = self.combine_pz(pz_nb, pz_bb, cat_nb, cat_bb)
-        self.job.result = cat
+        self.output.result = cat
