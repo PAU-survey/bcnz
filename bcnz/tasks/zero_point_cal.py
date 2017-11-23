@@ -9,6 +9,7 @@ from sklearn.neighbors import KDTree
 
 descr = {
   'cut_frac': 'Fraction removed using a photo-z cut',
+  'use_dist': 'If weighting the zero-points based on a distance',
   'Rmin': 'Cut in minimum value of R',
   'Rmax': 'Cut in maximum value of R',
   'median': 'If using the median instead of the mean',
@@ -21,8 +22,9 @@ class zero_point_cal:
 
     # One could divide this into two parts, one which is estimating the 
     # zero-points and another applying it.
-    version = 1.07
-    config = {'cut_frac': 0., 'Rmin': 0., 'Rmax': 10,
+    version = 1.08
+    config = {'cut_frac': 0.211, 'Rmin': 0., 'Rmax': 10,
+              'use_dist': False,  
               'weight': False, 'median': False,
               'Nneigh': 10,
               'bands': [],
@@ -33,8 +35,8 @@ class zero_point_cal:
     def check_config(self):
         assert self.config['bands'], 'Empty list of bands'
 
-    def get_zp(self, data, model, pzcat):
-        """Get the zero-points."""
+    def get_zp_dist(self, data, model, pzcat):
+        """Get the zero-points weighting on a distance."""
 
         flux = data.flux.stack().to_xarray()
         flux_err = data.flux_err.stack().to_xarray()
@@ -42,6 +44,8 @@ class zero_point_cal:
         # The photo-z outliers might have worse colors.
         odds_cut = pzcat.odds.quantile(self.config['cut_frac'])
         pzcat = pzcat[odds_cut < pzcat.odds]
+
+
         flux = flux.sel(ref_id=pzcat.index)
         flux_err = flux_err.sel(ref_id=pzcat.index)
 
@@ -72,6 +76,7 @@ class zero_point_cal:
         # catalog for training.
 
         dist, ind = tree.query(pred, k=N+1)
+
         ind = flux_train.ref_id[ind].values
 
         tmp = np.zeros((N,)+data.flux.shape)
@@ -86,6 +91,25 @@ class zero_point_cal:
              zp.mean(dim='i')
 
         return zp
+
+    def get_zp_uniform(self, data, model, pzcat):
+        flux = data['flux'].stack().to_xarray()
+        ratio = flux / model.sel(band=data.flux.columns)
+
+        odds_cut = pzcat.odds.quantile(self.config['cut_frac'])
+        pzcat = pzcat[odds_cut < pzcat.odds]
+        ratio = ratio.loc[pzcat.index]
+
+        zp = ratio.median(dim='ref_id')
+
+        return zp
+
+    def get_zp(self, data, model, pzcat):
+        f = self.get_zp_dist if self.config['use_dist'] else \
+            self.get_zp_uniform
+
+
+        return f(data, model, pzcat)
 
     def first_normalization(self, data, model):
 
@@ -115,12 +139,14 @@ class zero_point_cal:
 
         new_data = pd.concat({'flux': xflux, 'flux_err': xflux_err}, axis=1)
 
+
         return new_data
 
     def calibrate_flux(self, data, model, pzcat):
         if self.config['norm_first']:
             data = self.first_normalization(data, model)
-   
+  
+ 
         zp = self.get_zp(data, model, pzcat)
         flux = data.flux.stack().to_xarray()
 
@@ -130,11 +156,11 @@ class zero_point_cal:
         return data
 
     def run(self):
-        with self.job.model.get_store() as store:
+        with self.input.model.get_store() as store:
             model = store['best_model'].to_xarray().best_model
-            model = model.rename({'gal': 'ref_id'})
 
-        pzcat = self.job.model.result.unstack() # This is the photo-z job..
-        data = self.job.flux.result
 
-        self.job.result = self.calibrate_flux(data, model, pzcat)
+        pzcat = self.input.model.result
+        data = self.input.flux.result
+
+        self.output.result = self.calibrate_flux(data, model, pzcat)
