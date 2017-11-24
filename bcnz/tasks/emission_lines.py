@@ -65,7 +65,8 @@ class emission_lines:
     def ext_spl(self, ext):
         """Spline for the extinction."""
 
-        ext_spl = splrep(ext.lmb, ext[self.config['ext_law']])
+        sub = ext[ext.ext_law == self.config['ext_law']]
+        ext_spl = splrep(sub.lmb, sub.k)
 
         return ext_spl
 
