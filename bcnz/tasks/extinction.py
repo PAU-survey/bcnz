@@ -66,4 +66,5 @@ class extinction:
         return df
 
     def run(self):
+        raise NotImplementedError('The output should match extinction_lagaile..')
         self.job.result = self.get_k()
