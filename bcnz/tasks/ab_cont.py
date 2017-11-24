@@ -29,7 +29,7 @@ class ab_cont:
       'dz_ab': 0.001,
       'int_dz': 1.,
       'int_method': 'simps',
-      'ext_law': 'calzetti',
+      'ext_law': 'SB_calzetti',
       'EBV': 0.0
     }
 

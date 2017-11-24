@@ -24,7 +24,7 @@ class emission_lines:
     version = 1.056
 
     config = {'dz': 0.0005, 'ampl': 1e-16, 'EBV': 0.,
-              'ext_law': 'calzetti'}
+              'ext_law': 'SB_calzetti'}
 
     ratios = {
       'OII': 1.0,
