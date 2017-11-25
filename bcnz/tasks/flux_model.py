@@ -15,7 +15,6 @@ descr = {
   'zmax': 'Maximum redshift',
   'dz': 'Grid width in redshift',
   'use_lines': 'If including emission lines',
-  'use_ext': 'If including extinction',
   'sep_lines': 'Lines with separate model'
 }
 
@@ -30,7 +29,6 @@ class flux_model:
       'zmax': 2.0,
       'dz': 0.01,
       'use_lines': True,
-      'use_ext': False,
       'sep_lines': []
     }
 
@@ -162,13 +160,7 @@ class flux_model:
 
     def model(self, ab_cont, ab_lines):
 
-        if not self.config['use_ext']:
-            ab_cont = ab_cont[ab_cont.EBV == 0.]
-            ab_lines = ab_lines[ab_lines.EBV == 0.]
-
         C = self.config
-#        fL = C['filters']
-
         zgrid = np.arange(C['zmin'], C['zmax']+C['dz'], C['dz'])
         fmod_cont = self._model_array(ab_cont, zgrid, C['seds'])
 
