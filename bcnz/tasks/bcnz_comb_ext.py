@@ -25,11 +25,9 @@ class bcnz_comb_ext:
             if not key.startswith('pzcat_'):
                 continue
 
-            # A bit of a hack...
-            EBV = self.job.depend[key].model.ab.config['EBV']
-            D[EBV] = dep.result
+            D[key] = dep.result
 
-        cat_out = pd.concat(D, axis=0, names=['EBV']).reset_index()
+        cat_out = pd.concat(D, axis=0, names=['run']).reset_index()
 
         return cat_out
 
@@ -45,13 +43,14 @@ class bcnz_comb_ext:
                 continue
 
             part = dep.get_store()['pz'].reset_index()
-            EBV = self.job.depend[key].model.ab.config['EBV']
-            part['EBV'] = EBV
+#            EBV = self.job.depend[key].model.ab.config['EBV']
+#            part['EBV'] = EBV
+            part['run'] = key
 
             df = df.append(part, ignore_index=True)
 
         # This part will complain if the EBV is not unique among the runs...
-        pz = df.set_index(['ref_id', 'z', 'EBV']).to_xarray().pz    
+        pz = df.set_index(['ref_id', 'z', 'run']).to_xarray().pz    
 
         print('Finish loading pz..')
 
@@ -59,24 +58,24 @@ class bcnz_comb_ext:
 
 
     def combine_pz(self, pz_in, cat_in):
-        if self.config['flat_priors']:
-            priors = xr.DataArray(np.ones(len(pz_in.EBV)), dims=('EBV'))
-        else:
-            # COSMOS priors....
-            S = [(0.00, 31334), (0.10, 12927), (0.15, 12131), (0.20, 11778), (0.25, 11025), \
-                 (0.05, 10659), (0.30,  9055), (0.35,  6884), (0.40,  6067), (0.50,  5580)]
+#        if self.config['flat_priors']:
+#            priors = xr.DataArray(np.ones(len(pz_in.EBV)), dims=('EBV'))
+#        else:
+#            raise NotImplementedError('This is no longer working')
+#            # COSMOS priors....
+#            S = [(0.00, 31334), (0.10, 12927), (0.15, 12131), (0.20, 11778), (0.25, 11025), \
+#                 (0.05, 10659), (0.30,  9055), (0.35,  6884), (0.40,  6067), (0.50,  5580)]
+#
+#            E = pd.Series(dict(S), name='EBV').to_xarray()
+#            priors = E.rename({'index': 'EBV'})
+#
+#            # Priors from the catalogue itself...
+#            E = cat_in.loc[cat_in.groupby('ref_id').chi2.idxmin()].EBV.value_counts().to_xarray()
+#            priors = E.rename({'index': 'EBV'})
+#
+#        priors = priors / float(priors.sum())
 
-            E = pd.Series(dict(S), name='EBV').to_xarray()
-            priors = E.rename({'index': 'EBV'})
-
-            # Priors from the catalogue itself...
-            E = cat_in.loc[cat_in.groupby('ref_id').chi2.idxmin()].EBV.value_counts().to_xarray()
-            priors = E.rename({'index': 'EBV'})
-
-
-        priors = priors / float(priors.sum())
-
-        chi2_min = cat_in[['ref_id', 'EBV', 'chi2']].set_index(['ref_id', 'EBV']).to_xarray().chi2
+        chi2_min = cat_in[['ref_id', 'run', 'chi2']].set_index(['ref_id', 'run']).to_xarray().chi2
 
         pz = np.clip(pz_in, 1e-100, np.infty)
         chi2_in = -2.*np.log(pz)
@@ -84,11 +83,10 @@ class bcnz_comb_ext:
         chi2_tmp = chi2_in.min(dim=['z'])
         chi2 = chi2_in + (chi2_min - chi2_tmp)
 
-        pz_ebv = np.exp(-0.5*chi2)
+        pz_runs = np.exp(-0.5*chi2)
 
-#        pz_ebv = pz_ebv / pz_ebv.sum(dim='z')
-#        pz /= pz.sum(dim='')
-        pz = (pz_ebv*priors).sum(dim='EBV')
+#        pz = (pz_ebv*priors).sum(dim='EBV')
+        pz = (pz_runs).sum(dim='run')
 
         # Had 2 galaxies of 500 being Nan..
         pz[np.isnan(pz).all(axis=1)] = 1.
@@ -97,7 +95,6 @@ class bcnz_comb_ext:
 
         izmin = pz.argmax(dim='z')
         zb = pz.z[izmin]
-
 
         pzcat = pd.DataFrame(index=pz.ref_id)
         pz = pz.rename({'ref_id': 'gal'})
@@ -124,24 +121,21 @@ class bcnz_comb_ext:
             if not key.startswith('pzcat_'):
                 continue
 
-            best_model = dep.get_store()['best_model'] #.reset_index()
-
-            EBV = self.job.depend[key].model.ab.config['EBV']
-#            EBV = dep.f_mod.ab.config['EBV']
-            D[EBV] = best_model
+            best_model = dep.get_store()['best_model']
+            D[key] = best_model
 
         return D
 
-    def get_best_model(self, cat_in, D): #best_models):
-        F = pd.concat(D, names=['EBV']).reset_index().set_index(['ref_id', 'EBV'])
+    def get_best_model(self, cat_in, D):
+        F = pd.concat(D, names=['run']).reset_index()
 
         tosel = cat_in.loc[cat_in.groupby('ref_id').chi2.idxmin()]
-        tosel = tosel.set_index(['ref_id', 'EBV'])
 
-        nbest = tosel[[]].join(F)
-        nbest = nbest.reset_index().set_index(['ref_id', 'band'])
+        nbest = tosel[['run', 'ref_id']].merge(F, on=['run', 'ref_id'])
+        nbest = nbest.set_index(['ref_id', 'band'])
 
         return nbest
+
 
     def run(self):
         if not self.config['use_pz']:
