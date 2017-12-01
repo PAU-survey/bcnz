@@ -68,6 +68,8 @@ class flux_model:
         ab = ab.set_index(['band','sed', 'z', 'EBV'])
         f_mod = ab.to_xarray().flux
 
+#        ipdb.set_trace()
+
         f_mod = f_mod.sel(sed=seds)
         f_mod = f_mod.stack(model=['sed', 'EBV'])
 
