@@ -48,7 +48,7 @@ class bcnz_fit:
       'zmax': 2.0,
       'dz': 0.01,
       'odds_lim': 0.01,
-      'Niter': 200,
+      'Niter': 300,
       'line_weight': 2.,
       'chi2_algo': 'min',
       'use_ext': False,
@@ -251,13 +251,14 @@ class bcnz_fit:
 
     def fix_fmod_format(self, fmod_in):
         f_mod = fmod_in.to_xarray().f_mod
-        f_mod = f_mod.stack(model=['sed', 'EBV'])
+
+        model = ['sed', 'EBV'] if 'EBV' in f_mod.dims else ['sed']
+        f_mod = f_mod.stack(model=model)
 
         f_mod_full = f_mod
         f_mod = f_mod_full.sel(band=self.config['filters'])
 
         return f_mod, f_mod_full
-#        ipdb.set_trace()
 
     def run(self):
         self.check_conf()
