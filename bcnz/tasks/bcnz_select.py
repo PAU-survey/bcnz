@@ -4,14 +4,16 @@ import ipdb
 import numpy as np
 import pandas as pd
 
-descr = {'use_nondet': 'If including non-detections',
-         'SN_lim': 'Limit in the estimated SN'}
+descr = {'SN_lim': 'Limit in the estimated SN',
+         'min_err': 'Minimum error of the measurement',
+         'apply_mag': 'If applying the minimum error to magnitudes'}
 
 class bcnz_select:
     """Selecting a subset of the fluxes to use in the fitting."""
 
     version = 1.06
-    config = {'SN_lim': -100., 'SN_cap': 10000}
+    config = {'SN_lim': -100., 'min_err': 0.03,
+              'apply_mag': False}
 
     def limit_SN(self, cat):
         """Limit based on SN."""
@@ -21,21 +23,28 @@ class bcnz_select:
         SN_lim = self.config['SN_lim']
         cat['flux'] = cat['flux'][SN_lim < SN]
 
+        return cat
 
-        SN_cap = self.config['SN_cap']
-        new_SN = np.clip(SN, -np.infty, SN_cap)
-        cat['flux_err'] = cat.flux / new_SN
+    def add_minerr(self, cat):
+        """Add a minimum error in the flux measurements."""
+
+        if self.config['apply_mag']:
+            assert NotImplementedError('Not sure how todo this with negative magnitudes')
+        else:
+            add_err = cat['flux'] * self.config['min_err']
+            cat['flux_err'] = np.sqrt(cat['flux_err']**2 + add_err**2)
 
         return cat
 
-    def get_cat(self, cat):
+    def entry(self, cat):
         """Apply the different cuts."""
 
         cat = self.limit_SN(cat)
+        cat = self.add_minerr(cat)
 
         return cat
 
     def run(self):
         cat = self.input.input.result
 
-        self.output.result = self.get_cat(cat)
+        self.output.result = self.entry(cat)
