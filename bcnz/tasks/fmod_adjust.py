@@ -10,7 +10,7 @@ class fmod_adjust:
        entirely accurate.
     """
 
-    version = 1.01
+    version = 1.03
     config = {'norm_band': ''}
 
     def check_config(self):
@@ -53,12 +53,18 @@ class fmod_adjust:
         """Apply the previously estimated ratio to the model."""
 
         model.index = model.index.droplevel('EBV')
-        model = model.to_xarray()
+        model = model.to_xarray().f_mod
 
         ratio = ratio.drop(['band'], axis=1)
         ratio = ratio.set_index(['z', 'sed']).to_xarray().ratio
 
-        model = ratio*model
+        # The next line is dependent on a specific order.
+        assert model.dims[1] == 'band'
+        for i,band in enumerate(model.band):
+            if str(band.values).startswith('NB'):
+                continue
+
+            model[:,i,:] *= ratio
 
         return model
 
@@ -66,7 +72,7 @@ class fmod_adjust:
         ratio = self.ratio(coeff, model)
         model = self.apply_ratio(ratio, model)
 
-        model = model.f_mod.to_dataframe()
+        model = model.to_dataframe()
 
         return model
 
