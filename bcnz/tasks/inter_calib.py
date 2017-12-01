@@ -88,16 +88,6 @@ class inter_calib:
         return ratio, flux, flux_err
 
 
-    def get_model(self, model, zs):
-        """Get the model xarray."""
-
-        f_mod = model.to_xarray().f_mod
-        f_mod = f_mod.sel(z=zs.values, method='nearest')
-        f_mod = f_mod.sel(EBV=0.0)
-#        f_mod = f_mod.sel(band=self.config['fit_bands'])
-
-        return f_mod
-
     def set_min_err(self, flux, flux_err):
         """Set the minimum error before running."""
 
@@ -111,7 +101,6 @@ class inter_calib:
         return var_inv
 
     def minimize(self, f_mod, flux, var_inv):
-
         A = np.einsum('gf,gfs,gft->gst', var_inv, f_mod, f_mod)
         b = np.einsum('gf,gf,gfs->gs', var_inv, flux, f_mod)
 
@@ -237,6 +226,9 @@ class inter_calib:
             f_mod = f_mod.sel(band=fit_bands)
             if 'EBV' in f_mod.dims:
                 f_mod = f_mod.squeeze('EBV')
+
+            # Later the code depends on this order.
+            f_mod = f_mod.transpose('z', 'band', 'sed')
 
             f_modD[key] = f_mod
 
