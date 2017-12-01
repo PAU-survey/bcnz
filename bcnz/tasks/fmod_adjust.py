@@ -10,7 +10,7 @@ class fmod_adjust:
        entirely accurate.
     """
 
-    version = 1.0
+    version = 1.01
     config = {'norm_band': ''}
 
     def check_config(self):
@@ -54,7 +54,9 @@ class fmod_adjust:
 
         model.index = model.index.droplevel('EBV')
         model = model.to_xarray()
-        ratio = ratio.set_index(['z', 'band', 'sed']).to_xarray().ratio
+
+        ratio = ratio.drop(['band'], axis=1)
+        ratio = ratio.set_index(['z', 'sed']).to_xarray().ratio
 
         model = ratio*model
 
