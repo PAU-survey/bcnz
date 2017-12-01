@@ -69,7 +69,8 @@ class fmod_adjust:
         return model
 
     def run(self):
+        print('Running fmod_adjust')
         coeff = self.input.bbsyn_coeff.result
         model = self.input.model.result
 
-        self.entry(coeff, model)
+        self.output.result = self.entry(coeff, model)
