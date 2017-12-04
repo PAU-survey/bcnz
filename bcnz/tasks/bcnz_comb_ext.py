@@ -91,6 +91,7 @@ class bcnz_comb_ext:
     def to_chi2(self, pdf_in, cat_in):
         """Convert the input back to the chi2 values."""
 
+        pdf_in = pdf_in.to_xarray().pz
         chi2_min = cat_in.to_xarray().chi2
         pdf = np.clip(pdf_in, 1e-100, np.infty)
         chi2_in = -2.*np.log(pdf)
@@ -100,10 +101,31 @@ class bcnz_comb_ext:
 
         return chi2
 
-    def _pdf_iterator(self):
+    def _get_nz(self):
+        """Estimate the number of redshift bins to not split a galaxy into different
+           chunks.
+        """
 
+        sub = self.input.pzcat_0.get_store().select('pz', nrows=1e5)
+        gal_ids = sub.index.get_level_values(0).unique()
+
+        assert 1 < len(gal_ids), 'Internal error: loaded to few entries'
+
+        nz = len(sub.loc[gal_ids[0]])
+
+        return nz
+
+
+    def _chi2_iterator(self):
+        """Returns an iterator over the chi2 value for all the runs."""
+
+        # Part of the complication here comes from not directly storing the
+        # chi2 values.
         RD = {}
-        chunksize = 1000.
+
+        ngal = 500
+        nz = self._get_nz()
+        chunksize = nz * ngal
         for key,dep in self.input.depend.items():
             # Since it also has to depend on the galaxy catalogs.
             if not key.startswith('pzcat_'):
@@ -118,21 +140,60 @@ class bcnz_comb_ext:
         rd_keys = list(RD.keys())
         rd_keys.sort()
         while True:
-            part = {}
-
+            chi2L = []
             for key in rd_keys:         
+                print('Loading:', key)
+
                 pdf_in = next(RD[key]['pdf'])
                 cat_in = next(RD[key]['cat'])
 
-                part[key] = self.to_chi2(pdf_in, cat_in)
+                chi2_part = self.to_chi2(pdf_in, cat_in)
+                chi2_part['run'] = key
 
-            yield part
+                chi2L.append(chi2_part)
+            
+            chi2 = xr.concat(chi2L)
+            chi2 = xr.concat(chi2L, dim='run')
+
+            yield chi2
+
+    def pzcat_part(self, chi2):
+        pz_runs = np.exp(-0.5*chi2)
+        pz = (pz_runs).sum(dim='run')
+
+        # Had 2 galaxies of 500 being Nan..
+        pz[np.isnan(pz).all(axis=1)] = 1.
+        pz /= pz.sum(dim='z')
+        pz[np.isnan(pz).all(axis=1)] = 1./float(len(pz.z))
+
+        izmin = pz.argmax(dim='z')
+        zb = pz.z[izmin]
+
+        pzcat = pd.DataFrame(index=pz.ref_id)
+        pz = pz.rename({'ref_id': 'gal'})
+        pzcat['odds'] = libpzqual.odds(pz, zb, self.config['odds_lim'])
+        pzcat['pz_width'] = libpzqual.pz_width(pz, zb, self.config['width_frac'])
+        pzcat['zb'] = zb
+
+        return pzcat
+
+    def store_out(self):
+        """Create the output store."""
+
+        path = self.output.empty_file('default')
+        store = pd.HDFStore(path, 'w')
+
+        return store
 
     def combine_pdf(self):
-        R = self._pdf_iterator()
+        Rin = self._chi2_iterator()
+        store_out = self.store_out()
 
-        for X in R:
-            ipdb.set_trace()
+        for chi2 in Rin:
+            pzcat = self.pzcat_part(chi2)
+            store_out.append('default', pzcat)
+
+        return pzcat
 
     def combine_cat(self, cat_in):
 
