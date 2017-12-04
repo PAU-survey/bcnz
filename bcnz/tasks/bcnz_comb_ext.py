@@ -87,6 +87,19 @@ class bcnz_comb_ext:
 
         return pzcat
 
+
+    def to_chi2(self, pdf_in, cat_in):
+        """Convert the input back to the chi2 values."""
+
+        chi2_min = cat_in.to_xarray().chi2
+        pdf = np.clip(pdf_in, 1e-100, np.infty)
+        chi2_in = -2.*np.log(pdf)
+
+        chi2_tmp = chi2_in.min(dim=['z'])
+        chi2 = chi2_in + (chi2_min - chi2_tmp)
+
+        return chi2
+
     def _pdf_iterator(self):
 
         RD = {}
@@ -97,10 +110,10 @@ class bcnz_comb_ext:
                 continue
 
             store = dep.get_store()
-            Rcat = store.select('default', iterator=True, chunksize=chunksize)
             Rpdf = store.select('pz', iterator=True, chunksize=chunksize)
+            Rcat = store.select('default', iterator=True, chunksize=chunksize)
 
-            RD[key] = {'cat': iter(Rcat), 'pdf': iter(Rpdf)}
+            RD[key] = {'pdf': iter(Rpdf), 'cat': iter(Rcat)}
 
         rd_keys = list(RD.keys())
         rd_keys.sort()
@@ -108,18 +121,18 @@ class bcnz_comb_ext:
             part = {}
 
             for key in rd_keys:         
-                cat = next(RD[key]['cat'])
-                pdf = next(RD[key]['pdf'])
+                pdf_in = next(RD[key]['pdf'])
+                cat_in = next(RD[key]['cat'])
 
-                part[key] = (cat, pdf)
+                part[key] = self.to_chi2(pdf_in, cat_in)
 
             yield part
 
     def combine_pdf(self):
         R = self._pdf_iterator()
 
-
-        ipdb.set_trace()
+        for X in R:
+            ipdb.set_trace()
 
     def combine_cat(self, cat_in):
 
