@@ -58,23 +58,6 @@ class bcnz_comb_ext:
 
 
     def combine_pz(self, pz_in, cat_in):
-#        if self.config['flat_priors']:
-#            priors = xr.DataArray(np.ones(len(pz_in.EBV)), dims=('EBV'))
-#        else:
-#            raise NotImplementedError('This is no longer working')
-#            # COSMOS priors....
-#            S = [(0.00, 31334), (0.10, 12927), (0.15, 12131), (0.20, 11778), (0.25, 11025), \
-#                 (0.05, 10659), (0.30,  9055), (0.35,  6884), (0.40,  6067), (0.50,  5580)]
-#
-#            E = pd.Series(dict(S), name='EBV').to_xarray()
-#            priors = E.rename({'index': 'EBV'})
-#
-#            # Priors from the catalogue itself...
-#            E = cat_in.loc[cat_in.groupby('ref_id').chi2.idxmin()].EBV.value_counts().to_xarray()
-#            priors = E.rename({'index': 'EBV'})
-#
-#        priors = priors / float(priors.sum())
-
         chi2_min = cat_in[['ref_id', 'run', 'chi2']].set_index(['ref_id', 'run']).to_xarray().chi2
 
         pz = np.clip(pz_in, 1e-100, np.infty)
@@ -104,6 +87,39 @@ class bcnz_comb_ext:
 
         return pzcat
 
+    def _pdf_iterator(self):
+
+        RD = {}
+        chunksize = 1000.
+        for key,dep in self.input.depend.items():
+            # Since it also has to depend on the galaxy catalogs.
+            if not key.startswith('pzcat_'):
+                continue
+
+            store = dep.get_store()
+            Rcat = store.select('default', iterator=True, chunksize=chunksize)
+            Rpdf = store.select('pz', iterator=True, chunksize=chunksize)
+
+            RD[key] = {'cat': iter(Rcat), 'pdf': iter(Rpdf)}
+
+        rd_keys = list(RD.keys())
+        rd_keys.sort()
+        while True:
+            part = {}
+
+            for key in rd_keys:         
+                cat = next(RD[key]['cat'])
+                pdf = next(RD[key]['pdf'])
+
+                part[key] = (cat, pdf)
+
+            yield part
+
+    def combine_pdf(self):
+        R = self._pdf_iterator()
+
+
+        ipdb.set_trace()
 
     def combine_cat(self, cat_in):
 
@@ -143,9 +159,9 @@ class bcnz_comb_ext:
             pzcat = self.combine_cat(cat_in)
             pzcat = pzcat.set_index('ref_id')
         else:
-            cat_in = self.load_catalogs()
-            pdf_in = self.load_pdf()
-            pzcat = self.combine_pz(pdf_in, cat_in)
+#            cat_in = self.load_catalogs()
+#            pdf_in = self.load_pdf()
+            pzcat = self.combine_pdf()
 
 
         # Estimate best model..
