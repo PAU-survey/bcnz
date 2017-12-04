@@ -14,7 +14,9 @@ sys.path.append('/home/eriksen/source/bcnz/bcnz/tasks')
 import libpzqual
 
 class bcnz_comb_ext:
-    version = 1.16
+    """Combine the different extinction runs."""
+
+    version = 1.18
     config = {'use_pz': False, 'flat_priors': True,
               'odds_lim': 0.01, 'width_frac': 0.01}
 
@@ -133,7 +135,7 @@ class bcnz_comb_ext:
 
             store = dep.get_store()
             Rpdf = store.select('pz', iterator=True, chunksize=chunksize)
-            Rcat = store.select('default', iterator=True, chunksize=chunksize)
+            Rcat = store.select('default', iterator=True, chunksize=ngal)
 
             RD[key] = {'pdf': iter(Rpdf), 'cat': iter(Rcat)}
 
@@ -229,22 +231,23 @@ class bcnz_comb_ext:
 
     def run(self):
         if not self.config['use_pz']:
+            raise NotImplementedError('This is no longer in use..')
             cat_in = self.load_catalogs()
             pzcat = self.combine_cat(cat_in)
             pzcat = pzcat.set_index('ref_id')
         else:
 #            cat_in = self.load_catalogs()
 #            pdf_in = self.load_pdf()
-            pzcat = self.combine_pdf()
+            self.combine_pdf()
 
 
         # Estimate best model..
-        _models = self.load_models()
-        best_model = self.get_best_model(cat_in, _models)
+#        _models = self.load_models()
+#        best_model = self.get_best_model(cat_in, _models)
 
         print('here...')
-        path_out = self.output.empty_file('default')
-        store = pd.HDFStore(path_out, 'w')
-        store['default'] = pzcat
-        store['best_model'] = best_model
-        store.close()
+#        path_out = self.output.empty_file('default')
+#        store = pd.HDFStore(path_out, 'w')
+#        store['default'] = pzcat
+#        store['best_model'] = best_model
+#        store.close()
