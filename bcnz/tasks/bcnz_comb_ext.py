@@ -20,7 +20,7 @@ import libpzqual
 class bcnz_comb_ext:
     """Combine the different extinction runs."""
 
-    version = 1.21
+    version = 1.22
     config = {'use_pz': False, 'flat_priors': True,
               'odds_lim': 0.01, 'width_frac': 0.01,
               'Niter': 1}
@@ -212,13 +212,13 @@ class bcnz_comb_ext:
     def combine_pdf(self):
         priors = self.init_priors()
 
-        Rin = self._chi2_iterator()
         store_out = self.store_out()
 
         Lpriors = []
 
         Niter = self.config['Niter']
         for i in range(Niter):
+            Rin = self._chi2_iterator()
             for j,chi2 in enumerate(Rin):
                 pzcat, priors = self.pzcat_part(chi2, priors)
                 Lpriors.append(priors)
