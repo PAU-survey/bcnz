@@ -7,7 +7,11 @@ import pandas as pd
 import xarray as xr
 
 descr = {'use_pz': 'Combine the result using the full pdf',
-         'flat_priors': True}
+         'flat_priors': True,
+         'odds_lim': 'The limit withing to estimate the ODDS',
+         'width_frac': 'Fraction (one-sided) outside pz_width',
+         'Niter': 'Number of iteratios when estimating the priors'
+        }
 
 import sys
 sys.path.append('/home/eriksen/source/bcnz/bcnz/tasks')
@@ -16,9 +20,10 @@ import libpzqual
 class bcnz_comb_ext:
     """Combine the different extinction runs."""
 
-    version = 1.18
+    version = 1.19
     config = {'use_pz': False, 'flat_priors': True,
-              'odds_lim': 0.01, 'width_frac': 0.01}
+              'odds_lim': 0.01, 'width_frac': 0.01,
+              'Niter': 1}
 
     def load_catalogs(self):
         D = {}
@@ -159,9 +164,9 @@ class bcnz_comb_ext:
 
             yield chi2
 
-    def pzcat_part(self, chi2):
+    def pzcat_part(self, chi2, priors):
         pz_runs = np.exp(-0.5*chi2)
-        pz = (pz_runs).sum(dim='run')
+        pz = (pz_runs*priors).sum(dim='run')
 
         # Had 2 galaxies of 500 being Nan..
         pz[np.isnan(pz).all(axis=1)] = 1.
@@ -177,7 +182,15 @@ class bcnz_comb_ext:
         pzcat['pz_width'] = libpzqual.pz_width(pz, zb, self.config['width_frac'])
         pzcat['zb'] = zb
 
-        return pzcat
+
+        # And then trying to get priors...
+        A = pz_runs.isel_points(ref_id=range(len(izmin)), z=izmin)
+        A = A / A.sum(dim='run')
+
+        priors = A.sum(dim='points')
+
+        return pzcat, priors
+
 
     def store_out(self):
         """Create the output store."""
@@ -187,13 +200,44 @@ class bcnz_comb_ext:
 
         return store
 
+    def init_priors(self):
+        """Setting up the initial flat priors."""
+
+        runs = list(filter(lambda x: x.startswith('pzcat_'), self.input.depend.keys()))
+        priors = xr.DataArray(np.ones(len(runs)), dims='run', coords={'run': runs})
+
+        return priors
+
+
     def combine_pdf(self):
-        Rin = self._chi2_iterator()
+        priors = self.init_priors()
+
+        Rin, runs = self._chi2_iterator()
         store_out = self.store_out()
 
-        for chi2 in Rin:
-            pzcat = self.pzcat_part(chi2)
-            store_out.append('default', pzcat)
+        Lpriors = []
+
+        Niter = self.config['Niter']
+        for i in range(Niter):
+            for j,chi2 in enumerate(Rin):
+                pzcat, priors = self.pzcat_part(chi2, priors)
+                Lpriors.append(priors)
+
+                if i == Niter - 1:
+                    store_out.append('default', pzcat)
+
+                if j == 2:
+                    break
+
+            priors = sum(Lpriors)
+            priors /= priors.sum()
+
+            print('priors')
+            print(priors)
+
+
+            ipdb.set_trace()
+
 
         return pzcat
 
