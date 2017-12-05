@@ -20,7 +20,7 @@ import libpzqual
 class bcnz_comb_ext:
     """Combine the different extinction runs."""
 
-    version = 1.19
+    version = 1.21
     config = {'use_pz': False, 'flat_priors': True,
               'odds_lim': 0.01, 'width_frac': 0.01,
               'Niter': 1}
@@ -159,7 +159,6 @@ class bcnz_comb_ext:
 
                 chi2L.append(chi2_part)
             
-            chi2 = xr.concat(chi2L)
             chi2 = xr.concat(chi2L, dim='run')
 
             yield chi2
@@ -205,6 +204,7 @@ class bcnz_comb_ext:
 
         runs = list(filter(lambda x: x.startswith('pzcat_'), self.input.depend.keys()))
         priors = xr.DataArray(np.ones(len(runs)), dims='run', coords={'run': runs})
+        priors = priors / priors.sum()
 
         return priors
 
@@ -212,7 +212,7 @@ class bcnz_comb_ext:
     def combine_pdf(self):
         priors = self.init_priors()
 
-        Rin, runs = self._chi2_iterator()
+        Rin = self._chi2_iterator()
         store_out = self.store_out()
 
         Lpriors = []
@@ -226,18 +226,11 @@ class bcnz_comb_ext:
                 if i == Niter - 1:
                     store_out.append('default', pzcat)
 
-                if j == 2:
-                    break
-
             priors = sum(Lpriors)
             priors /= priors.sum()
 
             print('priors')
             print(priors)
-
-
-            ipdb.set_trace()
-
 
         return pzcat
 
