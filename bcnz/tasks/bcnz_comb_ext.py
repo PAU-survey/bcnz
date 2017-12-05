@@ -2,6 +2,7 @@
 # encoding: UTF8
 
 import ipdb
+import time
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -20,10 +21,13 @@ import libpzqual
 class bcnz_comb_ext:
     """Combine the different extinction runs."""
 
-    version = 1.22
+    version = 1.23
     config = {'use_pz': False, 'flat_priors': True,
               'odds_lim': 0.01, 'width_frac': 0.01,
               'Niter': 1}
+
+    # Lower this value to save memory.
+    ngal = 500
 
     def load_catalogs(self):
         D = {}
@@ -50,8 +54,6 @@ class bcnz_comb_ext:
                 continue
 
             part = dep.get_store()['pz'].reset_index()
-#            EBV = self.job.depend[key].model.ab.config['EBV']
-#            part['EBV'] = EBV
             part['run'] = key
 
             df = df.append(part, ignore_index=True)
@@ -108,21 +110,6 @@ class bcnz_comb_ext:
 
         return chi2
 
-    def _get_nz(self):
-        """Estimate the number of redshift bins to not split a galaxy into different
-           chunks.
-        """
-
-        sub = self.input.pzcat_0.get_store().select('pz', nrows=1e5)
-        gal_ids = sub.index.get_level_values(0).unique()
-
-        assert 1 < len(gal_ids), 'Internal error: loaded to few entries'
-
-        nz = len(sub.loc[gal_ids[0]])
-
-        return nz
-
-
     def _chi2_iterator(self):
         """Returns an iterator over the chi2 value for all the runs."""
 
@@ -131,7 +118,7 @@ class bcnz_comb_ext:
         RD = {}
 
         ngal = 500
-        nz = self._get_nz()
+        nz = len(self._get_zbins())
         chunksize = nz * ngal
         for key,dep in self.input.depend.items():
             # Since it also has to depend on the galaxy catalogs.
@@ -147,6 +134,7 @@ class bcnz_comb_ext:
         rd_keys = list(RD.keys())
         rd_keys.sort()
         while True:
+            t1 = time.time()
             chi2L = []
             for key in rd_keys:         
                 print('Loading:', key)
@@ -161,7 +149,72 @@ class bcnz_comb_ext:
             
             chi2 = xr.concat(chi2L, dim='run')
 
+            print('time', time.time() - t1)
             yield chi2
+
+
+    def _get_zbins(self):
+        """Get the redshift binning used."""
+
+        sub = self.input.pzcat_0.get_store().select('pz', nrows=1e5)
+        gal_ids = sub.index.get_level_values(0).unique()
+
+        assert 1 < len(gal_ids), 'Internal error: loaded to few entries'
+
+        z = sub.to_xarray().z
+
+        return z
+
+#    def _chi2_iterator(self):
+#        """Returns an iterator over the chi2 value for all the runs."""
+#
+#        # Part of the complication here comes from not directly storing the
+#        # chi2 values.
+#        RD = {}
+#
+#        z = self._get_zbins()
+#        chunksize = len(z) * self.ngal
+#        for key,dep in self.input.depend.items():
+#            # Since it also has to depend on the galaxy catalogs.
+#            if not key.startswith('pzcat_'):
+#                continue
+#
+#            store = dep.get_store()
+#            Rpdf = store.select('pz', iterator=True, chunksize=chunksize)
+#            Rcat = store.select('default', iterator=True, chunksize=self.ngal)
+#
+#            RD[key] = {'pdf': iter(Rpdf), 'cat': iter(Rcat)}
+#
+#
+#        rd_keys = list(RD.keys())
+#        rd_keys.sort()
+#
+#
+#        while True:
+#            t1 = time.time()
+#            chi2 = np.zeros((len(rd_keys), self.ngal, len(z)))
+#            chi2 = xr.DataArray(chi2, dims=('run', 'ref_id', 'z'))
+#            chi2.coords['run'] = rd_keys
+#            chi2.coords['z'] = z
+#
+#            for i,key in enumerate(rd_keys):
+#                print('Loading:', key)
+#
+#                pdf_in = next(RD[key]['pdf'])
+#                cat_in = next(RD[key]['cat'])
+#                chi2[i] = self.to_chi2(pdf_in, cat_in)
+#                
+##                chi2_part['run'] = key
+##                ipdb.set_trace()
+##                chi2L.append(chi2_part)
+#
+#            chi2.coords['ref_id'] = cat_in.index            
+#
+##            ipdb.set_trace()
+##            chi2 = xr.concat(chi2L, dim='run')
+#            print('Time loading', time.time() - t1)
+#            yield chi2
+
 
     def pzcat_part(self, chi2, priors):
         pz_runs = np.exp(-0.5*chi2)
