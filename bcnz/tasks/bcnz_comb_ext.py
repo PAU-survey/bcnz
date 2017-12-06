@@ -27,7 +27,7 @@ class bcnz_comb_ext:
               'Niter': 1}
 
     # Lower this value to save memory.
-    ngal = 500
+    ngal = 300
 
     def load_catalogs(self):
         D = {}
@@ -110,48 +110,6 @@ class bcnz_comb_ext:
 
         return chi2
 
-    def _chi2_iterator(self):
-        """Returns an iterator over the chi2 value for all the runs."""
-
-        # Part of the complication here comes from not directly storing the
-        # chi2 values.
-        RD = {}
-
-        ngal = 500
-        nz = len(self._get_zbins())
-        chunksize = nz * ngal
-        for key,dep in self.input.depend.items():
-            # Since it also has to depend on the galaxy catalogs.
-            if not key.startswith('pzcat_'):
-                continue
-
-            store = dep.get_store()
-            Rpdf = store.select('pz', iterator=True, chunksize=chunksize)
-            Rcat = store.select('default', iterator=True, chunksize=ngal)
-
-            RD[key] = {'pdf': iter(Rpdf), 'cat': iter(Rcat)}
-
-        rd_keys = list(RD.keys())
-        rd_keys.sort()
-        while True:
-            t1 = time.time()
-            chi2L = []
-            for key in rd_keys:         
-                print('Loading:', key)
-
-                pdf_in = next(RD[key]['pdf'])
-                cat_in = next(RD[key]['cat'])
-
-                chi2_part = self.to_chi2(pdf_in, cat_in)
-                chi2_part['run'] = key
-
-                chi2L.append(chi2_part)
-            
-            chi2 = xr.concat(chi2L, dim='run')
-
-            print('time', time.time() - t1)
-            yield chi2
-
 
     def _get_zbins(self):
         """Get the redshift binning used."""
@@ -165,56 +123,46 @@ class bcnz_comb_ext:
 
         return z
 
-#    def _chi2_iterator(self):
-#        """Returns an iterator over the chi2 value for all the runs."""
-#
-#        # Part of the complication here comes from not directly storing the
-#        # chi2 values.
-#        RD = {}
-#
-#        z = self._get_zbins()
-#        chunksize = len(z) * self.ngal
-#        for key,dep in self.input.depend.items():
-#            # Since it also has to depend on the galaxy catalogs.
-#            if not key.startswith('pzcat_'):
-#                continue
-#
-#            store = dep.get_store()
-#            Rpdf = store.select('pz', iterator=True, chunksize=chunksize)
-#            Rcat = store.select('default', iterator=True, chunksize=self.ngal)
-#
-#            RD[key] = {'pdf': iter(Rpdf), 'cat': iter(Rcat)}
-#
-#
-#        rd_keys = list(RD.keys())
-#        rd_keys.sort()
-#
-#
-#        while True:
-#            t1 = time.time()
-#            chi2 = np.zeros((len(rd_keys), self.ngal, len(z)))
-#            chi2 = xr.DataArray(chi2, dims=('run', 'ref_id', 'z'))
-#            chi2.coords['run'] = rd_keys
-#            chi2.coords['z'] = z
-#
-#            for i,key in enumerate(rd_keys):
-#                print('Loading:', key)
-#
-#                pdf_in = next(RD[key]['pdf'])
-#                cat_in = next(RD[key]['cat'])
-#                chi2[i] = self.to_chi2(pdf_in, cat_in)
-#                
-##                chi2_part['run'] = key
-##                ipdb.set_trace()
-##                chi2L.append(chi2_part)
-#
-#            chi2.coords['ref_id'] = cat_in.index            
-#
-##            ipdb.set_trace()
-##            chi2 = xr.concat(chi2L, dim='run')
-#            print('Time loading', time.time() - t1)
-#            yield chi2
+    def _chi2_iterator(self):
+        """Returns an iterator over the chi2 value for all the runs."""
 
+        # Part of the complication here comes from not directly storing the
+        # chi2 values.
+        RD = {}
+
+        nz = len(self._get_zbins())
+        chunksize = nz * self.ngal
+        for key,dep in self.input.depend.items():
+            # Since it also has to depend on the galaxy catalogs.
+            if not key.startswith('pzcat_'):
+                continue
+
+            store = dep.get_store()
+            Rpdf = store.select('pz', iterator=True, chunksize=chunksize)
+            Rcat = store.select('default', iterator=True, chunksize=self.ngal)
+
+            RD[key] = {'pdf': iter(Rpdf), 'cat': iter(Rcat)}
+
+        rd_keys = list(RD.keys())
+        rd_keys.sort()
+        while True:
+            # Storing directly in a large dataarray saved 10% of the runtime,
+            # was potentially dangerous since it had implicit assumptions on
+            # the input data.
+            chi2L = []
+            for key in rd_keys:         
+                print('Loading:', key)
+
+                pdf_in = next(RD[key]['pdf'])
+                cat_in = next(RD[key]['cat'])
+                chi2_part = self.to_chi2(pdf_in, cat_in)
+                chi2_part['run'] = key
+
+                chi2L.append(chi2_part)
+            
+            chi2 = xr.concat(chi2L, dim='run')
+
+            yield chi2
 
     def pzcat_part(self, chi2, priors):
         pz_runs = np.exp(-0.5*chi2)
@@ -273,15 +221,16 @@ class bcnz_comb_ext:
         for i in range(Niter):
             Rin = self._chi2_iterator()
             for j,chi2 in enumerate(Rin):
-                pzcat, priors = self.pzcat_part(chi2, priors)
-                Lpriors.append(priors)
+                pzcat, prior_part = self.pzcat_part(chi2, priors)
+                Lpriors.append(prior_part)
 
                 if i == Niter - 1:
                     store_out.append('default', pzcat)
 
-            priors = sum(Lpriors)
-            priors /= priors.sum()
+            npriors = sum(Lpriors)
+            npriors /= npriors.sum()
 
+            priors = npriors
             print('priors')
             print(priors)
 
