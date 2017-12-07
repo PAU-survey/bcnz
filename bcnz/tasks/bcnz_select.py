@@ -11,7 +11,7 @@ descr = {'SN_lim': 'Limit in the estimated SN',
 class bcnz_select:
     """Selecting a subset of the fluxes to use in the fitting."""
 
-    version = 1.06
+    version = 1.09
     config = {'SN_lim': -100., 'min_err': 0.03,
               'apply_mag': False}
 
@@ -30,9 +30,17 @@ class bcnz_select:
 
         if self.config['apply_mag']:
             assert NotImplementedError('Not sure how todo this with negative magnitudes')
-        else:
-            add_err = cat['flux'] * self.config['min_err']
-            cat['flux_err'] = np.sqrt(cat['flux_err']**2 + add_err**2)
+#        else:
+
+        # Adding the error only to the narrow-band. The broad bands already has
+        # a minimum error in the input.
+        for band in cat.flux.columns:
+            if not band.startswith('NB'):
+                continue
+
+            print(band)
+            add_err = cat['flux', band] * self.config['min_err']
+            cat['flux_err', band] = np.sqrt(cat['flux_err', band]**2 + add_err**2)
 
         return cat
 
