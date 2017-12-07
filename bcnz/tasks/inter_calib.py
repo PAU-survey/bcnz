@@ -17,21 +17,19 @@ descr = {
   'Niter': 'Number of iterations in minimization',
   'SN_cap': 'Minimum signal-to-noise',
   'min_method': 'How to use the syntetic broad bands',
-  'norm_readjust': 'If readjusting the normalizing of each band using the model',
   'zp_type': 'How to estimate the zero-points'
 }
 
 class inter_calib:
     """First step of the calibration.."""
 
-    version = 1.14
+    version = 1.15
     config = {'bb_norm': 'cfht_r',
               'fit_bands': [],
               'Nrounds': 5,
               'Niter': 1000,
               'SN_cap': 50,
               'min_method': 'simple',
-              'norm_readjust': True,
               'zp_type': 'median'}
 
     def check_config(self):
@@ -120,7 +118,7 @@ class inter_calib:
 
         chi2 = var_inv*(flux - F)**2
 
-        return chi2, F #norm
+        return chi2, F
 
     def calc_zp(self, flux, var_inv, best_flux):
         # This is not expected to be optimal... To be improved!!
@@ -199,15 +197,6 @@ class inter_calib:
             flux = flux*zp
             flux_err = flux_err*zp
 
-            if self.config['norm_readjust']:
-                # For some galaxies we don't have this band...
-                ratio_adjust = best_flux.sel(band=bb_norm).values / flux.sel(band=bb_norm)
-                ratio_adjust = ratio_adjust.drop('band')
-
-                ratio_adjust[np.isinf(ratio_adjust)] = 1.
-                flux *= ratio_adjust
-                flux_err *= ratio_adjust
-
         return flux, flux_err, zp_tot
 
     def get_model(self, zs):
@@ -241,6 +230,7 @@ class inter_calib:
         modelD = self.get_model(zs)
 
         ratio, flux, flux_err = self.fix_to_synbb(coeff, galcat)
+
         xflux, xflux_err, zp = self.zero_points(modelD, flux, flux_err)
 
         # Combines the two xarrays into a single sparse dataframe. *not* nice.
