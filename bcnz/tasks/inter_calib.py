@@ -113,7 +113,8 @@ class inter_calib:
     def calc_zp(self, best_flux, flux, flux_err):
         """Estimate the zero-point."""
 
-        # This is not expected to be optimal... To be improved!!
+        err_inv = 1. / flux_err
+#        err_inv = err_inv.fillna(0.0)
 
         # Note: This should be written properly....
         if self.config['zp_type'] == 'ratio':
@@ -123,17 +124,21 @@ class inter_calib:
         elif self.config['zp_type'] == 'median':
             from scipy.optimize import minimize
 #            def cost(R, err_inv, flux, model):
-            def cost(R, model, flux, flux_err):
-                return np.abs(np.median((flux*R[0] - model) / flux_err))
+            def cost(R, model, flux, err_inv):
+                return np.abs(np.median(err_inv*(flux*R[0] - model)))
 
             t1 = time.time()
             # And another test for getting the median...
             zp = np.ones(len(flux.band))
             for i,band in enumerate(flux.band):
-                args = (best_flux.sel(band=band).values, flux.sel(band=band).values, \
-                        flux_err.sel(band=band).values)
+                A = (best_flux.sel(band=band).values, flux.sel(band=band).values, \
+                     err_inv.sel(band=band).values)
 
-                X = minimize(cost, 1., args=args)
+                X = minimize(cost, 1., args=A)
+
+                ipdb.set_trace()
+
+
                 zp[i] = X.x
 
             print(time.time() - t1)
