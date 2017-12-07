@@ -7,6 +7,7 @@ import time
 import numpy as np
 import pandas as pd
 import xarray as xr
+from scipy.optimize import minimize
 
 from matplotlib import pyplot as plt
 
@@ -85,11 +86,13 @@ class inter_calib:
     def minimize(self, f_mod, flux, flux_err):
         """Minimize the model difference at a specific redshift."""
 
+        # Otherwise we will get nans in the result.
         var_inv = 1./flux_err**2
         var_inv = var_inv.fillna(0.)
+        xflux = flux.fillna(0.)
 
         A = np.einsum('gf,gfs,gft->gst', var_inv, f_mod, f_mod)
-        b = np.einsum('gf,gf,gfs->gs', var_inv, flux, f_mod)
+        b = np.einsum('gf,gf,gfs->gs', var_inv, xflux, f_mod)
 
         v = np.ones_like(b)
         t1 = time.time()
@@ -122,22 +125,18 @@ class inter_calib:
             R[np.isinf(R)] = 0.
             zp = np.median(R, axis=0)
         elif self.config['zp_type'] == 'median':
-            from scipy.optimize import minimize
-#            def cost(R, err_inv, flux, model):
             def cost(R, model, flux, err_inv):
-                return np.abs(np.median(err_inv*(flux*R[0] - model)))
+                return float(np.abs((err_inv*(flux*R[0] - model)).median()))
 
             t1 = time.time()
             # And another test for getting the median...
             zp = np.ones(len(flux.band))
             for i,band in enumerate(flux.band):
-                A = (best_flux.sel(band=band).values, flux.sel(band=band).values, \
-                     err_inv.sel(band=band).values)
+                A = (best_flux.sel(band=band), flux.sel(band=band), \
+                     err_inv.sel(band=band))
 
                 X = minimize(cost, 1., args=A)
-
-                ipdb.set_trace()
-
+                #assert not isinstance(X.x, np.nan), 'Internal error: found nan'
 
                 zp[i] = X.x
 
@@ -153,7 +152,7 @@ class inter_calib:
 
         fit_bands = self.config['fit_bands']
         flux = flux.sel(band=fit_bands)
-        flux = flux.fillna(0.)
+#        flux = flux.fillna(0.)
         flux_err = flux_err.sel(band=fit_bands)
 
         model_parts = list(modelD.keys())
@@ -194,8 +193,10 @@ class inter_calib:
             flux = flux*zp
             flux_err = flux_err*zp
 
-        # These was earlier nan-values, but was replaced.
-        flux.values = np.where(flux==0, np.nan, flux)
+#        # These was earlier nan-values, but was replaced.
+#        flux.values = np.where(flux==0, np.nan, flux)
+
+        ipdb.set_trace()
 
         return flux, flux_err, zp_tot
 
