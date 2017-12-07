@@ -193,11 +193,6 @@ class inter_calib:
             flux = flux*zp
             flux_err = flux_err*zp
 
-#        # These was earlier nan-values, but was replaced.
-#        flux.values = np.where(flux==0, np.nan, flux)
-
-        ipdb.set_trace()
-
         return flux, flux_err, zp_tot
 
     def get_model(self, zs):
