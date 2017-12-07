@@ -21,7 +21,7 @@ import libpzqual
 class bcnz_comb_ext:
     """Combine the different extinction runs."""
 
-    version = 1.25
+    version = 1.27
     config = {'use_pz': False, 'flat_priors': True,
               'odds_lim': 0.01, 'width_frac': 0.01,
               'Niter': 1}
@@ -162,80 +162,79 @@ class bcnz_comb_ext:
 
             yield chi2
 
-    def pzcat_part(self, chi2, priors):
-        pz_runs = np.exp(-0.5*chi2) * priors
-        pz_runs /= pz_runs.sum(dim=['run','z'])
-
-        # The xarray does not have support for 2D argmax (xarray/issues/60).
-        pzcat = pd.DataFrame()
-        t1 = time.time()
-        for i,ref_id in enumerate(pz_runs.ref_id):
-            # TODO: Figure out why some objects gives really strange
-            # results.
-            sub = pz_runs[:,i,:]
-            if np.isnan(sub).all():
-                continue
-
-            W = sub.where(sub == sub.max(), drop=True)
-
-            if 1 != len(W.z):
-                ipdb.set_trace()
-
-            S = pd.Series()
-            S['ref_id'] = int(ref_id)
-            S['zb'] = float(W.z)
-            S['run'] = W.run.values[0]
-            pzcat = pzcat.append(S, ignore_index=True)
-       
- 
-        print('time', time.time()-t1)
-
-        pz = pz_runs.sel_points(ref_id=pzcat.ref_id.values, run=pzcat.run.values)
-        pz /= pz.sum(dim='z')
-
-        pz = pz.rename({'points': 'gal'})
-        pz.coords['gal'] = pz.ref_id
-        pzcat['odds'] = libpzqual.odds(pz, pzcat.zb, self.config['odds_lim'])
-        pzcat['pz_width'] = libpzqual.pz_width(pz, pzcat.zb, self.config['width_frac'])
-        pzcat['ref_id'] = pzcat.ref_id.astype(np.int)
-
-        pzcat = pzcat.set_index('ref_id')
-
-        prior_part = pzcat.run.value_counts().to_xarray()
-
-#        ipdb.set_trace()
-
-        return pzcat, prior_part
-
-##        ipdb.set_trace()
-##        pz = (pz_runs*priors).sum(dim='run')
-##        pz_runs kk
+#    def pzcat_part(self, chi2, priors):
+#        pz_runs = np.exp(-0.5*chi2) * priors
+#        pz_runs /= pz_runs.sum(dim=['run','z'])
 #
-#        # Had 2 galaxies of 500 being Nan..
-#        pz[np.isnan(pz).all(axis=1)] = 1.
+#        # The xarray does not have support for 2D argmax (xarray/issues/60).
+#        pzcat = pd.DataFrame()
+#        t1 = time.time()
+#        for i,ref_id in enumerate(pz_runs.ref_id):
+#            # TODO: Figure out why some objects gives really strange
+#            # results.
+#            sub = pz_runs[:,i,:]
+#            if np.isnan(sub).all():
+#                continue
+#
+#            W = sub.where(sub == sub.max(), drop=True)
+#
+#            if 1 != len(W.z):
+#                ipdb.set_trace()
+#
+#            S = pd.Series()
+#            S['ref_id'] = int(ref_id)
+#            S['zb'] = float(W.z)
+#            S['run'] = W.run.values[0]
+#            pzcat = pzcat.append(S, ignore_index=True)
+#       
+# 
+#        print('time', time.time()-t1)
+#
+#        pz = pz_runs.sel_points(ref_id=pzcat.ref_id.values, run=pzcat.run.values)
 #        pz /= pz.sum(dim='z')
-#        pz[np.isnan(pz).all(axis=1)] = 1./float(len(pz.z))
 #
-#        izmin = pz.argmax(dim='z')
-#        zb = pz.z[izmin]
+#        pz = pz.rename({'points': 'gal'})
+#        pz.coords['gal'] = pz.ref_id
+#        pzcat['odds'] = libpzqual.odds(pz, pzcat.zb, self.config['odds_lim'])
+#        pzcat['pz_width'] = libpzqual.pz_width(pz, pzcat.zb, self.config['width_frac'])
+#        pzcat['ref_id'] = pzcat.ref_id.astype(np.int)
 #
-#        ipdb.set_trace()
+#        pzcat = pzcat.set_index('ref_id')
 #
-#        pzcat = pd.DataFrame(index=pz.ref_id)
-#        pz = pz.rename({'ref_id': 'gal'})
-#        pzcat['odds'] = libpzqual.odds(pz, zb, self.config['odds_lim'])
-#        pzcat['pz_width'] = libpzqual.pz_width(pz, zb, self.config['width_frac'])
-#        pzcat['zb'] = zb
+#        prior_part = pzcat.run.value_counts().to_xarray()
 #
+##        ipdb.set_trace()
 #
-#        # And then trying to get priors...
-#        A = pz_runs.isel_points(ref_id=range(len(izmin)), z=izmin)
-#        A = A / A.sum(dim='run')
-#
-#        priors = A.sum(dim='points')
-#
-#        return pzcat, priors
-#
+#        return pzcat, prior_part
+
+    def pzcat_part(self, chi2, priors):
+        pz_runs = np.exp(-0.5*chi2) 
+        pz = (pz_runs*priors).sum(dim='run')
+
+        # Had 2 galaxies of 500 being Nan..
+        pz[np.isnan(pz).all(axis=1)] = 1.
+        pz /= pz.sum(dim='z')
+        pz[np.isnan(pz).all(axis=1)] = 1./float(len(pz.z))
+
+        izmin = pz.argmax(dim='z')
+        zb = pz.z[izmin]
+
+        pzcat = pd.DataFrame(index=pz.ref_id)
+        pz = pz.rename({'ref_id': 'gal'})
+        pzcat['odds'] = libpzqual.odds(pz, zb, self.config['odds_lim'])
+        pzcat['pz_width'] = libpzqual.pz_width(pz, zb, self.config['width_frac'])
+        pzcat['zb'] = zb
+
+        A = pz_runs.isel_points(ref_id=range(len(izmin)), z=izmin)
+        A = A[0 < A.sum(dim='run')]
+        F = A.argmax(dim='run')
+        pzcat.loc[F.ref_id, 'run'] = A.run[F]
+
+        # And then trying to get priors...
+        priors = A.sum(dim='points')
+
+        return pzcat, priors
+
 
     def store_out(self):
         """Create the output store."""
