@@ -15,21 +15,17 @@ descr = {
   'fit_bands': 'Bands used in the fit',
   'Nrounds': 'How many rounds in the zero-point calibration',
   'Niter': 'Number of iterations in minimization',
-  'SN_cap': 'Minimum signal-to-noise',
-  'min_method': 'How to use the syntetic broad bands',
   'zp_type': 'How to estimate the zero-points'
 }
 
 class inter_calib:
-    """First step of the calibration.."""
+    """Calibration between the broad and the narrow bands."""
 
     version = 1.15
     config = {'bb_norm': 'cfht_r',
               'fit_bands': [],
               'Nrounds': 5,
               'Niter': 1000,
-              'SN_cap': 50,
-              'min_method': 'simple',
               'zp_type': 'median'}
 
     def check_config(self):
@@ -86,19 +82,12 @@ class inter_calib:
         return ratio, flux, flux_err
 
 
-    def set_min_err(self, flux, flux_err):
-        """Set the minimum error before running."""
+    def minimize(self, f_mod, flux, flux_err):
+        """Minimize the model difference at a specific redshift."""
 
-        SN = flux / flux_err
-        SN = np.clip(SN, -np.infty, self.config['SN_cap'])
-
-        flux_err = flux / SN
-        var_inv = 1./flux_err**2.
+        var_inv = 1./flux_err**2
         var_inv = var_inv.fillna(0.)
 
-        return var_inv
-
-    def minimize(self, f_mod, flux, var_inv):
         A = np.einsum('gf,gfs,gft->gst', var_inv, f_mod, f_mod)
         b = np.einsum('gf,gf,gfs->gs', var_inv, flux, f_mod)
 
@@ -117,10 +106,13 @@ class inter_calib:
         flux_model = xr.DataArray(F, coords=coords, dims=('ref_id', 'band'))
 
         chi2 = var_inv*(flux - F)**2
+        chi2.values = np.where(chi2==0., np.nan, chi2)
 
         return chi2, F
 
-    def calc_zp(self, flux, var_inv, best_flux):
+    def calc_zp(self, best_flux, flux, flux_err):
+        """Estimate the zero-point."""
+
         # This is not expected to be optimal... To be improved!!
 
         # Note: This should be written properly....
@@ -130,21 +122,23 @@ class inter_calib:
             zp = np.median(R, axis=0)
         elif self.config['zp_type'] == 'median':
             from scipy.optimize import minimize
-            def cost(R, err_inv, flux, model):
-                return np.abs(np.median(err_inv*(flux*R[0] - model)))
+#            def cost(R, err_inv, flux, model):
+            def cost(R, model, flux, flux_err):
+                return np.abs(np.median((flux*R[0] - model) / flux_err))
 
             t1 = time.time()
             # And another test for getting the median...
             zp = np.ones(len(flux.band))
             for i,band in enumerate(flux.band):
-                args = (np.sqrt(var_inv.sel(band=band).values), flux.sel(band=band).values, \
-                        best_flux.sel(band=band).values)
+                args = (best_flux.sel(band=band).values, flux.sel(band=band).values, \
+                        flux_err.sel(band=band).values)
 
                 X = minimize(cost, 1., args=args)
                 zp[i] = X.x
 
             print(time.time() - t1)
-           
+          
+ 
         zp = xr.DataArray(zp, dims=('band'), coords={'band': flux.band})
  
         return zp
@@ -156,7 +150,6 @@ class inter_calib:
         flux = flux.sel(band=fit_bands)
         flux = flux.fillna(0.)
         flux_err = flux_err.sel(band=fit_bands)
-        var_inv = self.set_min_err(flux, flux_err)
 
         model_parts = list(modelD.keys())
         model_parts.sort()
@@ -179,7 +172,7 @@ class inter_calib:
                 print('Iteration', i, 'Part', j)
 
                 f_mod = modelD[key]
-                chi2_part, F = self.minimize(f_mod, flux, var_inv)
+                chi2_part, F = self.minimize(f_mod, flux, flux_err)
                 chi2[j,:] = chi2_part.sum(dim='band')
                 flux_model[j,:] = F
    
@@ -188,14 +181,16 @@ class inter_calib:
             best_flux = xr.DataArray(best_flux, dims=('ref_id', 'band'), \
                         coords={'ref_id': flux.ref_id, 'band': flux.band})
 
-            zp = self.calc_zp(flux, var_inv, best_flux)
-
+            zp = self.calc_zp(best_flux, flux, flux_err)
             zp_tot *= zp
 
             print('zp round: {}'.format(i))
             print(zp.values)
             flux = flux*zp
             flux_err = flux_err*zp
+
+        # These was earlier nan-values, but was replaced.
+        flux.values = np.where(flux==0, np.nan, flux)
 
         return flux, flux_err, zp_tot
 
@@ -230,7 +225,6 @@ class inter_calib:
         modelD = self.get_model(zs)
 
         ratio, flux, flux_err = self.fix_to_synbb(coeff, galcat)
-
         xflux, xflux_err, zp = self.zero_points(modelD, flux, flux_err)
 
         # Combines the two xarrays into a single sparse dataframe. *not* nice.
