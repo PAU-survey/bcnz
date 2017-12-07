@@ -22,7 +22,7 @@ descr = {
 class inter_calib:
     """Calibration between the broad and the narrow bands."""
 
-    version = 1.15
+    version = 1.16
     config = {'bb_norm': 'cfht_r',
               'fit_bands': [],
               'Nrounds': 5,
@@ -42,10 +42,19 @@ class inter_calib:
         return trans
 
     def find_synbb(self, coeff, galcat):
+        """Syntetic flux in one of the bands."""
 
+        # This handles missing flux values.
+        # Note: There might be more precise ways of doing this..
         trans = self.find_trans(coeff)
         flux = galcat['flux'][trans.band.values].stack().to_xarray()
+        missing_band = np.isnan(flux)
+        flux = flux.fillna(0.)
+
         synbb = flux.dot(trans)
+
+        missing_flux = 1.*missing_band.dot(trans)
+        synbb = synbb/(1.-missing_flux)
 
         return synbb
 
@@ -68,10 +77,13 @@ class inter_calib:
 
         # To be absolutely sure the order is the same..
         ratio = ratio.sel(ref_id=flux.ref_id)
-        ratio = ratio.fillna(1.)
 
-        # Yeah, this is ugly... Here we need to only scale the broad
-        # bands.
+        # There are some extreme outliers..
+        ratio[5 < ratio] = 1.
+
+        # TODO: Consider adding the error on the synthetic broad bands.
+
+        # Yeah, this is ugly... Here we need to only scale the broad bands.
         isBB = list(filter(lambda x: not x.startswith('NB'), flux.band.values))
         for i,touse in enumerate(isBB):
             if not touse:
@@ -233,18 +245,19 @@ class inter_calib:
         xflux_err = xflux_err.to_dataframe('X').reset_index().pivot('ref_id', 'band', 'X')
         cat_out = pd.concat({'flux': xflux, 'flux_err': xflux_err}, axis=1)
 
-        return cat_out, zp
+        return cat_out, zp, ratio
 
     def run(self):
         coeff = self.input.bbsyn_coeff.result
         galcat = self.input.galcat.result
 
         t1 = time.time()
-        galcat_out, zp = self.entry(coeff, galcat)
+        galcat_out, zp, ratio = self.entry(coeff, galcat)
         print('Time calibrating:', time.time() - t1)
 
         path = self.output.empty_file('default')
         store = pd.HDFStore(path, 'w')
         store['default'] = galcat_out
         store['zp'] = zp.to_dataframe('zp')
+        store['ratio'] = ratio.to_dataframe('ratio')
         store.close()
