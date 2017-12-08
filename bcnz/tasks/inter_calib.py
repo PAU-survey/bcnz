@@ -22,7 +22,7 @@ descr = {
 class inter_calib:
     """Calibration between the broad and the narrow bands."""
 
-    version = 1.16
+    version = 1.17
     config = {'bb_norm': 'cfht_r',
               'fit_bands': [],
               'Nrounds': 5,
@@ -138,7 +138,7 @@ class inter_calib:
             zp = np.median(R, axis=0)
         elif self.config['zp_type'] == 'median':
             def cost(R, model, flux, err_inv):
-                return float(np.abs((err_inv*(flux*R[0] - model)).median()))
+                return float(np.abs((err_inv*(flux*R[0] - model)/R[0]).median()))
 
             t1 = time.time()
             # And another test for getting the median...
