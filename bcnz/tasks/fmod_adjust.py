@@ -10,7 +10,7 @@ class fmod_adjust:
        entirely accurate.
     """
 
-    version = 1.03
+    version = 1.04
     config = {'norm_band': ''}
 
     def check_config(self):
@@ -36,7 +36,8 @@ class fmod_adjust:
         synbb = coeff.dot(A).unstack(dim='model')
         F = xr.Dataset({'flux': B, 'flux_syn': synbb})
         F = F.to_dataframe()
-        F['ratio'] = F.flux / F.flux_syn
+#        F['ratio'] = F.flux / F.flux_syn
+        F['ratio'] = F.flux_syn / F.flux
 
         # To avoid extremely large ratios.
         flux_median = F.groupby('sed').flux.median().rename('flux_median')
