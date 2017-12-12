@@ -23,7 +23,7 @@ descr = {
 class inter_calib:
     """Calibration between the broad and the narrow bands."""
 
-    version = 1.17
+    version = 1.18
     config = {'fix_to_synbb': True,
               'free_ampl': False,
               'bb_norm': 'cfht_r',
@@ -175,13 +175,13 @@ class inter_calib:
             vn = m0*v
             v = vn
 
-            if i in [0,1,2,3] or (not i % 10):
-                S1 = np.einsum('gt,gt->g', b_BB, v)
-                S2 = np.einsum('gs,gst,gt->g', v, A_BB, v)
+#            if i in [0,1,2,3] or (not i % 10):
+            S1 = np.einsum('gt,gt->g', b_BB, v)
+            S2 = np.einsum('gs,gst,gt->g', v, A_BB, v)
 
-                k = S1 / S2
-                b = b_NB + k[:,np.newaxis]*b_BB
-                A = A_NB + k[:,np.newaxis,np.newaxis]**2*A_BB
+            k = S1 / S2
+            b = b_NB + k[:,np.newaxis]*b_BB
+            A = A_NB + k[:,np.newaxis,np.newaxis]**2*A_BB
 
 
         gal_id = np.array(flux.ref_id)
@@ -294,6 +294,9 @@ class inter_calib:
             f_mod = f_mod.sel(z=zs.values, method='nearest')
 
             f_mod = f_mod.sel(band=fit_bands)
+            if 1 < len(f_mod.EBV):
+                ipdb.set_trace()
+
             if 'EBV' in f_mod.dims:
                 f_mod = f_mod.squeeze('EBV')
 
