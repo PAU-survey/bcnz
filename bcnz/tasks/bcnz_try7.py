@@ -200,12 +200,9 @@ class bcnz_try7:
 
         k = xr.DataArray(k, dims=('gal', 'z'), coords={'gal': gal_id, 'z': f_mod.z})
 
-        chi2_NB = var_inv*(flux.sel(band=NBlist) - F)**2
-        chi2_BB = var_inv*(k*flux.sel(band=BBlist) - F)**2
-        chi2 = xr.concat([chi2_NB, chi2_BB], dim='band')
+        chi2 = var_inv*(flux - F)**2
+        chi2.values = np.where(chi2==0., np.nan, chi2)
 
-#        ipdb.set_trace()
-#        chi2 = var_inv*(flux - F)**2
 
         pb = np.exp(-0.5*chi2.sum(dim='band'))
         pb = pb / (1e-100 + pb.sum(dim='z'))
