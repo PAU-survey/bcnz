@@ -112,7 +112,7 @@ class bcnz_try7:
 
         # Bad hack..
 #        A = np.clip(A, 1e-50, np.infty)
-        print('time A',  time.time() - t1)
+#        print('time A',  time.time() - t1)
 
         t1 = time.time()
 #        b = np.einsum('gf,gf,zsf->gzs', var_inv, flux, f_mod)
@@ -177,7 +177,7 @@ class bcnz_try7:
                 b = b_NB + k[:,:,np.newaxis]*b_BB
                 A = A_NB + k[:,:,np.newaxis,np.newaxis]**2*A_BB
 
-                print('k', np.median(np.abs(k-1)))
+#                print('k', np.median(np.abs(k-1)))
 #                ipdb.set_trace()
 
 
