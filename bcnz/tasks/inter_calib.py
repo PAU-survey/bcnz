@@ -12,6 +12,7 @@ from scipy.optimize import minimize
 from matplotlib import pyplot as plt
 
 descr = {
+  'fix_to_synbb': 'If fixing to the synthetic band',
   'bb_norm': 'Which broad band which is used for normalization',
   'fit_bands': 'Bands used in the fit',
   'Nrounds': 'How many rounds in the zero-point calibration',
@@ -23,7 +24,9 @@ class inter_calib:
     """Calibration between the broad and the narrow bands."""
 
     version = 1.17
-    config = {'bb_norm': 'cfht_r',
+    config = {'fix_to_synbb': True,
+              'free_ampl': False,
+              'bb_norm': 'cfht_r',
               'fit_bands': [],
               'Nrounds': 5,
               'Niter': 1000,
@@ -94,6 +97,16 @@ class inter_calib:
 
         return ratio, flux, flux_err
 
+    def find_input(self, galcat):
+        """Get the input in case of not applying a normalization."""
+
+        flux = galcat['flux'].stack().to_xarray()
+        flux_err = galcat['flux_err'].stack().to_xarray()
+
+        ratio = xr.DataArray(np.ones(len(flux)), dims=('ref_id'), \
+                coords={'ref_id': flux.ref_id})
+
+        return ratio, flux, flux_err
 
     def minimize(self, f_mod, flux, flux_err):
         """Minimize the model difference at a specific redshift."""
@@ -125,6 +138,64 @@ class inter_calib:
 
         return chi2, F
 
+
+    def minimize_free(self, f_mod, flux, flux_err):
+        """Minimize the model difference at a specific redshift."""
+
+        # Otherwise we will get nans in the result.
+        var_inv = 1./flux_err**2
+        var_inv = var_inv.fillna(0.)
+        xflux = flux.fillna(0.)
+
+        NBlist = list(filter(lambda x: x.startswith('NB'), flux.band.values))
+        BBlist = list(filter(lambda x: not x.startswith('NB'), flux.band.values))
+
+#        A = np.einsum('gf,gfs,gft->gst', var_inv, f_mod, f_mod)
+#        b = np.einsum('gf,gf,gfs->gs', var_inv, xflux, f_mod)
+        A_NB = np.einsum('gf,gfs,gft->gst', var_inv.sel(band=NBlist), \
+               f_mod.sel(band=NBlist), f_mod.sel(band=NBlist))
+        b_NB = np.einsum('gf,gf,gfs->gs', var_inv.sel(band=NBlist), xflux.sel(band=NBlist), \
+               f_mod.sel(band=NBlist))
+        A_BB = np.einsum('gf,gfs,gft->gst', var_inv.sel(band=BBlist), \
+               f_mod.sel(band=BBlist), f_mod.sel(band=BBlist))
+        b_BB = np.einsum('gf,gf,gfs->gs', var_inv.sel(band=BBlist), xflux.sel(band=BBlist), \
+               f_mod.sel(band=BBlist))
+
+        k = np.ones((len(flux)))
+        b = b_NB + k[:,np.newaxis]*b_BB
+        A = A_NB + k[:,np.newaxis,np.newaxis]**2*A_BB
+
+#        ipdb.set_trace()
+
+        v = np.ones_like(b)
+        t1 = time.time()
+        for i in range(self.config['Niter']):
+            a = np.einsum('gst,gt->gs', A, v)
+            m0 = b / a
+            vn = m0*v
+            v = vn
+
+            if i in [0,1,2,3] or (not i % 10):
+                S1 = np.einsum('gt,gt->g', b_BB, v)
+                S2 = np.einsum('gs,gst,gt->g', v, A_BB, v)
+
+                k = S1 / S2
+                b = b_NB + k[:,np.newaxis]*b_BB
+                A = A_NB + k[:,np.newaxis,np.newaxis]**2*A_BB
+
+
+        gal_id = np.array(flux.ref_id)
+        coords = {'ref_id': gal_id, 'band': f_mod.band}
+        coords_norm = {'ref_id': gal_id, 'model': np.array(f_mod.sed)}
+        F = np.einsum('gfs,gs->gf', f_mod, v)
+        flux_model = xr.DataArray(F, coords=coords, dims=('ref_id', 'band'))
+
+        chi2 = var_inv*(flux - F)**2
+        chi2.values = np.where(chi2==0., np.nan, chi2)
+
+        return chi2, F
+
+
     def calc_zp(self, best_flux, flux, flux_err):
         """Estimate the zero-point."""
 
@@ -138,7 +209,7 @@ class inter_calib:
             zp = np.median(R, axis=0)
         elif self.config['zp_type'] == 'median':
             def cost(R, model, flux, err_inv):
-                return float(np.abs((err_inv*(flux*R[0] - model)/R[0]).median()))
+                return float(np.abs((err_inv*(flux*R[0] - model)).median()))
 
             t1 = time.time()
             # And another test for getting the median...
@@ -183,12 +254,14 @@ class inter_calib:
                  coords={'band': flux.band})
 
         bb_norm = self.config['bb_norm']
+
+        fmin = self.minimize_free if self.config['free_ampl'] else self.minimize
         for i in range(self.config['Nrounds']):
             for j,key in enumerate(model_parts):
                 print('Iteration', i, 'Part', j)
 
                 f_mod = modelD[key]
-                chi2_part, F = self.minimize(f_mod, flux, flux_err)
+                chi2_part, F = fmin(f_mod, flux, flux_err)
                 chi2[j,:] = chi2_part.sum(dim='band')
                 flux_model[j,:] = F
    
@@ -237,7 +310,11 @@ class inter_calib:
         zs = galcat.zs
         modelD = self.get_model(zs)
 
-        ratio, flux, flux_err = self.fix_to_synbb(coeff, galcat)
+        if self.config['fix_to_synbb']:
+            ratio, flux, flux_err = self.fix_to_synbb(coeff, galcat)
+        else:
+            ratio, flux, flux_err = self.find_input(galcat)
+
         xflux, xflux_err, zp = self.zero_points(modelD, flux, flux_err)
 
         # Combines the two xarrays into a single sparse dataframe. *not* nice.
