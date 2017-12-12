@@ -73,8 +73,9 @@ class bcnz_try6:
         flux_err = xr.DataArray(data_df['flux_err'][filters], dims=dims)
 
         # Not exacly the best, but Numpy had problems with the fancy
-        # indexing.
-        to_use = ~np.isnan(flux_err)
+        # indexing. # TODO: For some reason the flux and fluxerror NaN
+        # values was different.
+        to_use = np.logical_and(~np.isnan(flux_err), ~np.isnan(flux))
 
         # This gave problems in cases where all measurements was removed..
         flux.values = np.where(to_use, flux.values, 1e-100) #0.) 
@@ -118,9 +119,15 @@ class bcnz_try6:
 #        b = np.einsum('gf,gf,zsf->gzs', var_inv, flux, f_mod)
         b = np.einsum('gf,gf,zfs->gzs', var_inv, flux, f_mod)
 
+        NBlist = list(filter(lambda x: x.startswith('NB'), flux.band.values))
         BBlist = list(filter(lambda x: not x.startswith('NB'), flux.band.values))
         b_BB = np.einsum('gf,gf,zfs->gzs', var_inv.sel(band=BBlist), \
                          flux.sel(band=BBlist), f_mod.sel(band=BBlist))
+
+        # TODO: Does this select in the same order everywhere???
+        b_NB = np.einsum('gf,gf,zfs->gzs', var_inv.sel(band=NBlist), \
+                         flux.sel(band=NBlist), f_mod.sel(band=NBlist))
+
 
         C = np.einsum('gf,gf->g', var_inv.sel(band=BBlist), \
                       flux.sel(band=BBlist)**2)
@@ -146,18 +153,22 @@ class bcnz_try6:
             m0 = b / a
             vn = m0*v
 
-            if self.config['Niter'] == 995:
-#            if False:
-                # Testing updating a scaling between the two systems.
-                k = np.einsum('g,gzs,gzs->gz',1./C, b_BB, vn)
-                b_BB_copy = b_BB.copy()
-                b_BB *= k[:,:,np.newaxis]
-                b = b + (k[:,:,np.newaxis]-1.)*b_BB_copy
+            # Testing updating a scaling between the two systems.
+            k = np.einsum('g,gzs,gzs->gz',1./C, b_BB, vn)
+            b = b_BB*k[:,:,np.newaxis] + b_NB
 
-                print('i', i)
-                print('k median', np.median(k), 'mean', k.mean())
+#            ipdb.set_trace()
+#
+#
+#            b_BB_copy = b_BB.copy()
+#            b_BB *= k[:,:,np.newaxis]
+#            b = b + (k[:,:,np.newaxis]-1.)*b_BB_copy
+#
+#            print('i', i)
+#            print('k median', np.median(k), 'mean', k.mean())
 
-            assert not np.isnan(b).any()
+            if np.isnan(b).any():
+                ipdb.set_trace()
 
 #            if i == 828:
 #                ipdb.set_trace()
@@ -169,7 +180,14 @@ class bcnz_try6:
         F = np.einsum('zfs,gzs->gzf', f_mod, v)
         F = xr.DataArray(F, coords=coords, dims=('gal', 'z', 'band'))
 
-        chi2 = var_inv*(flux - F)**2
+        k = xr.DataArray(k, dims=('gal', 'z'), coords={'gal': gal_id, 'z': f_mod.z})
+
+        chi2_NB = var_inv*(flux.sel(band=NBlist) - F)**2
+        chi2_BB = var_inv*(k*flux.sel(band=BBlist) - F)**2
+        chi2 = xr.concat([chi2_NB, chi2_BB], dim='band')
+
+#        ipdb.set_trace()
+#        chi2 = var_inv*(flux - F)**2
 
         pb = np.exp(-0.5*chi2.sum(dim='band'))
         pb = pb / (1e-100 + pb.sum(dim='z'))
@@ -178,9 +196,8 @@ class bcnz_try6:
         norm = xr.DataArray(v, coords=coords_norm, dims=\
                             ('gal','z','model'))
 
-        print(chi2.min(dim='gal'))
-
-        ipdb.set_trace()
+#        print(chi2.min(dim='gal'))
+#        ipdb.set_trace()
 
         return chi2, norm
 

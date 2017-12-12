@@ -169,16 +169,13 @@ class bcnz_try7:
             m0 = b / a
             vn = m0*v
 
-            if i in [0,1,2,3] or (not i % 10):
-                S1 = np.einsum('gzt,gzt->gz', b_BB, v)
-                S2 = np.einsum('gzs,gzst,gzt->gz', v, A_BB, v)
+#            if i in [0,1,2,3] or (not i % 10):
+            S1 = np.einsum('gzt,gzt->gz', b_BB, v)
+            S2 = np.einsum('gzs,gzst,gzt->gz', v, A_BB, v)
 
-                k = S1 / S2
-                b = b_NB + k[:,:,np.newaxis]*b_BB
-                A = A_NB + k[:,:,np.newaxis,np.newaxis]**2*A_BB
-
-#                print('k', np.median(np.abs(k-1)))
-#                ipdb.set_trace()
+            k = S1 / S2
+            b = b_NB + k[:,:,np.newaxis]*b_BB
+            A = A_NB + k[:,:,np.newaxis,np.newaxis]**2*A_BB
 
 
             # Testing updating a scaling between the two systems.
