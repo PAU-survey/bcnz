@@ -21,7 +21,7 @@ descr = {
 class flux_model:
     """Combined model for all the fluxes."""
 
-    version = 1.03
+    version = 1.04
     config = {
 #      'filters': [],
       'seds': [],
@@ -158,7 +158,32 @@ class flux_model:
 
         return ab_lines, seds
 
+    def workaround_concat(self, fmod_cont, fmod_lines):
+        # For some reason the xarray concat, 
+        #    xr.concat([fmod_cont, fmod_lines], dim='model')
+        # stopped working. I don't why. This workaround is lengthy 
+        # and ugly. Please check if it workse later on newer
+        # versions of xarray.
+        # 
+        fmod_cont = fmod_cont.unstack(dim='model')
+        fmod_lines = fmod_lines.unstack(dim='model')
 
+        fmod_cont = fmod_cont.sel(band=fmod_lines.band)
+        fmod_cont = fmod_cont.sel(z=fmod_lines.z)
+
+        EBV = round(float(fmod_cont.EBV[0]), 4)
+        fmod_cont = fmod_cont.squeeze(['EBV'])
+        fmod_lines = fmod_lines.squeeze(['EBV'])
+       
+        fmod = xr.concat([fmod_cont, fmod_lines], dim='sed')
+        fmod = fmod.rename({'EBV': 'tmp'})
+        fmod = fmod.expand_dims('EBV', -1)
+        fmod.coords['EBV'] = np.array([EBV])
+        del fmod['tmp']
+
+        fmod = fmod.stack(model=('sed', 'EBV'))
+
+        return fmod
 
     def model(self, ab_cont, ab_lines):
 
@@ -169,7 +194,7 @@ class flux_model:
         if self.config['use_lines']:
             ab_lines, seds_lines = self.select_lines(ab_lines)
             fmod_lines = self._model_array(ab_lines, zgrid, seds_lines)
-            fmod = xr.concat([fmod_cont, fmod_lines], dim='model')
+            fmod = self.workaround_concat(fmod_cont, fmod_lines)
         else:
             fmod = fmod_cont
 
@@ -182,5 +207,8 @@ class flux_model:
         f_mod = self.model(ab, ab_el)
         f_mod = f_mod.unstack(dim='model')
         f_mod = f_mod.to_dataframe(name='f_mod')
+
+        if 1 < len(f_mod.to_xarray().EBV):
+            ipdb.set_trace()
 
         self.output.result = f_mod
