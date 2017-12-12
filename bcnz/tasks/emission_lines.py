@@ -21,7 +21,7 @@ descr = {
 class emission_lines:
     """The model flux for the emission lines."""
 
-    version = 1.056
+    version = 1.057
 
     config = {'dz': 0.0005, 'ampl': 1e-16, 'EBV': 0.,
               'ext_law': 'SB_calzetti'}
@@ -35,6 +35,8 @@ class emission_lines:
       'Lyalpha':  2.,
       'NII_1': 0.3 * 0.35 * 1.77, # Paper gave lines relative to Halpha.
       'NII_2': 0.35 * 1.77
+      'SII_1': 0.35,
+      'SII_2': 0.35
     }
 
     line_loc = {
@@ -45,7 +47,9 @@ class emission_lines:
       'Hbeta': 4861,
       'Lyalpha': 1215.7,
       'NII_1': 6548., 
-      'NII_2': 6583.
+      'NII_2': 6583.,
+      'SII_1': 6716.44,
+      'SII_2': 6730.82
     }
 
 
