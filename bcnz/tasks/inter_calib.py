@@ -148,7 +148,6 @@ class inter_calib:
                f_mod.sel(band=BBlist))
 
         k = np.ones((len(flux)))
-        k_tot = k.copy()
         b = b_NB + k[:,np.newaxis]*b_BB
         A = A_NB + k[:,np.newaxis,np.newaxis]**2*A_BB
 
@@ -163,10 +162,9 @@ class inter_calib:
             S1 = np.einsum('gt,gt->g', b_BB, v)
             S2 = np.einsum('gs,gst,gt->g', v, A_BB, v)
             k = S1 / S2
-            if True:
-                k_tot *= k
-                b = b_NB + k[:,np.newaxis]*b_BB
-                A = A_NB + k[:,np.newaxis,np.newaxis]**2*A_BB
+
+            b = b_NB + k[:,np.newaxis]*b_BB
+            A = A_NB + k[:,np.newaxis,np.newaxis]**2*A_BB
 
 
         gal_id = np.array(flux.ref_id)
@@ -183,11 +181,13 @@ class inter_calib:
 
         flux_model = xr.DataArray(F, coords=coords, dims=('ref_id', 'band'))
 
-        print(chi2.sum(dim='band'))
-        ipdb.set_trace()
-
         return chi2, F
 
+# Note: The commented version is adding the free factor in the fluxes. I experimented
+# with this when including k in the model seemingly gave wrong result. One should remove
+# t_tot, since this makes little sense. k is the *total* amplitude after multiple
+# iterations.
+#
 #    def minimize_free(self, f_mod, flux, flux_err):
 #        """Minimize the model difference at a specific redshift."""
 #
