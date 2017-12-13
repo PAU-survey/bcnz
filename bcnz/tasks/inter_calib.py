@@ -62,6 +62,8 @@ class inter_calib:
         return synbb
 
     def fix_to_synbb(self, coeff, galcat):
+        """Fix the data to a synthetic band."""
+
         bb_norm = self.config['bb_norm']
 
         # The synthetic broad band.
@@ -86,25 +88,15 @@ class inter_calib:
 
         # TODO: Consider adding the error on the synthetic broad bands.
 
-        # Yeah, this is ugly... Here we need to only scale the broad bands.
-        isBB = list(filter(lambda x: not x.startswith('NB'), flux.band.values))
-        for i,touse in enumerate(isBB):
-            if not touse:
-                continue
+        if self.config['fix_to_synbb']:
+            # Yeah, this is ugly... Here we need to only scale the broad bands.
+            isBB = list(filter(lambda x: not x.startswith('NB'), flux.band.values))
+            for i,touse in enumerate(isBB):
+                if not touse:
+                    continue
 
-            flux.values[:,i] *= ratio
-            flux_err.values[:,i] *= ratio
-
-        return ratio, flux, flux_err
-
-    def find_input(self, galcat):
-        """Get the input in case of not applying a normalization."""
-
-        flux = galcat['flux'].stack().to_xarray()
-        flux_err = galcat['flux_err'].stack().to_xarray()
-
-        ratio = xr.DataArray(np.ones(len(flux)), dims=('ref_id'), \
-                coords={'ref_id': flux.ref_id})
+                flux.values[:,i] *= ratio
+                flux_err.values[:,i] *= ratio
 
         return ratio, flux, flux_err
 
@@ -175,10 +167,8 @@ class inter_calib:
             vn = m0*v
             v = vn
 
-#            if i in [0,1,2,3] or (not i % 10):
             S1 = np.einsum('gt,gt->g', b_BB, v)
             S2 = np.einsum('gs,gst,gt->g', v, A_BB, v)
-
             k = S1 / S2
             b = b_NB + k[:,np.newaxis]*b_BB
             A = A_NB + k[:,np.newaxis,np.newaxis]**2*A_BB
@@ -313,11 +303,7 @@ class inter_calib:
         zs = galcat.zs
         modelD = self.get_model(zs)
 
-        if self.config['fix_to_synbb']:
-            ratio, flux, flux_err = self.fix_to_synbb(coeff, galcat)
-        else:
-            ratio, flux, flux_err = self.find_input(galcat)
-
+        ratio, flux, flux_err = self.fix_to_synbb(coeff, galcat)
         xflux, xflux_err, zp = self.zero_points(modelD, flux, flux_err)
 
         # Combines the two xarrays into a single sparse dataframe. *not* nice.
