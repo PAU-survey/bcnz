@@ -23,7 +23,7 @@ descr = {
 class inter_calib:
     """Calibration between the broad and the narrow bands."""
 
-    version = 1.19
+    version = 1.20 #19
     config = {'fix_to_synbb': True,
               'free_ampl': False,
               'bb_norm': 'cfht_r',
@@ -83,11 +83,7 @@ class inter_calib:
         # To be absolutely sure the order is the same..
         ratio = ratio.sel(ref_id=flux.ref_id)
 
-        # There are some extreme outliers..
-        ratio[5 < ratio] = 1.
-
         # TODO: Consider adding the error on the synthetic broad bands.
-
         if self.config['fix_to_synbb']:
             # Yeah, this is ugly... Here we need to only scale the broad bands.
             isBB = list(filter(lambda x: not x.startswith('NB'), flux.band.values))
@@ -152,6 +148,7 @@ class inter_calib:
                f_mod.sel(band=BBlist))
 
         k = np.ones((len(flux)))
+        k_tot = k.copy()
         b = b_NB + k[:,np.newaxis]*b_BB
         A = A_NB + k[:,np.newaxis,np.newaxis]**2*A_BB
 
@@ -166,20 +163,102 @@ class inter_calib:
             S1 = np.einsum('gt,gt->g', b_BB, v)
             S2 = np.einsum('gs,gst,gt->g', v, A_BB, v)
             k = S1 / S2
-            b = b_NB + k[:,np.newaxis]*b_BB
-            A = A_NB + k[:,np.newaxis,np.newaxis]**2*A_BB
+            if True:
+                k_tot *= k
+                b = b_NB + k[:,np.newaxis]*b_BB
+                A = A_NB + k[:,np.newaxis,np.newaxis]**2*A_BB
 
 
         gal_id = np.array(flux.ref_id)
         coords = {'ref_id': gal_id, 'band': f_mod.band}
         coords_norm = {'ref_id': gal_id, 'model': np.array(f_mod.sed)}
         F = np.einsum('gfs,gs->gf', f_mod, v)
-        flux_model = xr.DataArray(F, coords=coords, dims=('ref_id', 'band'))
 
+        # Scaling the model..
+        isBB = np.array(list(map(lambda x: not x.startswith('NB'), flux.band.values)))
+        F[:,isBB] *= k[:,np.newaxis]
+    
         chi2 = var_inv*(flux - F)**2
         chi2.values = np.where(chi2==0., np.nan, chi2)
 
+        flux_model = xr.DataArray(F, coords=coords, dims=('ref_id', 'band'))
+
+        print(chi2.sum(dim='band'))
+        ipdb.set_trace()
+
         return chi2, F
+
+#    def minimize_free(self, f_mod, flux, flux_err):
+#        """Minimize the model difference at a specific redshift."""
+#
+#        # Otherwise we will get nans in the result.
+#        var_inv = 1./flux_err**2
+#        var_inv = var_inv.fillna(0.)
+#        xflux = flux.fillna(0.)
+#
+#        NB = list(filter(lambda x: x.startswith('NB'), flux.band.values))
+#        BB = list(filter(lambda x: not x.startswith('BB'), flux.band.values))
+#        A = np.einsum('gf,gfs,gft->gst', var_inv, f_mod, f_mod)
+#        b_NB = np.einsum('gf,gf,gfs->gs', var_inv.sel(band=NB), xflux.sel(band=NB), f_mod.sel(band=NB))
+#        b_BB = np.einsum('gf,gf,gfs->gs', var_inv.sel(band=BB), xflux.sel(band=BB), f_mod.sel(band=BB))
+#        C = np.einsum('gf,gf->g', var_inv.sel(band=BB), \
+#                      xflux.sel(band=BB)**2)
+#
+#        k = np.ones((len(xflux)))
+#        k_tot = k.copy()
+#        b = b_NB + b_BB # np.einsum('g,gf->gf', k, b_BB)
+#
+#        v = np.ones_like(b)
+#        t1 = time.time()
+#        for i in range(self.config['Niter']):
+#            a = np.einsum('gst,gt->gs', A, v)
+#            m0 = b / a
+#            vn = m0*v
+#
+#            # Minimize the chi2 (see notes).
+#
+#
+#            k = np.einsum('g,gs,gs->g',1./C, b_BB, vn)
+#            b_BB = np.einsum('g,gf->gf', k, b_BB)
+#            b = b_NB + b_BB
+#            C = k**2*C
+#
+##            print('k', k[5], 'ktot', k_tot[5])
+##            ipdb.set_trace()
+#
+#
+##            print(k_tot.median())
+##            print(np.median(k_tot))
+##            ipdb.set_trace()
+#            if np.isnan(k_tot).any():
+#                ipdb.set_trace()
+#
+#            k_tot *= k
+#
+#            print(np.median(k_tot))
+#            v = vn
+#
+##        ipdb.set_trace()
+#
+#        gal_id = np.array(flux.ref_id)
+#        coords = {'ref_id': gal_id, 'band': f_mod.band}
+#        coords_norm = {'ref_id': gal_id, 'model': np.array(f_mod.sed)}
+#        F = np.einsum('gfs,gs->gf', f_mod, v)
+#        flux_model = xr.DataArray(F, coords=coords, dims=('ref_id', 'band'))
+#
+#        isbb = np.array(list(map(lambda x: not x.startswith('NB'), flux.band.values)))
+#
+#        flux[:,isbb] *= k_tot[:,np.newaxis]
+#
+#        chi2 = var_inv*(flux - F)**2
+#        chi2.values = np.where(chi2==0., np.nan, chi2)
+#
+#
+#        ipdb.set_trace()
+#
+#
+#        return chi2, F
+#
 
 
     def calc_zp(self, best_flux, flux, flux_err):
@@ -209,6 +288,7 @@ class inter_calib:
 
                 zp[i] = X.x
 
+ 
             print(time.time() - t1)
           
  
