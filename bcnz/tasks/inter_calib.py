@@ -23,7 +23,7 @@ descr = {
 class inter_calib:
     """Calibration between the broad and the narrow bands."""
 
-    version = 1.18
+    version = 1.19
     config = {'fix_to_synbb': True,
               'free_ampl': False,
               'bb_norm': 'cfht_r',
@@ -142,8 +142,6 @@ class inter_calib:
         NBlist = list(filter(lambda x: x.startswith('NB'), flux.band.values))
         BBlist = list(filter(lambda x: not x.startswith('NB'), flux.band.values))
 
-#        A = np.einsum('gf,gfs,gft->gst', var_inv, f_mod, f_mod)
-#        b = np.einsum('gf,gf,gfs->gs', var_inv, xflux, f_mod)
         A_NB = np.einsum('gf,gfs,gft->gst', var_inv.sel(band=NBlist), \
                f_mod.sel(band=NBlist), f_mod.sel(band=NBlist))
         b_NB = np.einsum('gf,gf,gfs->gs', var_inv.sel(band=NBlist), xflux.sel(band=NBlist), \
@@ -156,8 +154,6 @@ class inter_calib:
         k = np.ones((len(flux)))
         b = b_NB + k[:,np.newaxis]*b_BB
         A = A_NB + k[:,np.newaxis,np.newaxis]**2*A_BB
-
-#        ipdb.set_trace()
 
         v = np.ones_like(b)
         t1 = time.time()
