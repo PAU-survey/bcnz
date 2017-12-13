@@ -17,7 +17,7 @@ descr = {
   'fit_bands': 'Bands used in the fit',
   'Nrounds': 'How many rounds in the zero-point calibration',
   'Niter': 'Number of iterations in minimization',
-  'zp_type': 'How to estimate the zero-points'
+  'zp_min': 'How to estimate the zero-points'
 }
 
 class inter_calib:
@@ -30,7 +30,7 @@ class inter_calib:
               'fit_bands': [],
               'Nrounds': 5,
               'Niter': 1000,
-              'zp_type': 'median'}
+              'zp_min': 'flux2'}
 
     def check_config(self):
         assert self.config['fit_bands'], 'Need to set: fit_bands'
@@ -260,40 +260,68 @@ class inter_calib:
 #        return chi2, F
 #
 
+    def _zp_min_cost(self, cost, best_flux, flux, err_inv):
+        """Estimate the zero-point through minimizing a cost function."""
+
+        t1 = time.time()
+        # And another test for getting the median...
+        zp = np.ones(len(flux.band))
+        for i,band in enumerate(flux.band):
+            A = (best_flux.sel(band=band), flux.sel(band=band), \
+                 err_inv.sel(band=band))
+
+            X = minimize(cost, 1., args=A)
+            #assert not isinstance(X.x, np.nan), 'Internal error: found nan'
+
+            zp[i] = X.x
+
+        return zp
+
 
     def calc_zp(self, best_flux, flux, flux_err):
         """Estimate the zero-point."""
 
         err_inv = 1. / flux_err
-#        err_inv = err_inv.fillna(0.0)
 
-        # Note: This should be written properly....
-        if self.config['zp_type'] == 'ratio':
-            R = best_flux.values / flux.values
-            R[np.isinf(R)] = 0.
-            zp = np.median(R, axis=0)
-        elif self.config['zp_type'] == 'median':
-            def cost(R, model, flux, err_inv):
+        X = (best_flux, flux, err_inv)
+        zp_min = self.config['zp_min'] 
+
+#        ipdb.set_trace()
+
+        zp_min = 'mag'
+        if zp_min == 'mag':
+            # Code to follow quite closely what Alex did.
+            def cost_mag(R, bestmodel, sig, err_inv):
+                shift = 10**(-0.4*R[0])
+                err = 1./err_inv
+
+                sig = sig * shift
+                err = err * shift
+
+                S = -2.5*np.log10(sig)-48.6
+                E = 2.5*np.log10(1+err/sig)
+                M = -2.5*np.log10(bestmodel)-48.6
+
+                median = np.nanmedian((S-M)/E)
+                val = np.abs(median)
+
+                return val
+
+            zp = self._zp_min_cost(cost_mag, *X)
+            zp = 10**(-0.4*zp)
+        elif zp_min == 'flux':
+            def cost_flux(R, model, flux, err_inv):
                 return float(np.abs((err_inv*(flux*R[0] - model)).median()))
 
-            t1 = time.time()
-            # And another test for getting the median...
-            zp = np.ones(len(flux.band))
-            for i,band in enumerate(flux.band):
-                A = (best_flux.sel(band=band), flux.sel(band=band), \
-                     err_inv.sel(band=band))
+            zp = self._zp_min_cost(cost_flux, *X)
+        elif zp_min == 'flux2':
+            def cost_flux2(R, model, flux, err_inv):
+                return float(np.abs((err_inv*(flux*R[0] - model)/R[0]).median()))
 
-                X = minimize(cost, 1., args=A)
-                #assert not isinstance(X.x, np.nan), 'Internal error: found nan'
+            zp = self._zp_min_cost(cost_flux2, *X)
 
-                zp[i] = X.x
+        zp = xr.DataArray(zp, dim=('band',) coords={'band': flux.band})
 
- 
-            print(time.time() - t1)
-          
- 
-        zp = xr.DataArray(zp, dims=('band'), coords={'band': flux.band})
- 
         return zp
 
     def zero_points(self, modelD, flux, flux_err):
