@@ -23,7 +23,7 @@ descr = {
 class inter_calib:
     """Calibration between the broad and the narrow bands."""
 
-    version = 1.20 #19
+    version = 1.21
     config = {'fix_to_synbb': True,
               'free_ampl': False,
               'bb_norm': 'cfht_r',
@@ -277,6 +277,21 @@ class inter_calib:
 
         return zp
 
+    def _zp_flux_chi2(self, best_flux, flux, err_inv):
+        """Find the zero-points by minimizing a chi2 expression."""
+
+        # This could be done recursively, but the first round had
+        # very few outliers..
+        X = (best_flux / flux).median(dim='ref_id')
+        F = err_inv*((best_flux / flux) - X)
+
+        flux.values[0.2 < np.abs(F)] = np.nan
+        P1 = (flux*best_flux*err_inv**2).sum(dim='ref_id')
+        P2 = ((flux*err_inv)**2).sum(dim='ref_id')
+
+        zp = P1 / P2
+
+        return zp
 
     def calc_zp(self, best_flux, flux, flux_err):
         """Estimate the zero-point."""
@@ -288,7 +303,6 @@ class inter_calib:
 
 #        ipdb.set_trace()
 
-        zp_min = 'mag'
         if zp_min == 'mag':
             # Code to follow quite closely what Alex did.
             def cost_mag(R, bestmodel, sig, err_inv):
@@ -307,6 +321,7 @@ class inter_calib:
 
                 return val
 
+            print('starting minimize')
             zp = self._zp_min_cost(cost_mag, *X)
             zp = 10**(-0.4*zp)
         elif zp_min == 'flux':
@@ -319,8 +334,10 @@ class inter_calib:
                 return float(np.abs((err_inv*(flux*R[0] - model)/R[0]).median()))
 
             zp = self._zp_min_cost(cost_flux2, *X)
+        elif zp_min == 'flux_chi2':
+            zp = self._zp_flux_chi2(*X)
 
-        zp = xr.DataArray(zp, dim=('band',) coords={'band': flux.band})
+        zp = xr.DataArray(zp, dims=('band',), coords={'band': flux.band})
 
         return zp
 
