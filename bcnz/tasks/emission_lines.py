@@ -34,7 +34,7 @@ class emission_lines:
       'Halpha': 1.77,
       'Lyalpha':  2.,
       'NII_1': 0.3 * 0.35 * 1.77, # Paper gave lines relative to Halpha.
-      'NII_2': 0.35 * 1.77
+      'NII_2': 0.35 * 1.77,
       'SII_1': 0.35,
       'SII_2': 0.35
     }
