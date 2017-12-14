@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
-import ipdb
+from IPython.core import debugger
 import sys
 import time
 import numpy as np

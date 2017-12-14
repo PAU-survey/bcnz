@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import ipdb
+from IPython.core import debugger
 import numpy as np
 import pandas as pd
 

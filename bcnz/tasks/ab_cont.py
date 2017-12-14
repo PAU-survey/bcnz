@@ -3,7 +3,7 @@
 
 from __future__ import print_function
 
-import ipdb
+from IPython.core import debugger
 import time
 import numpy as np
 import pandas as pd
