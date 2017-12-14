@@ -16,6 +16,7 @@ descr = {'use_pz': 'Combine the result using the full pdf',
 
 import sys
 sys.path.append('/home/eriksen/source/bcnz/bcnz/tasks')
+sys.path.append('/nfs/pic.es/user/e/eriksen/source/bcnz/bcnz/tasks')
 import libpzqual
 
 class bcnz_comb_ext:

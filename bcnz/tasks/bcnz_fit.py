@@ -18,6 +18,7 @@ import xdolphin as xd
 
 import sys
 sys.path.append('/home/eriksen/source/bcnz/bcnz/tasks')
+sys.path.append('/nfs/pic.es/user/e/eriksen/source/bcnz/bcnz/tasks')
 import libpzqual
 
 #import .libpzqual
