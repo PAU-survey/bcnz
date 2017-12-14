@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
-import ipdb
+from IPython.core import debugger
 import sys
 import time
 import numpy as np
@@ -17,20 +17,20 @@ descr = {
   'fit_bands': 'Bands used in the fit',
   'Nrounds': 'How many rounds in the zero-point calibration',
   'Niter': 'Number of iterations in minimization',
-  'zp_type': 'How to estimate the zero-points'
+  'zp_min': 'How to estimate the zero-points'
 }
 
 class inter_calib:
     """Calibration between the broad and the narrow bands."""
 
-    version = 1.19
+    version = 1.21
     config = {'fix_to_synbb': True,
               'free_ampl': False,
               'bb_norm': 'cfht_r',
               'fit_bands': [],
               'Nrounds': 5,
               'Niter': 1000,
-              'zp_type': 'median'}
+              'zp_min': 'flux2'}
 
     def check_config(self):
         assert self.config['fit_bands'], 'Need to set: fit_bands'
@@ -83,11 +83,7 @@ class inter_calib:
         # To be absolutely sure the order is the same..
         ratio = ratio.sel(ref_id=flux.ref_id)
 
-        # There are some extreme outliers..
-        ratio[5 < ratio] = 1.
-
         # TODO: Consider adding the error on the synthetic broad bands.
-
         if self.config['fix_to_synbb']:
             # Yeah, this is ugly... Here we need to only scale the broad bands.
             isBB = list(filter(lambda x: not x.startswith('NB'), flux.band.values))
@@ -166,6 +162,7 @@ class inter_calib:
             S1 = np.einsum('gt,gt->g', b_BB, v)
             S2 = np.einsum('gs,gst,gt->g', v, A_BB, v)
             k = S1 / S2
+
             b = b_NB + k[:,np.newaxis]*b_BB
             A = A_NB + k[:,np.newaxis,np.newaxis]**2*A_BB
 
@@ -174,46 +171,174 @@ class inter_calib:
         coords = {'ref_id': gal_id, 'band': f_mod.band}
         coords_norm = {'ref_id': gal_id, 'model': np.array(f_mod.sed)}
         F = np.einsum('gfs,gs->gf', f_mod, v)
-        flux_model = xr.DataArray(F, coords=coords, dims=('ref_id', 'band'))
 
+        # Scaling the model..
+        isBB = np.array(list(map(lambda x: not x.startswith('NB'), flux.band.values)))
+        F[:,isBB] *= k[:,np.newaxis]
+    
         chi2 = var_inv*(flux - F)**2
         chi2.values = np.where(chi2==0., np.nan, chi2)
 
+        flux_model = xr.DataArray(F, coords=coords, dims=('ref_id', 'band'))
+
         return chi2, F
 
+# Note: The commented version is adding the free factor in the fluxes. I experimented
+# with this when including k in the model seemingly gave wrong result. One should remove
+# t_tot, since this makes little sense. k is the *total* amplitude after multiple
+# iterations.
+#
+#    def minimize_free(self, f_mod, flux, flux_err):
+#        """Minimize the model difference at a specific redshift."""
+#
+#        # Otherwise we will get nans in the result.
+#        var_inv = 1./flux_err**2
+#        var_inv = var_inv.fillna(0.)
+#        xflux = flux.fillna(0.)
+#
+#        NB = list(filter(lambda x: x.startswith('NB'), flux.band.values))
+#        BB = list(filter(lambda x: not x.startswith('BB'), flux.band.values))
+#        A = np.einsum('gf,gfs,gft->gst', var_inv, f_mod, f_mod)
+#        b_NB = np.einsum('gf,gf,gfs->gs', var_inv.sel(band=NB), xflux.sel(band=NB), f_mod.sel(band=NB))
+#        b_BB = np.einsum('gf,gf,gfs->gs', var_inv.sel(band=BB), xflux.sel(band=BB), f_mod.sel(band=BB))
+#        C = np.einsum('gf,gf->g', var_inv.sel(band=BB), \
+#                      xflux.sel(band=BB)**2)
+#
+#        k = np.ones((len(xflux)))
+#        k_tot = k.copy()
+#        b = b_NB + b_BB # np.einsum('g,gf->gf', k, b_BB)
+#
+#        v = np.ones_like(b)
+#        t1 = time.time()
+#        for i in range(self.config['Niter']):
+#            a = np.einsum('gst,gt->gs', A, v)
+#            m0 = b / a
+#            vn = m0*v
+#
+#            # Minimize the chi2 (see notes).
+#
+#
+#            k = np.einsum('g,gs,gs->g',1./C, b_BB, vn)
+#            b_BB = np.einsum('g,gf->gf', k, b_BB)
+#            b = b_NB + b_BB
+#            C = k**2*C
+#
+##            print('k', k[5], 'ktot', k_tot[5])
+##            ipdb.set_trace()
+#
+#
+##            print(k_tot.median())
+##            print(np.median(k_tot))
+##            ipdb.set_trace()
+#            if np.isnan(k_tot).any():
+#                ipdb.set_trace()
+#
+#            k_tot *= k
+#
+#            print(np.median(k_tot))
+#            v = vn
+#
+##        ipdb.set_trace()
+#
+#        gal_id = np.array(flux.ref_id)
+#        coords = {'ref_id': gal_id, 'band': f_mod.band}
+#        coords_norm = {'ref_id': gal_id, 'model': np.array(f_mod.sed)}
+#        F = np.einsum('gfs,gs->gf', f_mod, v)
+#        flux_model = xr.DataArray(F, coords=coords, dims=('ref_id', 'band'))
+#
+#        isbb = np.array(list(map(lambda x: not x.startswith('NB'), flux.band.values)))
+#
+#        flux[:,isbb] *= k_tot[:,np.newaxis]
+#
+#        chi2 = var_inv*(flux - F)**2
+#        chi2.values = np.where(chi2==0., np.nan, chi2)
+#
+#
+#        ipdb.set_trace()
+#
+#
+#        return chi2, F
+#
+
+    def _zp_min_cost(self, cost, best_flux, flux, err_inv):
+        """Estimate the zero-point through minimizing a cost function."""
+
+        t1 = time.time()
+        # And another test for getting the median...
+        zp = np.ones(len(flux.band))
+        for i,band in enumerate(flux.band):
+            A = (best_flux.sel(band=band), flux.sel(band=band), \
+                 err_inv.sel(band=band))
+
+            X = minimize(cost, 1., args=A)
+            #assert not isinstance(X.x, np.nan), 'Internal error: found nan'
+
+            zp[i] = X.x
+
+        return zp
+
+    def _zp_flux_chi2(self, best_flux, flux, err_inv):
+        """Find the zero-points by minimizing a chi2 expression."""
+
+        # This could be done recursively, but the first round had
+        # very few outliers..
+        X = (best_flux / flux).median(dim='ref_id')
+        F = err_inv*((best_flux / flux) - X)
+
+        flux.values[0.2 < np.abs(F)] = np.nan
+        P1 = (flux*best_flux*err_inv**2).sum(dim='ref_id')
+        P2 = ((flux*err_inv)**2).sum(dim='ref_id')
+
+        zp = P1 / P2
+
+        return zp
 
     def calc_zp(self, best_flux, flux, flux_err):
         """Estimate the zero-point."""
 
         err_inv = 1. / flux_err
-#        err_inv = err_inv.fillna(0.0)
 
-        # Note: This should be written properly....
-        if self.config['zp_type'] == 'ratio':
-            R = best_flux.values / flux.values
-            R[np.isinf(R)] = 0.
-            zp = np.median(R, axis=0)
-        elif self.config['zp_type'] == 'median':
-            def cost(R, model, flux, err_inv):
+        X = (best_flux, flux, err_inv)
+        zp_min = self.config['zp_min'] 
+
+#        ipdb.set_trace()
+
+        if zp_min == 'mag':
+            # Code to follow quite closely what Alex did.
+            def cost_mag(R, bestmodel, sig, err_inv):
+                shift = 10**(-0.4*R[0])
+                err = 1./err_inv
+
+                sig = sig * shift
+                err = err * shift
+
+                S = -2.5*np.log10(sig)-48.6
+                E = 2.5*np.log10(1+err/sig)
+                M = -2.5*np.log10(bestmodel)-48.6
+
+                median = np.nanmedian((S-M)/E)
+                val = np.abs(median)
+
+                return val
+
+            print('starting minimize')
+            zp = self._zp_min_cost(cost_mag, *X)
+            zp = 10**(-0.4*zp)
+        elif zp_min == 'flux':
+            def cost_flux(R, model, flux, err_inv):
                 return float(np.abs((err_inv*(flux*R[0] - model)).median()))
 
-            t1 = time.time()
-            # And another test for getting the median...
-            zp = np.ones(len(flux.band))
-            for i,band in enumerate(flux.band):
-                A = (best_flux.sel(band=band), flux.sel(band=band), \
-                     err_inv.sel(band=band))
+            zp = self._zp_min_cost(cost_flux, *X)
+        elif zp_min == 'flux2':
+            def cost_flux2(R, model, flux, err_inv):
+                return float(np.abs((err_inv*(flux*R[0] - model)/R[0]).median()))
 
-                X = minimize(cost, 1., args=A)
-                #assert not isinstance(X.x, np.nan), 'Internal error: found nan'
+            zp = self._zp_min_cost(cost_flux2, *X)
+        elif zp_min == 'flux_chi2':
+            zp = self._zp_flux_chi2(*X)
 
-                zp[i] = X.x
+        zp = xr.DataArray(zp, dims=('band',), coords={'band': flux.band})
 
-            print(time.time() - t1)
-          
- 
-        zp = xr.DataArray(zp, dims=('band'), coords={'band': flux.band})
- 
         return zp
 
     def zero_points(self, modelD, flux, flux_err):

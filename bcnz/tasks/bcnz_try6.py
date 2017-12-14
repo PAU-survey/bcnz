@@ -2,7 +2,7 @@
 
 from __future__ import print_function
 
-import ipdb
+from IPython.core import debugger
 import os
 import time
 import numpy as np
@@ -157,21 +157,9 @@ class bcnz_try6:
             k = np.einsum('g,gzs,gzs->gz',1./C, b_BB, vn)
             b = b_BB*k[:,:,np.newaxis] + b_NB
 
-#            ipdb.set_trace()
-#
-#
-#            b_BB_copy = b_BB.copy()
-#            b_BB *= k[:,:,np.newaxis]
-#            b = b + (k[:,:,np.newaxis]-1.)*b_BB_copy
-#
-#            print('i', i)
-#            print('k median', np.median(k), 'mean', k.mean())
-
+            # This should not happen...
             if np.isnan(b).any():
                 ipdb.set_trace()
-
-#            if i == 828:
-#                ipdb.set_trace()
 
             v = vn
 
@@ -186,18 +174,12 @@ class bcnz_try6:
         chi2_BB = var_inv*(k*flux.sel(band=BBlist) - F)**2
         chi2 = xr.concat([chi2_NB, chi2_BB], dim='band')
 
-#        ipdb.set_trace()
-#        chi2 = var_inv*(flux - F)**2
-
         pb = np.exp(-0.5*chi2.sum(dim='band'))
         pb = pb / (1e-100 + pb.sum(dim='z'))
         chi2 = chi2.sum(dim='band')
 
         norm = xr.DataArray(v, coords=coords_norm, dims=\
                             ('gal','z','model'))
-
-#        print(chi2.min(dim='gal'))
-#        ipdb.set_trace()
 
         return chi2, norm
 

@@ -4,7 +4,7 @@
 # Library containing the methods for estimating photo-z quality
 # parameters.
 
-import ipdb
+from IPython.core import debugger
 import numpy as np
 import xarray as xr
 
