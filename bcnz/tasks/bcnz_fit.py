@@ -17,7 +17,7 @@ from matplotlib import pyplot as plt
 import xdolphin as xd
 
 import sys
-sys.path.append('/home/eriksen/source/bcnz/bcnz/tasks')
+sys.path.append('/home/eriksen/code/bcnz/bcnz/tasks')
 import libpzqual
 
 #import .libpzqual
