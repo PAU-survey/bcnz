@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
-from IPython.core import debugger
+from IPython.core import debugger as ipdb
 import pandas as pd
 import xarray as xr
 
@@ -26,6 +26,8 @@ class fmod_adjust:
         coeff = coeff[coeff.bb == norm_band]
         coeff = coeff.set_index(['bb', 'nb']).to_xarray().val
         coeff = coeff.rename({'bb': 'band'})
+
+#        ipdb.set_trace()
 
         A = model.to_xarray().f_mod
         B = A.sel(band=norm_band)

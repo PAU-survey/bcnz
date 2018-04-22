@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
-from IPython.core import debugger
+from IPython.core import debugger as ipdb
 import time
 import numpy as np
 import pandas as pd
@@ -51,7 +51,11 @@ class flux_model:
         print('Starting to regrid')
         for i,model in enumerate(f_mod.model.values):
             for j,band in enumerate(f_mod.band.values):
-                y = f_mod.sel(band=band, model=model).values
+                #ipdb.set_trace()
+
+                # For some reason this started to fail...
+                #y = f_mod.sel(band=band, model=model).values
+                y = f_mod[j,:,i].values
                 spl = splrep(z, y)
                 A[:,i,j] = splev(zgrid, spl)
 
@@ -208,7 +212,8 @@ class flux_model:
         f_mod = f_mod.unstack(dim='model')
         f_mod = f_mod.to_dataframe(name='f_mod')
 
-        if 1 < len(f_mod.to_xarray().EBV):
-            ipdb.set_trace()
-
+        #ipdb.set_trace()
+        #if 1 < len(f_mod.to_xarray().EBV):
+        #    ipdb.set_trace()
+        
         self.output.result = f_mod

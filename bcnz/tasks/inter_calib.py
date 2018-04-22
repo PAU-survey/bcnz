@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
-from IPython.core import debugger
+from IPython.core import debugger as ipdb
 import sys
 import time
 import numpy as np
@@ -17,7 +17,8 @@ descr = {
   'fit_bands': 'Bands used in the fit',
   'Nrounds': 'How many rounds in the zero-point calibration',
   'Niter': 'Number of iterations in minimization',
-  'zp_min': 'How to estimate the zero-points'
+  'zp_min': 'How to estimate the zero-points',
+  'learn_rate': 'Learning rate'
 }
 
 class inter_calib:
@@ -30,7 +31,9 @@ class inter_calib:
               'fit_bands': [],
               'Nrounds': 5,
               'Niter': 1000,
-              'zp_min': 'flux2'}
+              'zp_min': 'flux2',
+              'learn_rate': 0.2,
+              'min_ri_ratio': 0.5}
 
     def check_config(self):
         assert self.config['fit_bands'], 'Need to set: fit_bands'
@@ -301,7 +304,26 @@ class inter_calib:
         X = (best_flux, flux, err_inv)
         zp_min = self.config['zp_min'] 
 
+        # Color selection.
+        flux_ratio = flux.sel(band='subaru_r') / flux.sel(band='subaru_i')
+        touse = self.config['min_ri_ratio'] < flux_ratio
+
+        best_flux = best_flux[touse]
+        flux = flux[touse]
+        flux_err = flux_err[touse]
+
+        # SN selection.
+        SN = flux / flux_err
+        SN_med = SN.median(axis=1)
+        touse = 10 < SN_med
+
+        best_flux = best_flux[touse]
+        flux = flux[touse]
+        flux_err = flux_err[touse]
+
+
 #        ipdb.set_trace()
+
 
         if zp_min == 'mag':
             # Code to follow quite closely what Alex did.
@@ -365,6 +387,8 @@ class inter_calib:
                  coords={'band': flux.band})
 
         bb_norm = self.config['bb_norm']
+#        max_abs = self.config['max_abs_change']
+        learn_rate = self.config['learn_rate']
 
         fmin = self.minimize_free if self.config['free_ampl'] else self.minimize
         for i in range(self.config['Nrounds']):
@@ -382,10 +406,30 @@ class inter_calib:
                         coords={'ref_id': flux.ref_id, 'band': flux.band})
 
             zp = self.calc_zp(best_flux, flux, flux_err)
+
+#            ipdb.set_trace()
+
+            # Setting learn_rate = 1. disable the learning rate.
+            # Clipping to a maximum value does not work. 
+            print('zp round: {}'.format(i))
+            print('zp full')
+            print(zp)
+            if i < 9:
+                print('Limiting zp shift..')
+                zp = 1 + learn_rate*(zp - 1.)
+
+
+#            ipdb.set_trace()
+#            # If you don't like this, set a high value.
+#            zp = np.clip(zp, 1.-max_abs, 1+max_abs)
+
+            #ipdb.set_trace()
+
             zp_tot *= zp
 
-            print('zp round: {}'.format(i))
             print(zp.values)
+            print(zp_tot.values)
+ 
             flux = flux*zp
             flux_err = flux_err*zp
 
@@ -405,8 +449,10 @@ class inter_calib:
             f_mod = f_mod.sel(z=zs.values, method='nearest')
 
             f_mod = f_mod.sel(band=fit_bands)
-            if 1 < len(f_mod.EBV):
-                ipdb.set_trace()
+
+# I no longer seem to pass EBV.
+#            if 1 < len(f_mod.EBV):
+#                ipdb.set_trace()
 
             if 'EBV' in f_mod.dims:
                 f_mod = f_mod.squeeze('EBV')
