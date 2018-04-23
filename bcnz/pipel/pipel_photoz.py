@@ -20,11 +20,15 @@ def pipel(memba):
     coadd.config['prod_memba'] = memba
 
     D = {'coadd': coadd, 
+         'ref_cat': xd.Job('paudm_cosmos'),
          'galcat': pipel_galcat.galcat(),
          'filters': pipel_filters.filters()}
 
     xpipel = xd.Job()
     xpipel.depend['pzcat'] = pipel_pz_chunks.pipel()
 
+    libcommon.replace(xpipel, D)
 
-    ipdb.set_trace()
+    xpipel.set_session(xd.session())
+
+    return xpipel

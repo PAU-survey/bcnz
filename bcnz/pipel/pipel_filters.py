@@ -13,7 +13,7 @@ def filters(): #fjc_filters):
     subaru_filters = xd.Job('subaru_filters')
 
     # TODO: Replace this with the official ones from PAUdm..
-    pau_filters = xd.Job('pau_filters')
+    pau_filters = xd.Job('paudm_filters')
 
     F = xd.Job('join_output')
     F.depend['pau'] = pau_filters

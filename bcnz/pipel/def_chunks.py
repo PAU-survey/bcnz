@@ -44,4 +44,3 @@ def pz_chunks():
     df['sep_lines'] = 'O'
 
     return df
-

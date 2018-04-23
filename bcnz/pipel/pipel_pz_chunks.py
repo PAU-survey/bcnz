@@ -7,7 +7,7 @@ import numpy as np
 
 import libcommon
 
-import pipel_photoz
+import pipel_pz_basic
 import pz_chunks
 
 import xdolphin as xd
@@ -51,7 +51,7 @@ def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False):
     # prevot_calib - If including Prevot extinction for the calibration run.
     # prevot_pzrun - If including Prevot extinction for the photo-z run.
 
-    pzcat_orig = pipel_photoz.pipel()
+    pzcat_orig = pipel_pz_basic.pipel()
 
     # Default bands.
     X = 455 + 10*np.arange(40)
@@ -99,7 +99,9 @@ def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False):
 
         pzcat = pzcat_orig.shallow_copy()
         pzcat.depend['model'] = modelD[key]
-        pzcat.depend['galcat'] = libcommon.Common('galcat')
+        #pzcat.depend['galcat'] = libcommon.Common('galcat')
+        pzcat.depend['galcat'] = inter_calib #libcommon.Common('galcat')
+
         bcnz_comb_ext.depend['pzcat_{}'.format(key)] = pzcat
 
     return bcnz_comb_ext
