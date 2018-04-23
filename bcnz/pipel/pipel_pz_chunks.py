@@ -8,7 +8,7 @@ import numpy as np
 import libcommon
 
 import pipel_pz_basic
-import pz_chunks
+import def_chunks
 
 import xdolphin as xd
 
@@ -59,7 +59,7 @@ def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False):
     BB = ['cfht_u', 'subaru_B', 'subaru_V', 'subaru_r', 'subaru_i', 'subaru_z']
 
     if not chunks:
-        chunks = pz_chunks.pz_chunks()
+        chunks = def_chunks.pz_chunks()
 
     # Synthetic broad band coefficients used to scale the 
     # broad band fluxes.
