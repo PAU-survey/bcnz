@@ -6,7 +6,6 @@ import ipdb
 import numpy as np
 
 import xdolphin as xd
-import libtag
 import libcommon
 
 def get_ab():
