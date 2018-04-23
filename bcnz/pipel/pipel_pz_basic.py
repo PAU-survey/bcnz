@@ -6,7 +6,6 @@ import ipdb
 import numpy as np
 
 import xdolphin as xd
-import libcommon
 
 def get_ab():
     """The input to the flux model."""
@@ -19,11 +18,11 @@ def get_ab():
     ab_cont = xd.Job('ab_cont')
     ab_cont.config.update({'dz_ab': 0.001, 'zmax_ab': 2.05})
     ab_cont.depend['seds'] = seds
-    ab_cont.depend['filters'] = libcommon.Common('filters')
+    ab_cont.depend['filters'] = xd.Common('filters')
     ab_cont.depend['extinction'] = extinction
 
     ab_lines = xd.Job('emission_lines')
-    ab_lines.depend['filters'] = libcommon.Common('filters')
+    ab_lines.depend['filters'] = xd.Common('filters')
     ab_lines.depend['extinction'] = extinction
 
     return ab_cont, ab_lines
@@ -66,8 +65,8 @@ def get_galcat():
     """
 
     nbsubset = xd.Job('nbpzsubset')
-    nbsubset.depend['input'] = libcommon.Common('galcat')
-    nbsubset.depend['ref_cat'] = libcommon.Common('ref_cat')
+    nbsubset.depend['input'] = xd.Common('galcat')
+    nbsubset.depend['ref_cat'] = xd.Common('ref_cat')
 
     select_data = xd.Job('bcnz_select')
     select_data.depend['input'] = nbsubset

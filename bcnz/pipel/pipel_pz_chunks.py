@@ -3,9 +3,6 @@
 
 from IPython.core import debugger as ipdb
 import numpy as np
-#import pandas as pd
-
-import libcommon
 
 import pipel_pz_basic
 import def_chunks
@@ -65,7 +62,7 @@ def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False, bands=False):
     # Synthetic broad band coefficients used to scale the 
     # broad band fluxes.
     bbsyn_coeff = xd.Job('bbsyn_coeff')
-    bbsyn_coeff.depend['filters'] = libcommon.Common('filters')
+    bbsyn_coeff.depend['filters'] = xd.Common('filters')
 
     # These are needed both for calibration and the photo-z.
     modelD = {}
@@ -100,8 +97,7 @@ def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False, bands=False):
 
         pzcat = pzcat_orig.shallow_copy()
         pzcat.depend['model'] = modelD[key]
-        #pzcat.depend['galcat'] = libcommon.Common('galcat')
-        pzcat.depend['galcat'] = inter_calib #libcommon.Common('galcat')
+        pzcat.depend['galcat'] = inter_calib
 
         bcnz_comb_ext.depend['pzcat_{}'.format(key)] = pzcat
 
