@@ -8,8 +8,8 @@ import numpy as np
 import pandas as pd
 
 
-class extinction_lagaile:
-    """Extinction laws in the Lagaile paper."""
+class extinction_laigle:
+    """Extinction laws in the Laigle COSMOS paper."""
 
     version = 1.0
     config = {}
