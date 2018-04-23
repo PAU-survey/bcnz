@@ -2,6 +2,8 @@
 # encoding: UTF8
 
 from IPython.core import debugger
+import os
+import sys
 import time
 import numpy as np
 import pandas as pd
@@ -14,8 +16,9 @@ descr = {'use_pz': 'Combine the result using the full pdf',
          'Niter': 'Number of iteratios when estimating the priors'
         }
 
-import sys
 sys.path.append('/home/eriksen/source/bcnz/bcnz/tasks')
+sys.path.append(os.path.expanduser('~/Dropbox/pauphotoz/bcnz/bcnz/tasks'))
+
 import libpzqual
 
 class bcnz_comb_ext:
