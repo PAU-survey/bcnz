@@ -11,12 +11,9 @@ import pandas as pd
 def pz_chunks():
     """Specify all the different SED combinations to run over."""
 
-#    # Ok, just change this...
-#    sed_dir = '/home/eriksen/data/photoz/seds/cosmos_noext'
     sed_dir = '~/data/photoz/seds/cosmos_noext'
 
     df = pd.DataFrame()
-
     X = [(False, ['Ell1_A_0', 'Ell2_A_0', 'Ell3_A_0', 'Ell4_A_0', 'Ell5_A_0','Ell6_A_0']),
          (False, ['Ell6_A_0', 'Ell7_A_0', 'S0_A_0','Sa_A_0','Sb_A_0', 'Sc_A_0']),
          (True, ['Sc_A_0', 'Sd_A_0', 'Sdm_A_0', 'SB0_A_0','SB1_A_0','SB2_A_0']),
