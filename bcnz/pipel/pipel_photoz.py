@@ -19,10 +19,12 @@ def pipel(memba):
     coadd = xd.Job('paudm_coadd')
     coadd.config['prod_memba'] = memba
 
+    # Here the galaxy
     D = {'coadd': coadd, 
          'ref_cat': xd.Job('paudm_cosmos'),
          'galcat': pipel_galcat.galcat(),
          'filters': pipel_filters.filters()}
+
 
     xpipel = xd.Job()
     xpipel.depend['pzcat'] = pipel_pz_chunks.pipel()

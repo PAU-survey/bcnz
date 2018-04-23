@@ -43,7 +43,7 @@ def get_model(part, model, bbsyn_coeff):
     return ymodel
 
 
-def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False):
+def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False, bands=False):
     """Pipeline for BCNZv2 when running with many chunks."""
 
     # chunks - Dataframe specifying the chunks to use. If not specified, use
@@ -53,10 +53,11 @@ def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False):
 
     pzcat_orig = pipel_pz_basic.pipel()
 
-    # Default bands.
-    X = 455 + 10*np.arange(40)
-    NB = list(map('NB{}'.format, X))
-    BB = ['cfht_u', 'subaru_B', 'subaru_V', 'subaru_r', 'subaru_i', 'subaru_z']
+    if not bands:
+        # Default bands.
+        NB = list(map('NB{}'.format, 455 + 10*np.arange(40)))
+        BB = ['cfht_u', 'subaru_B', 'subaru_V', 'subaru_r', 'subaru_i', 'subaru_z']
+        bands = NB + BB
 
     if not chunks:
         chunks = def_chunks.pz_chunks()
@@ -64,7 +65,7 @@ def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False):
     # Synthetic broad band coefficients used to scale the 
     # broad band fluxes.
     bbsyn_coeff = xd.Job('bbsyn_coeff')
-    bbsyn_coeff.depend['filters'] = libcommon.Common('filters') #pipel1.get('join_output')
+    bbsyn_coeff.depend['filters'] = libcommon.Common('filters')
 
     # These are needed both for calibration and the photo-z.
     modelD = {}
@@ -75,7 +76,7 @@ def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False):
     # Calibration by comparing the model fit to the observations.
     inter_calib = xd.Job('inter_calib')
     inter_calib.depend['bbsyn_coeff'] = bbsyn_coeff
-    inter_calib.depend['galcat'] = libcommon.Common('galcat') #pipel.get('bcnz_select')
+    inter_calib.depend['galcat'] = pzcat_orig.galcat
 
     # These should be elsewhere...
     inter_calib.config.update({\
