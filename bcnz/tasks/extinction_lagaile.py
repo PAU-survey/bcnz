@@ -14,9 +14,9 @@ class extinction_lagaile:
     version = 1.0
     config = {}
 
+    d = '~/data/photoz/ext_laws'
     def entry(self):
-        d = '/home/eriksen/data/photoz/ext_laws'
-        g = os.path.join(d, '*.dat')
+        g = os.path.join(os.path.expanduser(d), '*.dat')
        
         df = pd.DataFrame() 
         for path in glob.glob(g):
