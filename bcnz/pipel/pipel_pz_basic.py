@@ -21,9 +21,11 @@ def get_ab():
     ab_cont.depend['filters'] = xd.Common('filters')
     ab_cont.depend['extinction'] = extinction
 
+
     ab_lines = xd.Job('emission_lines')
     ab_lines.depend['filters'] = xd.Common('filters')
     ab_lines.depend['extinction'] = extinction
+    ab_lines.depend['ratios'] = xd.Job('line_ratios')
 
     return ab_cont, ab_lines
 
