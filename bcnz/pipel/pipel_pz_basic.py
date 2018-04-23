@@ -14,7 +14,7 @@ def get_ab():
     seds = xd.Job('curves')
     seds.config.update({'input_dir': '/home/eriksen/data/photoz/seds/cosmos_self', 'suf': 'sed', 'min_val': 0.0})
 
-    extinction = xd.Job('extinction_lagaile')
+    extinction = xd.Job('extinction_laigle')
 
     ab_cont = xd.Job('ab_cont')
     ab_cont.config.update({'dz_ab': 0.001, 'zmax_ab': 2.05})
