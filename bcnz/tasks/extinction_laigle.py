@@ -25,6 +25,8 @@ class extinction_laigle:
 
             df = df.append(part, ignore_index=True)
 
+        assert len(df), 'No extinction curves found'
+
         return df
 
     def run(self):
