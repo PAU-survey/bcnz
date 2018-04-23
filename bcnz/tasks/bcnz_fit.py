@@ -4,6 +4,7 @@ from __future__ import print_function
 
 from IPython.core import debugger
 import os
+import sys
 import time
 import numpy as np
 import pandas as pd
@@ -16,8 +17,8 @@ from scipy.integrate import trapz, simps
 from matplotlib import pyplot as plt
 import xdolphin as xd
 
-import sys
 sys.path.append('/home/eriksen/code/bcnz/bcnz/tasks')
+sys.path.append(os.path.expanduser('~/Dropbox/pauphotoz/bcnz/bcnz/tasks'))
 import libpzqual
 
 #import .libpzqual
