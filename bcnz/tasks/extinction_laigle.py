@@ -16,7 +16,7 @@ class extinction_laigle:
 
     d = '~/data/photoz/ext_laws'
     def entry(self):
-        g = os.path.join(os.path.expanduser(d), '*.dat')
+        g = os.path.join(os.path.expanduser(self.d), '*.dat')
        
         df = pd.DataFrame() 
         for path in glob.glob(g):
