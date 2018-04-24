@@ -72,7 +72,7 @@ def get_galcat():
 
     select_data = xd.Job('bcnz_select')
     select_data.depend['input'] = nbsubset
-    select_data.config['SN_lim'] = 2.6
+    select_data.config['SN_lim'] = 1.0
 
     return select_data
 
