@@ -18,21 +18,24 @@ descr = {
   'Nrounds': 'How many rounds in the zero-point calibration',
   'Niter': 'Number of iterations in minimization',
   'zp_min': 'How to estimate the zero-points',
-  'learn_rate': 'Learning rate'
+  'learn_rate': 'Learning rate',
+  'SN_min': 'Minimum median SN',
+  'min_ri_ratio': 'Minimum ri flux ratio'
 }
 
 class inter_calib:
     """Calibration between the broad and the narrow bands."""
 
-    version = 1.21
+    version = 1.23
     config = {'fix_to_synbb': True,
               'free_ampl': False,
-              'bb_norm': 'cfht_r',
+              'bb_norm': 'subaru_r',
               'fit_bands': [],
               'Nrounds': 5,
               'Niter': 1000,
               'zp_min': 'flux2',
               'learn_rate': 0.2,
+              'SN_min': 5.,
               'min_ri_ratio': 0.5}
 
     def check_config(self):
@@ -315,7 +318,7 @@ class inter_calib:
         # SN selection.
         SN = flux / flux_err
         SN_med = SN.median(axis=1)
-        touse = 10 < SN_med
+        touse = self.config['SN_min'] < SN_med
 
         best_flux = best_flux[touse]
         flux = flux[touse]
@@ -490,7 +493,7 @@ class inter_calib:
 
         path = self.output.empty_file('default')
         store = pd.HDFStore(path, 'w')
-        store['default'] = galcat_out
+        store.append('default', galcat_out)
         store['zp'] = zp.to_dataframe('zp')
         store['ratio'] = ratio.to_dataframe('ratio')
         store.close()
