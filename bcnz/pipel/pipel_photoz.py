@@ -8,10 +8,7 @@ import pipel_filters
 import pipel_galcat
 import pipel_pz_chunks
 
-# Move this away...
-import libcommon
-
-def pipel(memba):
+def pipel(memba, **kwargs):
     """Photo-z pipeline for the PAU data."""
 
     # Here we intentionally don't set a default memba
@@ -27,9 +24,8 @@ def pipel(memba):
 
 
     xpipel = xd.Job()
-    xpipel.depend['pzcat'] = pipel_pz_chunks.pipel()
-
-    libcommon.replace(xpipel, D)
+    xpipel.depend['pzcat'] = pipel_pz_chunks.pipel(**kwargs)
+    xpipel.replace_common(D)
 
     xpipel.set_session(xd.session())
 
