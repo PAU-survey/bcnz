@@ -27,8 +27,6 @@ class fmod_adjust:
         coeff = coeff.set_index(['bb', 'nb']).to_xarray().val
         coeff = coeff.rename({'bb': 'band'})
 
-#        ipdb.set_trace()
-
         A = model.to_xarray().f_mod
         B = A.sel(band=norm_band)
         A = A.stack(model=['z', 'sed', 'EBV'])
@@ -38,7 +36,6 @@ class fmod_adjust:
         synbb = coeff.dot(A).unstack(dim='model')
         F = xr.Dataset({'flux': B, 'flux_syn': synbb})
         F = F.to_dataframe()
-#        F['ratio'] = F.flux / F.flux_syn
         F['ratio'] = F.flux_syn / F.flux
 
         # To avoid extremely large ratios.
@@ -46,6 +43,8 @@ class fmod_adjust:
         F =  F.reset_index()
         F = F.merge(pd.DataFrame(flux_median), left_on='sed', right_index=True)
         F['fix'] = F.flux < 0.05*F.flux_median
+
+
         F.loc[F.fix, 'ratio'] = 1.0
 
         ratio = F[['band', 'sed', 'z', 'ratio']]
@@ -58,6 +57,7 @@ class fmod_adjust:
         model.index = model.index.droplevel('EBV')
         model = model.to_xarray().f_mod
 
+        # Note: The ratio should be the same for all (broad) bands.
         ratio = ratio.drop(['band'], axis=1)
         ratio = ratio.set_index(['z', 'sed']).to_xarray().ratio
 
