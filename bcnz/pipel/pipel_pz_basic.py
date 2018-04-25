@@ -35,17 +35,16 @@ def get_pzcat_config():
     config = {
       'dz': 0.001,
       'zmax': 1.0,
-      'Niter': 1000, #200,
-    #  'Niter': 400,
+      'Niter': 1000,
     }
 
-    config['filters'] = list(map('NB{}'.format, range(455, 845+1, 10)))
-    # Add the SEDs..
-    ell = ['ell2','ell5','ell13']
-    sp = ['s0','sa','sb','sc','sd']
-    sb = sb = map('sb{}'.format, range(11))
-    seds = ell + sp + list(sb)
-    config['seds'] = seds
+#    config['filters'] = list(map('NB{}'.format, range(455, 845+1, 10)))
+#    # Add the SEDs..
+#    ell = ['ell2','ell5','ell13']
+#    sp = ['s0','sa','sb','sc','sd']
+#    sb = sb = map('sb{}'.format, range(11))
+#    seds = ell + sp + list(sb)
+#    config['seds'] = seds
 
     return config
 
