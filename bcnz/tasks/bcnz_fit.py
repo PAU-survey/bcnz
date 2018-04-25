@@ -59,8 +59,7 @@ class bcnz_fit:
 
     def check_conf(self):
         assert self.config['filters'], 'Need to set filters'
-        assert self.config['seds'], 'Need to set: seds'
-
+        assert not self.config['seds'], 'This option is not used...'
 
     def get_arrays(self, data_df):
         """Read in the arrays and present them as xarrays."""
