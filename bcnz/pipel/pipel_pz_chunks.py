@@ -61,7 +61,7 @@ def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False, bands=False,
 
     pzcat_orig = pipel_pz_basic.pipel()
     pzcat_orig.config['filters'] = bands
-    pzcat_orid.config['Niter'] = Niter
+    pzcat_orig.config['Niter'] = Niter
 
     # Synthetic broad band coefficients used to scale the 
     # broad band fluxes.
