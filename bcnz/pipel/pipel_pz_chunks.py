@@ -48,7 +48,6 @@ def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False, bands=False):
     # prevot_calib - If including Prevot extinction for the calibration run.
     # prevot_pzrun - If including Prevot extinction for the photo-z run.
 
-    pzcat_orig = pipel_pz_basic.pipel()
 
     if not bands:
         # Default bands.
@@ -58,6 +57,9 @@ def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False, bands=False):
 
     if not chunks:
         chunks = def_chunks.pz_chunks()
+
+    pzcat_orig = pipel_pz_basic.pipel()
+    pzcat_orig.config['bands'] = bands
 
     # Synthetic broad band coefficients used to scale the 
     # broad band fluxes.
