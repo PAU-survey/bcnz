@@ -13,13 +13,20 @@ descr = {'use_pz': 'Combine the result using the full pdf',
          'flat_priors': True,
          'odds_lim': 'The limit withing to estimate the ODDS',
          'width_frac': 'Fraction (one-sided) outside pz_width',
-         'Niter': 'Number of iteratios when estimating the priors'
+         'Niter': 'Number of iterations when estimating the priors'
         }
 
+# Ok, this should not have to be loaded...
 sys.path.append('/home/eriksen/source/bcnz/bcnz/tasks')
 sys.path.append(os.path.expanduser('~/Dropbox/pauphotoz/bcnz/bcnz/tasks'))
 
 import libpzqual
+
+descr = {'use_pz': 'TODO: what is this???',
+         'flat_priors': 'If applying priors or not.',
+         'odds_lim': 'Limit within to estimate the ODDS',
+         'width_frac': 'Fraction used to estimate the pz_width'}
+
 
 class bcnz_comb_ext:
     """Combine the different extinction runs."""
@@ -33,6 +40,9 @@ class bcnz_comb_ext:
     ngal = 300
 
     def load_catalogs(self):
+        """Load the galaxy catalogs."""
+
+        # Note: This is only needed so I can actually estimate the chi2 value.
         D = {}
         for key,dep in self.input.depend.items():
             # Since it also has to depend on the galaxy catalogs.
@@ -46,6 +56,8 @@ class bcnz_comb_ext:
         return cat_out
 
     def load_pdf(self):
+        """Load the redshift distibution."""
+
         print('Start loading pz..')
 
         df = pd.DataFrame()
@@ -148,6 +160,7 @@ class bcnz_comb_ext:
 
         rd_keys = list(RD.keys())
         rd_keys.sort()
+
         while True:
             # Storing directly in a large dataarray saved 10% of the runtime,
             # was potentially dangerous since it had implicit assumptions on
@@ -258,13 +271,13 @@ class bcnz_comb_ext:
 
 
     def combine_pdf(self):
-        priors = self.init_priors()
+        """Combine the pdf of many different runs."""
 
+        priors = self.init_priors()
         store_out = self.store_out()
 
-        Lpriors = []
-
         Niter = self.config['Niter']
+        Lpriors = []
         for i in range(Niter):
             print('Iteration', i)
             Rin = self._chi2_iterator()
@@ -285,57 +298,8 @@ class bcnz_comb_ext:
 
         return pzcat
 
-    def combine_cat(self, cat_in):
-
-        cat_out = cat_in.loc[cat_in.groupby('ref_id').chi2.idxmin()]
-
-        return cat_out
-
-    def load_models(self):
-        D = {}
-
-        for key,dep in self.input.depend.items():
-            print('loading', key)
-
-            # Since it also has to depend on the galaxy catalogs.
-            if not key.startswith('pzcat_'):
-                continue
-
-            best_model = dep.get_store()['best_model']
-            D[key] = best_model
-
-        return D
-
-    def get_best_model(self, cat_in, D):
-        F = pd.concat(D, names=['run']).reset_index()
-
-        tosel = cat_in.loc[cat_in.groupby('ref_id').chi2.idxmin()]
-
-        nbest = tosel[['run', 'ref_id']].merge(F, on=['run', 'ref_id'])
-        nbest = nbest.set_index(['ref_id', 'band'])
-
-        return nbest
-
-
     def run(self):
-        if not self.config['use_pz']:
-            raise NotImplementedError('This is no longer in use..')
-            cat_in = self.load_catalogs()
-            pzcat = self.combine_cat(cat_in)
-            pzcat = pzcat.set_index('ref_id')
-        else:
-#            cat_in = self.load_catalogs()
-#            pdf_in = self.load_pdf()
-            self.combine_pdf()
+        # I don't remember why this is no longer in use...
+        assert not self.config['use_pz']:
 
-
-        # Estimate best model..
-#        _models = self.load_models()
-#        best_model = self.get_best_model(cat_in, _models)
-
-        print('here...')
-#        path_out = self.output.empty_file('default')
-#        store = pd.HDFStore(path_out, 'w')
-#        store['default'] = pzcat
-#        store['best_model'] = best_model
-#        store.close()
+        self.combine_pdf()
