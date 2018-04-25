@@ -35,7 +35,7 @@ def get_pzcat_config():
     config = {
       'dz': 0.001,
       'zmax': 1.0,
-      'Niter': 200,
+      'Niter': 1000, #200,
     #  'Niter': 400,
     }
 
