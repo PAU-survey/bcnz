@@ -25,6 +25,7 @@ def pipel(memba, **kwargs):
 
     xpipel = xd.Job()
     xpipel.depend['pzcat'] = pipel_pz_chunks.pipel(**kwargs)
+    xpipel.depend['ref_cat'] = xd.Common('ref_cat')
     xpipel.replace_common(D)
 
     xpipel.set_session(xd.session())
