@@ -40,7 +40,8 @@ def get_model(part, model, bbsyn_coeff):
     return ymodel
 
 
-def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False, bands=False):
+def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False, bands=False,
+          ngal=0, Niter=1000):
     """Pipeline for BCNZv2 when running with many chunks."""
 
     # chunks - Dataframe specifying the chunks to use. If not specified, use
@@ -59,7 +60,8 @@ def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False, bands=False):
         chunks = def_chunks.pz_chunks()
 
     pzcat_orig = pipel_pz_basic.pipel()
-    pzcat_orig.config['bands'] = bands
+    pzcat_orig.config['filters'] = bands
+    pzcat_orid.config['Niter'] = Niter
 
     # Synthetic broad band coefficients used to scale the 
     # broad band fluxes.
@@ -91,6 +93,11 @@ def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False, bands=False):
 
         inter_calib.depend['model_{}'.format(key)] = modelD[key]
 
+    # Just limit the number of galaxies...
+    galcat_lim = xd.Job('limit_ngal')
+    galcat_lim.depend['galcat'] = inter_calib
+    galcat_lim.config['ngal'] = ngal
+
     # Linking the photo-z runs.
     bcnz_comb_ext = xd.Job('bcnz_comb_ext')
     for key,row in chunks.iterrows():
@@ -99,7 +106,7 @@ def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False, bands=False):
 
         pzcat = pzcat_orig.shallow_copy()
         pzcat.depend['model'] = modelD[key]
-        pzcat.depend['galcat'] = inter_calib
+        pzcat.depend['galcat'] = galcat_lim
 
         bcnz_comb_ext.depend['pzcat_{}'.format(key)] = pzcat
 
