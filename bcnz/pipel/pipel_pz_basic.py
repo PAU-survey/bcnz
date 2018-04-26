@@ -69,7 +69,7 @@ def get_galcat():
     nbsubset.depend['input'] = xd.Common('galcat')
     nbsubset.depend['ref_cat'] = xd.Common('ref_cat')
 
-    select_data = xd.Job('bcnz_select')
+    select_data = xd.Job('bcnz_fix_noise')
     select_data.depend['input'] = nbsubset
     select_data.config['SN_lim'] = 1.0
 
