@@ -11,7 +11,7 @@ descr = {'SN_lim': 'Limit in the estimated SN',
 class bcnz_fix_noise:
     """Add noise floor and select fluxes for the fitting."""
 
-    version = 1.10
+    version = 1.15
     config = {'SN_lim': -100., 'min_err': 0.03,
               'apply_mag': False}
 
@@ -19,9 +19,10 @@ class bcnz_fix_noise:
         """Limit based on SN."""
 
         SN = cat['flux'] / cat['flux_err']
-
         SN_lim = self.config['SN_lim']
+
         cat['flux'] = cat['flux'][SN_lim < SN]
+        cat['flux_err'] = cat['flux_err'][SN_lim < SN]
 
         return cat
 
@@ -46,10 +47,12 @@ class bcnz_fix_noise:
             if not band.startswith('NB'):
                 continue
 
-            SN = cat['flux', band] / cat['flux_err', band]
+            # Some the absolute values are suspicious...
+            SN = np.abs(cat['flux', band]) / cat['flux_err', band]
+
             mag_err = 2.5*np.log10(1+1./SN)
             mag_err = np.sqrt(mag_err**2 + self.config['min_err']**2)
-            flux_err = cat['flux', band]*(10**(0.4*mag_err) - 1.)
+            flux_err = np.abs(cat['flux', band])*(10**(0.4*mag_err) - 1.)
 
             cat[('flux_err', band)] = flux_err
 
