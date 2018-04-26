@@ -300,6 +300,6 @@ class bcnz_comb_ext:
 
     def run(self):
         # I don't remember why this is no longer in use...
-        assert not self.config['use_pz']:
+        assert not self.config['use_pz']
 
         self.combine_pdf()
