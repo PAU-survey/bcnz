@@ -65,7 +65,9 @@ def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False, bands=False,
 
     # Synthetic broad band coefficients used to scale the 
     # broad band fluxes.
+    #bbsyn_coeff = xd.Job('bbsyn_coeff')
     bbsyn_coeff = xd.Job('bbsyn_coeff')
+    bbsyn_coeff = xd.Job('NB2BB')
     bbsyn_coeff.depend['filters'] = xd.Common('filters')
 
     # These are needed both for calibration and the photo-z.
