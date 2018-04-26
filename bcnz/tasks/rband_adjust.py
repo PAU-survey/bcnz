@@ -6,11 +6,13 @@ import time
 import numpy as np
 from scipy.optimize import curve_fit
 
-descr = {'ind': ''}
+descr = {'ind': '',
+         'synband': 'Which synthetic broad band to use',
+         'scale_data': 'If scaling the data'}
 
 class rband_adjust:
     version = 1.0
-    config = {'ind': False}
+    config = {'ind': False, 'synband': 'subaru_r', 'scale_data': True}
 
     def fix_missing_data(self, cat_in):
         """Linear interpolation in magnitude space to replace missing data."""
@@ -25,8 +27,6 @@ class rband_adjust:
         miss_ids = np.isnan(pau_syn).any(axis=1)
         miss_rows = np.arange(len(cat_in))[miss_ids]
 
-        X = 455 + 10*np.arange(40)
-        t2 = time.time()
         for i in miss_rows:
             touse = ~np.isnan(pau_syn[i])
 
@@ -38,8 +38,22 @@ class rband_adjust:
 
         return pau_syn
 
-    def entry(self, cat_in):
+    def find_synbb(self, pau_syn, bbsyn_coeff):
+        bbsyn_coeff = bbsyn_coeff[bbsyn_coeff.bb == self.config['synband']]
+ 
+#        X = 455 + 10*np.arange(40)
+        NB = list(map('NB{}'.format, 455 + 10*np.arange(40)))
+
+        vec = bbsyn_coeff.pivot('bb', 'nb', 'val')[NB].values[0]
+        synbb = np.dot(pau_syn, vec)
+
+        return synbb
+
+    def entry(self, cat_in, bbsyn_coeff):
         pau_syn = self.fix_missing_data(cat_in)
+        synbb = self.find_synbb(pau_syn, bbsyn_coeff)
+
+        from matplotlib import pyplot as plt
 
         ipdb.set_trace()
 
@@ -47,4 +61,5 @@ class rband_adjust:
 
     def run(self):
         cat_in = self.input.galcat.result
-        self.output.result = self.entry(cat_in)
+        bbsyn_coeff = self.input.bbsyn_coeff.result
+        self.output.result = self.entry(cat_in, bbsyn_coeff)
