@@ -12,7 +12,7 @@ descr = {'rm_stars': 'If removing stars here.'}
 class cosmos_laigle:
     """Interface from reading the COSMOS Laigle catalogue."""
 
-    version = 1.03
+    version = 1.04
     config = {'rm_stars': True}
 
     # Note, this code does *not* apply zero-points, following Alex
@@ -74,7 +74,10 @@ class cosmos_laigle:
 
         if self.config['rm_stars']:
             cat = cat[cat.type == 0]
- 
+
+        # Having this column from two catalogs gives problems.
+        del cat['type']
+
         return cat
 
     def run(self):
