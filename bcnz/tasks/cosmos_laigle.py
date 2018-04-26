@@ -12,7 +12,7 @@ descr = {'rm_stars': 'If removing stars here.'}
 class cosmos_laigle:
     """Interface from reading the COSMOS Laigle catalogue."""
 
-    version = 1.04
+    version = 1.06
     config = {'rm_stars': True}
 
     # Note, this code does *not* apply zero-points, following Alex
@@ -68,15 +68,25 @@ class cosmos_laigle:
         for key,val in other.items():
             cat[key] = val
 
-    def entry(self):
-        cat = self.read_cat()
-        self.other_cols(cat)
-
+    def fixes(self, cat):
         if self.config['rm_stars']:
             cat = cat[cat.type == 0]
 
         # Having this column from two catalogs gives problems.
         del cat['type']
+
+        # Scalte to PAU fluxes.
+        ab_factor = 10**(0.4*26)
+        cosmos_scale = ab_factor * 10**(0.4*48.6)
+        cat.loc[:,'flux'] = cosmos_scale*cat.flux
+        cat.loc[:,'flux_err'] = cosmos_scale*cat.flux_err
+
+        return cat
+
+    def entry(self):
+        cat = self.read_cat()
+        self.other_cols(cat)
+        cat = self.fixes(cat)
 
         return cat
 
