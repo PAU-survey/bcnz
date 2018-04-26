@@ -3,6 +3,7 @@
 
 from __future__ import print_function
 
+from IPython.core import debugger as ipdb
 import time
 import numpy as np
 import pandas as pd
@@ -19,7 +20,7 @@ descr = {
 class NB2BB:
     """The coefficients between narrow and broad bands which Alex used."""
 
-    version = 1.01
+    version = 1.02
     config = {\
       'broad_band': 'subaru_r'
     }
@@ -35,7 +36,7 @@ class NB2BB:
         return iNBNB.dot(BBNB)
 
     def calc_coeff(self, filt):
-        ll = np.arange(3000,10000, 5)
+        ll = np.arange(3000,10000,5)
         
         NB_filt = np.array([[filt.ix['NB%s'%str(x)].lmb.values,filt.ix['NB%s'%str(x)].response.values] for x in np.arange(455,850,10)])
         WNB = np.array([interp1d(NB_filt[i,0], NB_filt[i,1]/NB_filt[i,0], bounds_error=False, fill_value=(0,0))(ll) for i in range(40)])
@@ -54,11 +55,12 @@ class NB2BB:
         coeff = coeff / np.sum(coeff)
         keys = ['NB'+str(x)for x in np.arange(455,850,10)]
         coeff = pd.DataFrame(dict(zip(keys,coeff)), index=[0])
-        
-        #import ipdb
-        #ipdb.set_trace()
-        
-        return coeff
+       
+        # Fix the format to be more similar to what we use elsewhere...
+        xcoeff = pd.DataFrame({'nb': coeff.columns, 'val': coeff.values[0]})
+        xcoeff['bb'] = self.config['broad_band']
+
+        return xcoeff
 
     def run(self):
         filt = self.input.filters.result
