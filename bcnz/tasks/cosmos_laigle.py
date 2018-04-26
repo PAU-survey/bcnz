@@ -12,7 +12,7 @@ descr = {'rm_stars': 'If removing stars here.'}
 class cosmos_laigle:
     """Interface from reading the COSMOS Laigle catalogue."""
 
-    version = 1.06
+    version = 1.07
     config = {'rm_stars': True}
 
     # Note, this code does *not* apply zero-points, following Alex
@@ -50,6 +50,12 @@ class cosmos_laigle:
 
         # Yes, different definition and rounding error.
         cat[cat < -99] = np.nan
+
+        # Scale to PAU fluxes.
+        ab_factor = 10**(0.4*26)
+        cosmos_scale = ab_factor * 10**(0.4*48.6)
+        cat *= cosmos_scale
+
         for key_from, key_to in otherD.items():
             cat[key_to] = cat_in[key_from]
 
@@ -72,14 +78,8 @@ class cosmos_laigle:
         if self.config['rm_stars']:
             cat = cat[cat.type == 0]
 
-        # Having this column from two catalogs gives problems.
+        # This is probably not needed... 
         del cat['type']
-
-        # Scalte to PAU fluxes.
-        ab_factor = 10**(0.4*26)
-        cosmos_scale = ab_factor * 10**(0.4*48.6)
-        cat.loc[:,'flux'] = cosmos_scale*cat.flux
-        cat.loc[:,'flux_err'] = cosmos_scale*cat.flux_err
 
         return cat
 
