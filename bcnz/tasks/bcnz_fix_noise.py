@@ -11,7 +11,7 @@ descr = {'SN_lim': 'Limit in the estimated SN',
 class bcnz_fix_noise:
     """Add noise floor and select fluxes for the fitting."""
 
-    version = 1.16
+    version = 1.17
     config = {'SN_lim': -2., 'min_err': 0.03,
               'apply_mag': True}
 
@@ -37,11 +37,8 @@ class bcnz_fix_noise:
     def _mag_minerr(self, cat):
         """Apply minimum error to magnitudes."""
 
-        # Adding the error only to the narrow-band. The broad bands already has
-        # a minimum error in the input.
+        # By now applying 3% minimum error to all the different fluxes.
         for band in cat.flux.columns:
-            if not band.startswith('NB'):
-                continue
 
             # Some the absolute values are suspicious...
             SN = np.abs(cat['flux', band]) / cat['flux_err', band]
