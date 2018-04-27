@@ -25,6 +25,10 @@ class rband_adjust:
             return a*x + b
 
         pau_syn = cat_in.flux[NB].values
+
+        # Not exactly good...
+        pau_syn[pau_syn < 0.] = np.nan
+
         miss_ids = np.isnan(pau_syn).any(axis=1)
         miss_rows = np.arange(len(cat_in))[miss_ids]
 
@@ -33,9 +37,13 @@ class rband_adjust:
 
             yfit = np.log10(pau_syn[miss_rows[i]][touse]) if self.config['ind'] \
                    else np.log10(pau_syn[miss_rows[0]][touse])
-                   
-            popt,pcov = curve_fit(f_linear, X[touse], yfit)
-            pau_syn[i,~touse] = 10**f_linear(X[~touse], *popt)
+            
+            try:       
+                popt,pcov = curve_fit(f_linear, X[touse], yfit)
+                pau_syn[i,~touse] = 10**f_linear(X[~touse], *popt)
+            except ValueError:
+                ipdb.set_trace()
+
 
         return pau_syn
 
