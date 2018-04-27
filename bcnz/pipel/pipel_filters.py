@@ -12,8 +12,10 @@ def filters(): #fjc_filters):
     cfht_filters = xd.Job('cfht_filters')
     subaru_filters = xd.Job('subaru_filters')
 
-    # TODO: Replace this with the official ones from PAUdm..
-    pau_filters = xd.Job('paudm_filters')
+    # Here the default is intentionally the same wrong filter
+    # curves which Alex is using...
+    #pau_filters = xd.Job('paudm_filters')
+    pau_filters = xd.Job('fjc_filters')
 
     F = xd.Job('join_output')
     F.depend['pau'] = pau_filters
