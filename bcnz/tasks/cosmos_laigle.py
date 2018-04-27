@@ -12,7 +12,7 @@ descr = {'rm_stars': 'If removing stars here.'}
 class cosmos_laigle:
     """Interface from reading the COSMOS Laigle catalogue."""
 
-    version = 1.07
+    version = 1.08
     config = {'rm_stars': True}
 
     # Note, this code does *not* apply zero-points, following Alex
@@ -43,7 +43,7 @@ class cosmos_laigle:
 
         flux = cat_in[flux_cols]
         flux.columns = bands
-        flux_err = cat_in[flux_cols]
+        flux_err = cat_in[err_cols]
         flux_err.columns = bands
 
         cat = pd.concat({'flux': flux, 'flux_err': flux_err}, axis=1)
