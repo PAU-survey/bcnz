@@ -22,7 +22,6 @@ def pipel(memba, **kwargs):
          'galcat': pipel_galcat.galcat(),
          'filters': pipel_filters.filters()}
 
-
     xpipel = xd.Job()
     xpipel.depend['pzcat'] = pipel_pz_chunks.pipel(**kwargs)
     xpipel.depend['ref_cat'] = xd.Common('ref_cat')

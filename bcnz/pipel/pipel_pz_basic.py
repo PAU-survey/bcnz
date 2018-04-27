@@ -38,14 +38,6 @@ def get_pzcat_config():
       'Niter': 1000,
     }
 
-#    config['filters'] = list(map('NB{}'.format, range(455, 845+1, 10)))
-#    # Add the SEDs..
-#    ell = ['ell2','ell5','ell13']
-#    sp = ['s0','sa','sb','sc','sd']
-#    sb = sb = map('sb{}'.format, range(11))
-#    seds = ell + sp + list(sb)
-#    config['seds'] = seds
-
     return config
 
 def get_model():
@@ -71,7 +63,6 @@ def get_galcat():
 
     select_data = xd.Job('bcnz_fix_noise')
     select_data.depend['input'] = nbsubset
-    select_data.config['SN_lim'] = 1.0
 
     return select_data
 
