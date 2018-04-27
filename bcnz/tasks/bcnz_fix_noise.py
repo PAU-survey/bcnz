@@ -12,8 +12,8 @@ class bcnz_fix_noise:
     """Add noise floor and select fluxes for the fitting."""
 
     version = 1.16
-    config = {'SN_lim': -100., 'min_err': 0.03,
-              'apply_mag': False}
+    config = {'SN_lim': -2., 'min_err': 0.03,
+              'apply_mag': True}
 
     def limit_SN(self, cat):
         """Limit based on SN."""
