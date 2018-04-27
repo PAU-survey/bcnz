@@ -77,18 +77,17 @@ class rband_adjust:
         pau_syn = self.fix_missing_data(cat_in)
         synbb = self.find_synbb(pau_syn, bbsyn_coeff)
 
-        ratio = cat_in.flux.subaru_r / synbb
-        cat_out = self.scale_fluxes(cat_in, ratio)
+        obs2syn = cat_in.flux.subaru_r / synbb
+        cat_out = self.scale_fluxes(cat_in, obs2syn)
 
-        return ratio, cat_out
-
+        return obs2syn, cat_out
 
 
     def run(self):
         cat_in = self.input.galcat.result
         bbsyn_coeff = self.input.bbsyn_coeff.result
 
-        ratio, cat_out = self.entry(cat_in, bbsyn_coeff)
+        obs2syn, cat_out = self.entry(cat_in, bbsyn_coeff)
 
         # Yes, I should really extend xdolphin to handle
         # this pattern.
