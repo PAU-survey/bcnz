@@ -4,6 +4,7 @@
 from IPython.core import debugger as ipdb
 import time
 import numpy as np
+import pandas as pd
 from scipy.optimize import curve_fit
 
 descr = {'ind': '',
@@ -49,17 +50,42 @@ class rband_adjust:
 
         return synbb
 
+    def scale_fluxes(self, cat_in, obs2syn):
+        """Scale the fluxes between the systems."""
+
+        # Here we scale the narrow bands without adding additional
+        # errors. This might not be the most optimal.
+        cat_out = cat_in.copy() 
+        for band in cat_in.flux.columns:
+            if not band.startswith('NB'):
+                continue
+
+            cat_out['flux', band] *= obs2syn
+            cat_out['flux_err', band] *= obs2syn
+
+        return cat_out
+
     def entry(self, cat_in, bbsyn_coeff):
         pau_syn = self.fix_missing_data(cat_in)
         synbb = self.find_synbb(pau_syn, bbsyn_coeff)
 
-        from matplotlib import pyplot as plt
+        ratio = cat_in.flux.subaru_r / synbb
+        cat_out = self.scale_fluxes(cat_in, ratio)
 
-        ipdb.set_trace()
+        return ratio, cat_out
 
 
 
     def run(self):
         cat_in = self.input.galcat.result
         bbsyn_coeff = self.input.bbsyn_coeff.result
-        self.output.result = self.entry(cat_in, bbsyn_coeff)
+
+        ratio, cat_out = self.entry(cat_in, bbsyn_coeff)
+
+        # Yes, I should really extend xdolphin to handle
+        # this pattern.
+        path = self.output.empty_file('default')
+        store = pd.HDFStore(path, 'w')
+        store['ratio'] = ratio
+        store.append('default', cat_out)
+        store.close()
