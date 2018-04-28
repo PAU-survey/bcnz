@@ -7,7 +7,7 @@ import pandas as pd
 class line_ratios:
     """Task for configuring the emission line ratios."""
 
-    version = 1.0
+    version = 1.01
 
     config = {
       'OII': 1.0,
@@ -22,5 +22,26 @@ class line_ratios:
       'SII_2': 0.35
     }
 
+    # The line locations are considered fixed.
+    line_loc = {
+      'OII': 3726.8,
+      'OIII_1': 4959.,
+      'OIII_2': 5007.,
+      'Halpha': 6562.8,
+      'Hbeta': 4861,
+      'Lyalpha': 1215.7,
+      'NII_1': 6548.,
+      'NII_2': 6583.,
+      'SII_1': 6716.44,
+      'SII_2': 6730.82
+    }
+
+    def entry(self):
+        loc = pd.Series(self.line_loc)
+        ratios = pd.Series(self.config)
+        df = pd.DataFrame({'loc': loc, 'ratio': ratios})
+
+        return df
+
     def run(self):
-        self.output.result = pd.Series(self.config)
+        self.output.result = self.entry()
