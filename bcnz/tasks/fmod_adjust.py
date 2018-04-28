@@ -36,7 +36,7 @@ class fmod_adjust:
         syn2real = synbb / model_norm
 
         for i,band in enumerate(model.band):
-            if band.startswith('NB'):
+            if str(band.values).startswith('NB'):
                 model[i] *= syn2real
 
         # Since we can not directly store xarray.
