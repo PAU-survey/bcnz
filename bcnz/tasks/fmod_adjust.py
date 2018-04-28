@@ -10,77 +10,41 @@ class fmod_adjust:
        entirely accurate.
     """
 
-    version = 1.04
+    version = 1.05
     config = {'norm_band': ''}
 
     def check_config(self):
         assert self.config['norm_band'], \
                'Need to specify the normalization band'
 
-    def ratio(self, coeff, model):
-        """Estimate the ratio between the model flux and the syntetic
-           broad band.
-        """
-
-        norm_band = self.config['norm_band']
-        coeff = coeff[coeff.bb == norm_band]
-        coeff = coeff.set_index(['bb', 'nb']).to_xarray().val
-        coeff = coeff.rename({'bb': 'band'})
-
-        A = model.to_xarray().f_mod
-        B = A.sel(band=norm_band)
-        A = A.stack(model=['z', 'sed', 'EBV'])
-        A = A.sel(band=coeff.nb.values).rename({'band': 'nb'})
-
-        # Estimate the ratio between the t
-        synbb = coeff.dot(A).unstack(dim='model')
-        F = xr.Dataset({'flux': B, 'flux_syn': synbb})
-        F = F.to_dataframe()
-        F['ratio'] = F.flux_syn / F.flux
-
-        # To avoid extremely large ratios.
-        flux_median = F.groupby('sed').flux.median().rename('flux_median')
-        F =  F.reset_index()
-        F = F.merge(pd.DataFrame(flux_median), left_on='sed', right_index=True)
-        F['fix'] = F.flux < 0.05*F.flux_median
-
-
-        F.loc[F.fix, 'ratio'] = 1.0
-
-        ratio = F[['band', 'sed', 'z', 'ratio']]
-
-        return ratio
-
-    def apply_ratio(self, ratio, model):
-        """Apply the previously estimated ratio to the model."""
-
-        model.index = model.index.droplevel('EBV')
-        model = model.to_xarray().f_mod
-
-        # Note: The ratio should be the same for all (broad) bands.
-        ratio = ratio.drop(['band'], axis=1)
-        ratio = ratio.set_index(['z', 'sed']).to_xarray().ratio
-
-        # The next line is dependent on a specific order.
-        assert model.dims[1] == 'band'
-        for i,band in enumerate(model.band):
-            if str(band.values).startswith('NB'):
-                continue
-
-            model[:,i,:] *= ratio
-
-        return model
-
     def entry(self, coeff, model):
-        ratio = self.ratio(coeff, model)
-        model = self.apply_ratio(ratio, model)
+        """Directly scale the model as with the data."""
 
+        # Transform the coefficients.
+        norm_band = self.config['norm_band']
+        coeff = coeff[coeff.bb == norm_band][['nb', 'val']]
+        coeff = coeff.set_index(['nb']).to_xarray().val
+
+        inds = ['band', 'z', 'sed', 'ext_law', 'EBV']
+        model = model.set_index(inds)
+        model = model.to_xarray().flux
+        model_norm = model.sel(band=norm_band)
+        model_NB = model.sel(band=coeff.nb.values)
+
+        # Scaling the fluxes..
+        synbb = (model_NB.rename({'band': 'nb'})*coeff).sum(dim='nb')
+        syn2real = synbb / model_norm
+
+        for i,band in enumerate(model.band):
+            if band.startswith('NB'):
+                model[i] *= syn2real
+
+        # Since we can not directly store xarray.
         model = model.to_dataframe()
 
         return model
 
     def run(self):
-        print('Running fmod_adjust')
         coeff = self.input.bbsyn_coeff.result
         model = self.input.model.result
 
