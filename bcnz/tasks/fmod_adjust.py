@@ -6,7 +6,8 @@ import pandas as pd
 import xarray as xr
 
 descr = {'norm_band': 'Band used for the normalization',
-         'funky_limit': 'If adding limits to match Alex code.'}
+         'funky_limit': 'If adding limits to match Alex code.',
+         'use_lines': 'If using emission lines'}
 
 class fmod_adjust:
     """Adjust the model to reflect that the syntetic narrow bands is not
@@ -15,7 +16,8 @@ class fmod_adjust:
 
     version = 1.10
     config = {'norm_band': '', 'funky_limit': True,
-              'lines_upper': 0.1226}
+              'lines_upper': 0.1226,
+              'use_lines': True}
 
     def check_config(self):
         assert self.config['norm_band'], \
@@ -80,8 +82,11 @@ class fmod_adjust:
         # first round I plan adding another layer doing the rebinning. After
         # doing the comparison, we should not rebin at all.
         out_cont = self.scale_model(coeff, model_cont)
-        out_lines = self.scale_model(coeff, model_lines)
-        out = pd.concat([out_cont, out_lines])
+        if self.config['use_lines']:
+            out_lines = self.scale_model(coeff, model_lines)
+            out = pd.concat([out_cont, out_lines])
+        else:
+            out = out_cont
 
         return out
 

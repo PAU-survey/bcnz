@@ -50,8 +50,13 @@ def get_model(part):
     model.ab_cont.config.update(conf)
     model.ab_lines.config.update(conf)
 
+    # If using emission lines.
+    model.config['use_lines'] = part.use_lines
+
+    # Where and which continuum SEDs to use.
     model.ab_cont.seds.config['input_dir'] = part.sed_dir
     model.ab_cont.config['seds'] = part.seds
+
 
     ipdb.set_trace()
 
