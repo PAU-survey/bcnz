@@ -331,8 +331,6 @@ class inter_calib:
 
             zp = self.calc_zp(best_flux, flux, flux_err)
 
-#            ipdb.set_trace()
-
             # Setting learn_rate = 1. disable the learning rate.
             # Clipping to a maximum value does not work. 
             print('zp round: {}'.format(i))
@@ -342,18 +340,8 @@ class inter_calib:
                 print('Limiting zp shift..')
                 zp = 1 + learn_rate*(zp - 1.)
 
-
-#            ipdb.set_trace()
-#            # If you don't like this, set a high value.
-#            zp = np.clip(zp, 1.-max_abs, 1+max_abs)
-
-            #ipdb.set_trace()
-
             zp_tot *= zp
 
-            print(zp.values)
-            print(zp_tot.values)
- 
             flux = flux*zp
             flux_err = flux_err*zp
 
@@ -365,34 +353,39 @@ class inter_calib:
         t1 = time.time()
         f_modD = {}
         fit_bands = self.config['fit_bands']
+
+        inds = ['band', 'sed', 'ext_law', 'EBV', 'z']
         for key, dep in self.input.depend.items():
             if not key.startswith('model'):
                 continue
 
-            f_mod = dep.result.to_xarray().f_mod
+            f_mod = dep.result.reset_index().set_index(inds)
+            f_mod = f_mod.to_xarray().flux
             f_mod = f_mod.sel(z=zs.values, method='nearest')
-
-            f_mod = f_mod.sel(band=fit_bands)
-
-# I no longer seem to pass EBV.
-#            if 1 < len(f_mod.EBV):
-#                ipdb.set_trace()
 
             if 'EBV' in f_mod.dims:
                 f_mod = f_mod.squeeze('EBV')
 
-            # Later the code depends on this order.
-            f_mod = f_mod.transpose('z', 'band', 'sed')
+            if 'ext_law' in f_mod.dims:
+                f_mod = f_mod.squeeze('ext_law')
 
-            f_modD[key] = f_mod
+            # Later the code depends on this order.
+            f_modD[key] = f_mod.transpose('z', 'band', 'sed')
 
         print('Time loading model:', time.time() - t1)
 
         return f_modD
 
-    def entry(self, coeff, galcat):
+    def entry(self, galcat):
+        # Here one load the model exactly at the spectroscopic redshift for each
+        # of the galaxies.
         zs = galcat.zs
         modelD = self.get_model(zs)
+
+
+        ipdb.set_trace()
+
+
 
         ratio, flux, flux_err = self.fix_to_synbb(coeff, galcat)
         xflux, xflux_err, zp = self.zero_points(modelD, flux, flux_err)
@@ -405,8 +398,11 @@ class inter_calib:
         return cat_out, zp, ratio
 
     def run(self):
-        coeff = self.input.bbsyn_coeff.result
         galcat = self.input.galcat.result
+        self.entry(galcat)
+
+        ipdb.set_trace()
+
 
         t1 = time.time()
         galcat_out, zp, ratio = self.entry(coeff, galcat)
