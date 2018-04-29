@@ -16,18 +16,18 @@ def get_model(part):
     model = model_rebinned.model
 
     conf = {'EBV': part.EBV, 'ext_law': part.ext_law}
-    model.ab_cont.config.update(conf)
-    model.ab_lines.config.update(conf)
+    model.model_cont.config.update(conf)
+    model.model_lines.config.update(conf)
 
     # If using emission lines.
     model.config['use_lines'] = part.use_lines
 
     # If having a different template for the OIII lines.
-    model.ab_lines.config['sep_OIII'] = part.sep_OIII
+    model.model_lines.config['sep_OIII'] = part.sep_OIII
 
     # Where and which continuum SEDs to use.
-    model.ab_cont.seds.config['input_dir'] = part.sed_dir
-    model.ab_cont.config['seds'] = part.seds
+    model.model_cont.seds.config['input_dir'] = part.sed_dir
+    model.model_cont.config['seds'] = part.seds
 
     return model_rebinned
 
@@ -74,9 +74,7 @@ def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False, bands=False,
     inter_calib.config.update({\
       'Nrounds': 15,
       'learn_rate': 1.0,
-      'fit_bands': NB + BB,
-      'bb_norm': 'subaru_r',
-      'zp_min': 'flux2'})
+      'fit_bands': NB + BB})
 
     for key, row in chunks.iterrows():
         if (not prevot_calib) and (row.ext_law == 'SMC_prevot'):
