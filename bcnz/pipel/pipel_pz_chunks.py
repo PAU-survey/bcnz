@@ -9,36 +9,53 @@ import def_chunks
 
 import xdolphin as xd
 
-def get_model(part, model, bbsyn_coeff):
-    """Model for a specific chunk."""
+#def get_model(part, model, bbsyn_coeff):
+#    """Model for a specific chunk."""
+#
+#    ipdb.set_trace()
+#
+#    # The shallow copy here ends up being very confusing...
+#    xmodel_rebin = model.shallow_copy()
+#
+#    xab = model.ab.shallow_copy()
+#    xab_lines = model.ab_lines.shallow_copy()
+#    xmodel.config['sep_lines'] = part['sep_lines']
+#
+#    seds = xab.seds.shallow_copy()
+#    seds.config['input_dir'] = part.sed_dir
+#    xab.depend['seds'] = seds
+#
+#    xmodel.config['use_lines'] = part['use_lines']
+#    conf = {'EBV': part['EBV'], 'ext_law': part['ext_law']}
+#
+#    xab.config.update(conf)
+#    xab_lines.config.update(conf)
+#    xmodel.config['seds'] = part['seds']
+#
+#    xmodel.depend['ab'] = xab 
+#    xmodel.depend['ab_lines'] = xab_lines
+#
+#    ymodel = xd.Job('fmod_adjust')
+#    ymodel.config['norm_band'] = 'subaru_r'
+#    ymodel.depend['bbsyn_coeff'] = bbsyn_coeff
+#    ymodel.depend['model'] = xmodel
+#
+#    return ymodel
 
-    # The shallow copy here ends up being very confusing...
-    xmodel = model.shallow_copy()
-    xab = model.ab.shallow_copy()
-    xab_lines = model.ab_lines.shallow_copy()
-    xmodel.config['sep_lines'] = part['sep_lines']
+def get_model(part):
+    model_rebinned = pipel_pz_basic.get_model()
+    model = model_rebinned.model
 
-    seds = xab.seds.shallow_copy()
-    seds.config['input_dir'] = part.sed_dir
-    xab.depend['seds'] = seds
+    conf = {'EBV': part.EBV, 'ext_law': part.ext_law}
+    model.ab_cont.config.update(conf)
+    model.ab_lines.config.update(conf)
 
-    xmodel.config['use_lines'] = part['use_lines']
-    conf = {'EBV': part['EBV'], 'ext_law': part['ext_law']}
+    model.ab_cont.seds.config['input_dir'] = part.sed_dir
+    model.ab_cont.config['seds'] = part.seds
 
-    xab.config.update(conf)
-    xab_lines.config.update(conf)
-    xmodel.config['seds'] = part['seds']
+    ipdb.set_trace()
 
-    xmodel.depend['ab'] = xab 
-    xmodel.depend['ab_lines'] = xab_lines
-
-    ymodel = xd.Job('fmod_adjust')
-    ymodel.config['norm_band'] = 'subaru_r'
-    ymodel.depend['bbsyn_coeff'] = bbsyn_coeff
-    ymodel.depend['model'] = xmodel
-
-    return ymodel
-
+    return model
 
 def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False, bands=False,
           ngal=0, Niter=1000):
@@ -74,7 +91,8 @@ def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False, bands=False,
     modelD = {}
     model = pzcat_orig.model
     for key, row in chunks.iterrows():
-        modelD[key] = get_model(row, model, bbsyn_coeff)
+        #modelD[key] = get_model(row, model, bbsyn_coeff)
+        modelD[key] = get_model(row) #, model, bbsyn_coeff)
 
     # Calibration by comparing the model fit to the observations.
     inter_calib = xd.Job('inter_calib')
