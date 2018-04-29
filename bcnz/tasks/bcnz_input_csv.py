@@ -9,7 +9,7 @@ import pandas as pd
 class bcnz_input_csv:
     """Input as a csv file."""
 
-    version = 1.01
+    version = 1.02
     config = {'file_name': 'pau821_onlyzs35_003_NB2BB.csv'}
 
     # This should not be in the configuration, since it
@@ -30,10 +30,13 @@ class bcnz_input_csv:
         def sel(pre, L):
             return [pre+x for x in L]
 
-        flux_cols = sel('flux_', NB2)
-        err_cols = sel('flux_err_', NB2)
-        flux = cat_in[flux_cols].rename(columns=dict(zip(flux_cols, NB)))
-        err = cat_in[err_cols].rename(columns=dict(zip(err_cols, NB)))
+        BB_in = ['u_cfht', 'B_Subaru', 'V_Subaru', 'r_Subaru', 'i_Subaru', 'suprime_FDCCD_z']
+        BB_out = ['cfht_u', 'subaru_B','subaru_V', 'subaru_r', 'subaru_i', 'subaru_z']
+
+        flux_cols = sel('flux_', NB2) + sel('flux_', BB_in)
+        err_cols = sel('flux_err_', NB2) + sel('flux_err_', BB_in)
+        flux = cat_in[flux_cols].rename(columns=dict(zip(flux_cols, NB + BB_out)))
+        err = cat_in[err_cols].rename(columns=dict(zip(err_cols, NB + BB_out)))
 
         cat = pd.concat({'flux': flux, 'flux_err': err}, axis=1)
         cat['ref_id'] = cat_in.ref_id
