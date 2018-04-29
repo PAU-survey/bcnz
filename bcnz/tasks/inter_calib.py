@@ -279,16 +279,16 @@ class inter_calib:
             zp = self.calc_zp(best_flux, flux, flux_err)
             zp = 1 + self.config['learn_rate']*(zp - 1.)
 
-
             flux = flux*zp
             flux_err = flux_err*zp
 
             zp_tot *= zp
             zp_details[i] = zp_tot
 
-        ipdb.set_trace()
+        zp_tot = zp_tot.to_series()
+        zp_details = pd.DataFrame(zp_details, index=flux.band)
 
-        return zp, zp_tot
+        return zp_tot, zp_details
 
     def get_model(self, zs):
         """Load and store the models as different xarrays."""
