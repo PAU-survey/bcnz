@@ -139,7 +139,6 @@ class ab_cont:
 
         r_const = self.r_const(filters)
         ab = self.calc_ab(filters, seds, ext, r_const)
-        ab = self.convert_flux(ab)
 
         return ab, r_const
 
