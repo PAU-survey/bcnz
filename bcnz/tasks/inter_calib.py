@@ -141,29 +141,13 @@ class inter_calib:
 
         return zp
 
-    def _zp_flux_chi2(self, best_flux, flux, err_inv):
-        """Find the zero-points by minimizing a chi2 expression."""
-
-        # This could be done recursively, but the first round had
-        # very few outliers..
-        X = (best_flux / flux).median(dim='ref_id')
-        F = err_inv*((best_flux / flux) - X)
-
-        flux.values[0.2 < np.abs(F)] = np.nan
-        P1 = (flux*best_flux*err_inv**2).sum(dim='ref_id')
-        P2 = ((flux*err_inv)**2).sum(dim='ref_id')
-
-        zp = P1 / P2
-
-        return zp
-
     def zp_mag(self, best_model, flux, flux_err):
         """Zero-points when using an expression minimizing the median
            of a magnitude distribution.
         """
 
         # The below code is copied from Alex with minimal
-        # changes.
+        # changes. This code hopefully disappears soon..
         def cost(x, sig,err,bestmodel):
             shift = x
             shift = 10**(-0.4*shift)
@@ -214,7 +198,6 @@ class inter_calib:
 
         X = (best_flux, flux, err_inv)
         zp_min = self.config['zp_min'] 
-
 
         if zp_min == 'mag':
             zp = self.zp_mag(*X)
