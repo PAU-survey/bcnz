@@ -17,7 +17,8 @@ descr = {
   'ampl': 'Added amplitude',
   'EBV': 'Extinction coefficient',
   'ext_law': 'Extinction law',
-  'sep_OIII': 'If keeping OIII separate'}
+  'sep_OIII': 'If keeping OIII separate', 
+  'funky_OIII_norm': 'Separate normalization for the OIII lines.'}
 
 class emission_lines:
     """The model flux for the emission lines."""
@@ -25,7 +26,8 @@ class emission_lines:
     version = 1.057
 
     config = {'dz': 0.0005, 'ampl': 1e-16, 'EBV': 0.,
-              'ext_law': 'SB_calzetti', 'sep_OIII': True}
+              'ext_law': 'SB_calzetti', 'sep_OIII': True,
+              'funky_OIII_norm': True}
 
     def _filter_spls(self, filters):
         """Convert filter curves to splines."""
@@ -66,7 +68,14 @@ class emission_lines:
 
             isOIII = line_name.startswith('OIII')
             dest = 'OIII' if (isOIII and self.config['sep_OIII']) else 'lines'
-            fluxD[dest] += ampl*(line.ratio*y_f*y_ext) / rconst
+
+            # Since Alex had a different normalization for the OIII lines.
+            # This is not needed...
+            ratio = line.ratio
+            if isOIII and self.config['funky_OIII_norm']:
+                ratio /= ratios.loc['OIII_2'].ratio
+
+            fluxD[dest] += ampl*(ratio*y_f*y_ext) / rconst
 
         if not self.config['sep_OIII']:
             del fluxD['OIII']
