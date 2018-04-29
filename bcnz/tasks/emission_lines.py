@@ -114,7 +114,7 @@ class emission_lines:
 
         return df
 
-    def _to_df(self, oldD, z, band, ext_law, EBV):
+    def _to_df(self, oldD, z, band):
         """Dictionary suitable for concatination."""
 
         df = pd.DataFrame()
@@ -130,10 +130,9 @@ class emission_lines:
         F = F.reset_index()
         F = F.rename(columns={0: 'flux'})
         F['band'] = band
-        F['ext'] = ext_law
-        F['EBV'] = EBV
 
         return F
+
     def line_model(self, ratios, filters, extinction):
         """Find the emission line model."""
 
@@ -142,36 +141,24 @@ class emission_lines:
 
         z = np.arange(0., 2., self.config['dz'])
 
-#        df = pd.DataFrame()
-#        dims = ['band', 'sed', 'ext_law', 'EBV', 'z']
-#        bands = filterD.keys()
-#        ipdb.set_trace()
-
-        resD = {}
+        df = pd.DataFrame()
         for band, f_spl in filtersD.items():
             print('Band', band)
             rconst = rconstD[band]
             part = self._find_flux(z, f_spl, ratios, rconst, ext_spl)
 
-            ext_law = self.config['ext_law']
-            part = self._new_fix(part, z, band, ext_law, self.config['EBV'])
-#            resD.update({(x,band):y for x,y in part.items()})
+            part = self._new_fix(part, z, band)
+            df = df.append(part, ignore_index=True)
 
-            ipdb.set_trace()
-
-            nn = pd.DataFrame(part)
-            nn.columns.name = 'sed'
-            nn.index = z
-            nn.index.name = 'z'
-
-            ipdb.set_trace()
-
-        df = pd.DataFrame(resD)
-        df.columns.names = ['sed', 'band']
-        df.index.name = 'z'
-
+        df['ext_law'] = self.config['ext_law']
+        df['EBV'] = self.config['EBV']
 
         ipdb.set_trace()
+
+#        df = pd.DataFrame(resD)
+#        df.columns.names = ['sed', 'band']
+#        df.index.name = 'z'
+#        ipdb.set_trace()
 
 
 
