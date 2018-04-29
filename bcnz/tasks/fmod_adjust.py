@@ -13,32 +13,35 @@ class fmod_adjust:
        entirely accurate.
     """
 
-    version = 1.08
-    config = {'norm_band': '', 'funky_limit': True}
+    version = 1.09
+    config = {'norm_band': '', 'funky_limit': True,
+              'lines_upper': 0.1226}
 
     def check_config(self):
         assert self.config['norm_band'], \
                'Need to specify the normalization band'
 
-    def funky_hack(self, syn2real, sed):
+    def funky_hack(self, syn2real, sed, model_norm):
         """Exactly mimic the cuts Alex was making."""
 
         from matplotlib import pyplot as plt
 
+        print('sed', sed)
         ratio = syn2real.sel(sed=sed).copy()
         if sed == 'OIII':
-#            ratio[ratio.z < 0.1] = 1.
             ratio[(ratio.z < 0.1) | (0.45 < ratio.z)] = 1.
-
-            plt.plot(ratio.z, ratio[:,0,0])
-            plt.show()
         elif sed == 'lines': 
-            ipdb.set
+            flux = model_norm.sel(sed=sed)
+            ratio.values[flux < 0.001*flux.max()] = 1.
 
-            plt.plot(ratio.z, ratio[:,0,0])
-            plt.show()
+            # Yes, this actually happens in an interval.
+            upper = self.config['lines_upper']
+            ratio[(ratio.z>0.1025) & (ratio.z<upper)] = 1.
+        else:
+            # The continuum ratios are better behaved.
+            pass
 
-        ipdb.set_trace()
+        return ratio
 
     def entry(self, coeff, model):
         """Directly scale the model as with the data."""
@@ -51,7 +54,7 @@ class fmod_adjust:
         inds = ['band', 'z', 'sed', 'ext_law', 'EBV']
         model = model.set_index(inds)
         model = model.to_xarray().flux
-        model_norm = model.sel(band=norm_band)
+        model_norm = model.sel(band=norm_band).copy() # A copy is needed for funky_hack..
         model_NB = model.sel(band=coeff.nb.values)
 
         # Scaling the fluxes..
@@ -60,18 +63,16 @@ class fmod_adjust:
 
         for j,xsed in enumerate(model.sed):
             sed = str(xsed.values) 
-            syn2real_mod = self.funky_hack(syn2real, sed)
+            syn2real_mod = self.funky_hack(syn2real, sed, model_norm)
 
             for i,xband in enumerate(model.band):
-                band = str(xband.values)
-                
-                if str(band.values).startswith('NB'):
-                    model[i] *= syn2real
+                # Here we scale the narrow bands into the broad band system.
+                if str(xband.values).startswith('NB'):
+                    model[i,:,j,:,:] *= syn2real_mod
 
         # Since we can not directly store xarray.
         model = model.to_dataframe()
-
-        ipdb.set_trace()
+        model = model.reset_index()
 
         return model
 
