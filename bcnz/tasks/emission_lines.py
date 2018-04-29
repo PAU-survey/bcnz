@@ -73,53 +73,10 @@ class emission_lines:
 
         return fluxD
 
-    def _new_fix(self, oldD, z, band, ext_law, EBV):
-        """Dictionary suitable for concatination."""
-
-        df = pd.DataFrame()
-
-        # Ok, there is probably a much better way of doing this...
-        F = pd.DataFrame(oldD)
-        F.index = z
-        F.index.name = 'z'
-        F.columns.name = 'sed'
-
-        F = F.stack()
-        F.name = 'flux'
-        F = F.reset_index()
-        F = F.rename(columns={0: 'flux'})
-        F['band'] = band
-        F['ext'] = ext_law
-        F['EBV'] = EBV
-
-        return F
-
-
-    def get_model(self, ratios, filtersD, rconstD, ext_spl):
-        """Get the model fluxes for the emission lines."""
-
-        ext_law = self.config['ext_law']
-        bandL = filtersD.keys()
-
-        z = np.arange(0., 2., self.config['dz'])
-
-        df = pd.DataFrame()
-        for fname, f_spl in filtersD.items():
-            rconst = rconstD[fname]     
-
-            part = self._find_flux(z, f_spl, ratios, rconst, ext_spl)
-            part = self._new_fix(part, z, fname, ext_law, self.config['EBV'])
-
-            df = df.append(part, ignore_index=True)
-
-        return df
-
     def _to_df(self, oldD, z, band):
         """Dictionary suitable for concatination."""
 
-        df = pd.DataFrame()
-
-        # Ok, there is probably a much better way of doing this...
+        # I have tried finding better ways, but none wored very well..
         F = pd.DataFrame(oldD)
         F.index = z
         F.index.name = 'z'
@@ -143,23 +100,16 @@ class emission_lines:
 
         df = pd.DataFrame()
         for band, f_spl in filtersD.items():
-            print('Band', band)
             rconst = rconstD[band]
             part = self._find_flux(z, f_spl, ratios, rconst, ext_spl)
+            part = self._to_df(part, z, band)
 
-            part = self._new_fix(part, z, band)
             df = df.append(part, ignore_index=True)
 
         df['ext_law'] = self.config['ext_law']
         df['EBV'] = self.config['EBV']
 
-        ipdb.set_trace()
-
-#        df = pd.DataFrame(resD)
-#        df.columns.names = ['sed', 'band']
-#        df.index.name = 'z'
-#        ipdb.set_trace()
-
+        return df
 
 
     def entry(self, ratios, filters, extinction):
