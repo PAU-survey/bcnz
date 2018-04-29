@@ -157,6 +157,56 @@ class inter_calib:
 
         return zp
 
+    def zp_mag(self, best_model, flux, flux_err):
+        """Zero-points when using an expression minimizing the median
+           of a magnitude distribution.
+        """
+
+        # The below code is copied from Alex with minimal
+        # changes.
+        def cost(x, sig,err,bestmodel):
+            shift = x
+            shift = 10**(-0.4*shift)
+            sig = sig * shift
+            err = err * shift
+            S = -2.5*np.log10(sig)-48.6
+            E = 2.5*np.log10(1+err/sig)
+            Em = 2.5*np.log10(1-err/sig)
+            M = -2.5*np.log10(bestmodel)-48.6
+            S[np.isinf(S)] = np.nan
+            E[np.isinf(E)] = np.nan
+            # Em[np.isinf(Em)] = np.nan
+            M[np.isinf(M)] = np.nan
+            arr = (S-M) / E
+            # arr = np.where(S>M, (S-M) / Em, (S-M) / E)
+            arr[(arr<-5)|(arr>5)] = np.nan
+            median = np.nanmedian(arr)
+            val = np.abs(median)
+
+            return val
+
+        sig = flux.values
+        err = flux_err.values
+        bestmodel = best_model
+
+        nbands = len(flux.band)
+        zp_mag = np.zeros(nbands)
+        for i in range(nbands):
+            print('Running for band:', i)
+
+            S,E,M = (sig[:,i], err[:,i], bestmodel[:,i])
+            E = E[~np.isnan(S)]
+            M = M[~np.isnan(S)]
+            S = S[~np.isnan(S)]
+            res = minimize(cost, x0=[0.,], args=(S,E,M), method='SLSQP', bounds=((-0.1, 0.1),))
+
+            zp_mag[i] = res.x[0]
+
+        zp = 10**(-0.4*zp_mag)
+
+        return zp
+
+
     def calc_zp(self, best_flux, flux, flux_err):
         """Estimate the zero-point."""
 
@@ -165,45 +215,9 @@ class inter_calib:
         X = (best_flux, flux, err_inv)
         zp_min = self.config['zp_min'] 
 
-        # Color selection.
-        flux_ratio = flux.sel(band='subaru_r') / flux.sel(band='subaru_i')
-        touse = self.config['min_ri_ratio'] < flux_ratio
-
-        best_flux = best_flux[touse]
-        flux = flux[touse]
-        flux_err = flux_err[touse]
-
-        # SN selection.
-        SN = flux / flux_err
-        SN_med = SN.median(axis=1)
-        touse = self.config['SN_min'] < SN_med
-
-        best_flux = best_flux[touse]
-        flux = flux[touse]
-        flux_err = flux_err[touse]
-
 
         if zp_min == 'mag':
-            # Code to follow quite closely what Alex did.
-            def cost_mag(R, bestmodel, sig, err_inv):
-                shift = 10**(-0.4*R[0])
-                err = 1./err_inv
-
-                sig = sig * shift
-                err = err * shift
-
-                S = -2.5*np.log10(sig)-48.6
-                E = 2.5*np.log10(1+err/sig)
-                M = -2.5*np.log10(bestmodel)-48.6
-
-                median = np.nanmedian((S-M)/E)
-                val = np.abs(median)
-
-                return val
-
-            print('starting minimize')
-            zp = self._zp_min_cost(cost_mag, *X)
-            zp = 10**(-0.4*zp)
+            zp = self.zp_mag(*X)
         elif zp_min == 'flux':
             def cost_flux(R, model, flux, err_inv):
                 return float(np.abs((err_inv*(flux*R[0] - model)).median()))
@@ -229,26 +243,29 @@ class inter_calib:
         flux = galcat['flux'][fit_bands].stack().to_xarray()
         flux_err = galcat['flux_err'][fit_bands].stack().to_xarray()
 
-        # The flux model.
+        # Empty structure for storint the best flux model.
         dims = ('part', 'ref_id', 'band')
-        model_parts = list(modelD.keys())
-        model_parts.sort()
-        coords_flux = {'ref_id': flux.ref_id, 'part': model_parts, 'band': fit_bands}
+        _model_parts = list(modelD.keys())
+        _model_parts.sort()
+        coords_flux = {'ref_id': flux.ref_id, 'part': _model_parts, 'band': fit_bands}
         flux_model = np.zeros((len(modelD), len(flux), len(fit_bands)))
         flux_model = xr.DataArray(flux_model, dims=dims, coords=coords_flux)
 
         # Datastructure for storing the results...
-        coords_chi2 = {'ref_id': flux.ref_id, 'part': model_parts}
+        coords_chi2 = {'ref_id': flux.ref_id, 'part': _model_parts}
         chi2 = np.zeros((len(modelD), len(flux)))
         chi2 = xr.DataArray(chi2, dims=('part', 'ref_id'), coords=coords_chi2)
 
         zp_tot = xr.DataArray(np.ones(len(flux.band)), dims=('band'), \
                  coords={'band': flux.band})
 
-        return flux, flux_err, chi2, zp_tot, model_parts
+        return flux, flux_err, chi2, zp_tot, flux_model
 
-    def find_best_model(self, modelD, model_parts, flux, flux_err, chi2):
+    def find_best_model(self, modelD, flux_model, flux, flux_err, chi2):
         """Find the best flux model."""
+
+        # Just get a normal list of the models.
+        model_parts = [str(x.values) for x in flux_model.part]
 
         fmin = self.minimize_free if self.config['free_ampl'] else self.minimize
         for j,key in enumerate(model_parts):
@@ -258,10 +275,7 @@ class inter_calib:
             chi2[j,:] = chi2_part.sum(dim='band')
             flux_model[j,:] = F
 
-  
-        ipdb.set_trace()
-
- 
+        # Ok, this is not the only possible assumption!
         best_part = chi2.argmin(dim='part')
         best_flux = flux_model.isel_points(ref_id=range(len(flux)), part=best_part)
         best_flux = xr.DataArray(best_flux, dims=('ref_id', 'band'), \
@@ -273,20 +287,21 @@ class inter_calib:
         """Estimate the zero-points."""
 
         # Just simple input transformations.
-        flux, flux_err, chi2, zp_tot,model_parts = self._prepare_input(modelD, galcat)
+        flux, flux_err, chi2, zp_tot, flux_model = self._prepare_input(modelD, galcat)
 
         zp_details = {}
         for i in range(self.config['Nrounds']):
-            best_flux = self.find_best_model(modelD, model_parts, flux, flux_err, chi2)
+            best_flux = self.find_best_model(modelD, flux_model, flux, flux_err, chi2)
 
             zp = self.calc_zp(best_flux, flux, flux_err)
             zp = 1 + self.config['learn_rate']*(zp - 1.)
 
-            zp_tot *= zp
 
             flux = flux*zp
             flux_err = flux_err*zp
-            zp_details[i] = zp
+
+            zp_tot *= zp
+            zp_details[i] = zp_tot
 
         ipdb.set_trace()
 
