@@ -31,7 +31,7 @@ class inter_calib:
               'Niter': 1000,
               'zp_min': 'mag', # yes, this in not my preferred option...
               'learn_rate': 1.0, # Temporarily disabled
-              'SN_min': 5., # Temporarily disabled
+              'SN_min': 1.,
               'min_ri_ratio': 0.5} # Temporarily disabled
 
     def check_config(self):
@@ -327,6 +327,10 @@ class inter_calib:
         # two pipelines give the same results.
 
         galcat = galcat[~np.isnan(galcat.zs)]
+
+        # This cut was needed to avoid negative numbers in the logarithm.
+        SN = galcat.flux / galcat.flux_err
+        galcat = galcat.loc[self.config['SN_min'] < SN.min(axis=1)]
 
         return galcat
 
