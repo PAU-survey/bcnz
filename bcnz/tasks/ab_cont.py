@@ -3,7 +3,7 @@
 
 from __future__ import print_function
 
-from IPython.core import debugger
+from IPython.core import debugger as ipdb
 import time
 import numpy as np
 import pandas as pd
@@ -30,8 +30,12 @@ class ab_cont:
       'int_dz': 1.,
       'int_method': 'simps',
       'ext_law': 'SB_calzetti',
-      'EBV': 0.0
+      'EBV': 0.0,
+      'seds': []
     }
+
+    def check_config(self):
+        assert len(self.config['seds']), 'Sorry, by now you need to specify the SEDs.'
 
     def r_const(self, filters):
         """Normalization factor for each filter."""
@@ -71,6 +75,10 @@ class ab_cont:
     def calc_ab(self, filters, seds, ext, r_const):
         """Estimate the fluxes for all filters and SEDs."""
 
+        # Test for missing SEDs.
+        missing_seds = set(self.config['seds']) - set(seds.index)
+        assert not len(missing_seds), 'Missing seds: {}'.format(missing_seds)
+
         sedD = self.sed_spls(seds)
         ext_spl = self.ext_spl(ext)
         z = np.arange(0., self.config['zmax_ab'], self.config['dz_ab'])
@@ -96,7 +104,8 @@ class ab_cont:
 
             X = np.outer(a, lmb)
 
-            for sed in seds.index.unique():
+            # Only looping over the configured SEDs.
+            for sed in self.config['seds']:
                 t1 = time.time()
 
                 y_sed = splev(X, sedD[sed])
@@ -124,25 +133,6 @@ class ab_cont:
                 t2 = time.time()
 
         return df
-
-    def convert_flux(self, ab):
-        """Convert fluxes into the PAU units."""
-
-        # Later we might want to store fluxes in different systems, but
-        # this is all we currently need.
-
-        # Here f is the flux estimated by the integral. The factor of 48.6
-        # comes from assuming the templates being in erg s^-1 cm^-2 Hz^-1.
-        # m_ab = -2.5*log10(f) - 48.6
-        # m_ab = -2.5*log10(f_PAU) - 26.
-
-#        if self.config['flux_unit'] == 'PAU':
-#        fac = 10**(0.4*(48.6-26.))
-#        ab['flux'] *= fac
-
-#        ipdb.set_trace()
-
-        return ab
 
     def entry(self, filters, seds, ext):
         """Estimate model fluxes."""
