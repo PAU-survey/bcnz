@@ -21,7 +21,6 @@ def get_ab():
     ab_cont.depend['filters'] = xd.Common('filters')
     ab_cont.depend['extinction'] = extinction
 
-
     ab_lines = xd.Job('emission_lines')
     ab_lines.depend['filters'] = xd.Common('filters')
     ab_lines.depend['extinction'] = extinction
@@ -43,14 +42,18 @@ def get_pzcat_config():
 def get_model():
     """The part returning the model."""
 
-    model = xd.Job('flux_model')
-    model.config.update({'dz': 0.001, 'zmax': 1.0})
-    ab, ab_lines = get_ab()
+    ab_cont, ab_lines = get_ab()
 
-    model.depend['ab'] = ab
+    model = xd.Job('fmod_adjust')
+    model.depend['bbsyn_coeff'] = xd.Common('bbsyn_coeff')
+    model.depend['ab_cont'] = ab_cont
     model.depend['ab_lines'] = ab_lines
 
-    return model
+    model_rebinned = xd.Job('model_rebin')
+    model_rebinned.config.update({'dz': 0.001, 'zmax': 1.0})
+    model_rebinned.depend['model'] = model
+
+    return model_rebinned
 
 def get_galcat():
     """Two steps for first selecting a subset of galaxies and
@@ -66,6 +69,14 @@ def get_galcat():
 
     return select_data
 
+def get_bbsyn_coeff():
+    """The synthetic broad band coefficients."""
+
+    bbsyn_coeff = xd.Job('NB2BB')
+    bbsyn_coeff.depend['filters'] = xd.Common('filters')
+
+    return bbsyn_coeff
+
 def pipel():
     """The main entry point for getting the pipeline."""
 
@@ -74,6 +85,6 @@ def pipel():
     pzcat.depend['model'] = get_model()
     pzcat.depend['galcat'] = get_galcat()
 
-    pzcat.model.config['seds'] = pzcat.config['seds'] # yes...
+    #pzcat.model.config['seds'] = pzcat.config['seds'] # yes...
 
     return pzcat

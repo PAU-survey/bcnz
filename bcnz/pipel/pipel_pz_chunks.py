@@ -29,7 +29,7 @@ def get_model(part):
     model.ab_cont.seds.config['input_dir'] = part.sed_dir
     model.ab_cont.config['seds'] = part.seds
 
-    return model
+    return model_rebinned
 
 def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False, bands=False,
           ngal=0, Niter=1000):
@@ -56,8 +56,6 @@ def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False, bands=False,
 
     # Synthetic broad band coefficients used to scale the 
     # broad band fluxes.
-    #bbsyn_coeff = xd.Job('bbsyn_coeff')
-    bbsyn_coeff = xd.Job('bbsyn_coeff')
     bbsyn_coeff = xd.Job('NB2BB')
     bbsyn_coeff.depend['filters'] = xd.Common('filters')
 
@@ -70,7 +68,6 @@ def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False, bands=False,
 
     # Calibration by comparing the model fit to the observations.
     inter_calib = xd.Job('inter_calib')
-    inter_calib.depend['bbsyn_coeff'] = bbsyn_coeff
     inter_calib.depend['galcat'] = pzcat_orig.galcat
 
     # These should be elsewhere...

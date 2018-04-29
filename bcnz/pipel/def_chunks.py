@@ -39,6 +39,6 @@ def pz_chunks():
             S['sed_dir'] = sed_dir
             df = df.append(S, ignore_index=True)
 
-    df['sep_lines'] = 'O'
+    df['sep_OIII'] = True
 
     return df
