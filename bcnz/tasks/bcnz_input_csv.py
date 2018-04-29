@@ -9,7 +9,7 @@ import pandas as pd
 class bcnz_input_csv:
     """Input as a csv file."""
 
-    version = 1.
+    version = 1.01
     config = {'file_name': 'pau821_onlyzs35_003_NB2BB.csv'}
 
     # This should not be in the configuration, since it
@@ -45,6 +45,7 @@ class bcnz_input_csv:
 
             cat[field] = cat_in[field]
 
+        cat = cat.rename(columns={'zspec': 'zs'})
         cat = cat.set_index('ref_id')
 
         return cat
