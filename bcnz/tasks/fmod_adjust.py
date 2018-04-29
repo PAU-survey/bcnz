@@ -13,7 +13,7 @@ class fmod_adjust:
        entirely accurate.
     """
 
-    version = 1.09
+    version = 1.10
     config = {'norm_band': '', 'funky_limit': True,
               'lines_upper': 0.1226}
 
@@ -43,7 +43,7 @@ class fmod_adjust:
 
         return ratio
 
-    def entry(self, coeff, model):
+    def scale_model(self, coeff, model):
         """Directly scale the model as with the data."""
 
         # Transform the coefficients.
@@ -72,12 +72,22 @@ class fmod_adjust:
 
         # Since we can not directly store xarray.
         model = model.to_dataframe()
-        model = model.reset_index()
 
         return model
 
+    def entry(self, coeff, model_cont, model_lines):
+        # Here the different parts will have a different zbinning! For the
+        # first round I plan adding another layer doing the rebinning. After
+        # doing the comparison, we should not rebin at all.
+        out_cont = self.scale_model(coeff, model_cont)
+        out_lines = self.scale_model(coeff, model_lines)
+        out = pd.concat([out_cont, out_lines])
+
+        return out
+
     def run(self):
         coeff = self.input.bbsyn_coeff.result
-        model = self.input.model.result
+        model_cont = self.input.model_cont.result
+        model_lines = self.input.model_lines.result
 
-        self.output.result = self.entry(coeff, model)
+        self.output.result = self.entry(coeff, model_cont, model_lines)
