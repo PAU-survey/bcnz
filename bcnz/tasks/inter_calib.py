@@ -24,7 +24,7 @@ descr = {
 class inter_calib:
     """Calibration between the broad and the narrow bands."""
 
-    version = 1.23
+    version = 1.25
     config = {'free_ampl': False,
               'fit_bands': [],
               'Nrounds': 19,
@@ -190,7 +190,6 @@ class inter_calib:
 
         return zp
 
-
     def calc_zp(self, best_flux, flux, flux_err):
         """Estimate the zero-point."""
 
@@ -226,6 +225,17 @@ class inter_calib:
         flux = galcat['flux'][fit_bands].stack().to_xarray()
         flux_err = galcat['flux_err'][fit_bands].stack().to_xarray()
 
+        # this should have been changed in the input..        
+        if 'level_1' in flux.dims:
+            flux = flux.rename({'level_1': 'band'})
+            flux_err = flux_err.rename({'level_1': 'band'})
+
+        # ... just to have completely the same.
+        ab_factor = 10**(0.4*26)
+        cosmos_scale = ab_factor * 10**(0.4*48.6)
+        flux /= cosmos_scale
+        flux_err /= cosmos_scale
+
         # Empty structure for storint the best flux model.
         dims = ('part', 'ref_id', 'band')
         _model_parts = list(modelD.keys())
@@ -238,6 +248,8 @@ class inter_calib:
         coords_chi2 = {'ref_id': flux.ref_id, 'part': _model_parts}
         chi2 = np.zeros((len(modelD), len(flux)))
         chi2 = xr.DataArray(chi2, dims=('part', 'ref_id'), coords=coords_chi2)
+
+        ipdb.set_trace()
 
         zp_tot = xr.DataArray(np.ones(len(flux.band)), dims=('band'), \
                  coords={'band': flux.band})
@@ -283,7 +295,7 @@ class inter_calib:
             flux_err = flux_err*zp
 
             zp_tot *= zp
-            zp_details[i] = zp_tot
+            zp_details[i] = zp_tot.copy()
 
         zp_tot = zp_tot.to_series()
         zp_details = pd.DataFrame(zp_details, index=flux.band)
