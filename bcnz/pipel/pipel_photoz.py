@@ -8,6 +8,8 @@ import pipel_filters
 import pipel_galcat
 import pipel_pz_chunks
 
+import pipel_pz_basic
+
 def pipel(memba, **kwargs):
     """Photo-z pipeline for the PAU data."""
 
@@ -18,6 +20,7 @@ def pipel(memba, **kwargs):
 
     # Here the galaxy
     D = {'coadd': coadd, 
+         'bbsyn_coeff': pipel_pz_basic.get_bbsyn_coeff(),
          'ref_cat': xd.Job('paudm_cosmos'),
          'galcat': pipel_galcat.galcat(),
          'filters': pipel_filters.filters()}

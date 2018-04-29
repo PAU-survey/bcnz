@@ -249,9 +249,6 @@ class inter_calib:
         flux_err = flux_err[touse]
 
 
-#        ipdb.set_trace()
-
-
         if zp_min == 'mag':
             # Code to follow quite closely what Alex did.
             def cost_mag(R, bestmodel, sig, err_inv):
