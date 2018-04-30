@@ -32,7 +32,8 @@ class inter_calib:
               'zp_min': 'mag', # yes, this in not my preferred option...
               'learn_rate': 1.0, # Temporarily disabled
               'SN_min': 1.,
-              'min_ri_ratio': 0.5} # Temporarily disabled
+              'min_ri_ratio': 0.5, # Temporarily disabled
+              'cosmos_scale': False}
 
     def check_config(self):
         assert self.config['fit_bands'], 'Need to set: fit_bands'
@@ -231,10 +232,11 @@ class inter_calib:
             flux_err = flux_err.rename({'level_1': 'band'})
 
         # ... just to have completely the same.
-        ab_factor = 10**(0.4*26)
-        cosmos_scale = ab_factor * 10**(0.4*48.6)
-        flux /= cosmos_scale
-        flux_err /= cosmos_scale
+        if self.config['cosmos_scale']:
+            ab_factor = 10**(0.4*26)
+            cosmos_scale = ab_factor * 10**(0.4*48.6)
+            flux /= cosmos_scale
+            flux_err /= cosmos_scale
 
         # Empty structure for storint the best flux model.
         dims = ('part', 'ref_id', 'band')
@@ -248,8 +250,6 @@ class inter_calib:
         coords_chi2 = {'ref_id': flux.ref_id, 'part': _model_parts}
         chi2 = np.zeros((len(modelD), len(flux)))
         chi2 = xr.DataArray(chi2, dims=('part', 'ref_id'), coords=coords_chi2)
-
-        ipdb.set_trace()
 
         zp_tot = xr.DataArray(np.ones(len(flux.band)), dims=('band'), \
                  coords={'band': flux.band})

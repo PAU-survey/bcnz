@@ -12,9 +12,6 @@ import pandas as pd
 def pz_chunks():
     """Specify all the different SED combinations to run over."""
 
-    sed_dir = '~/data/photoz/seds/cosmos_noext'
-
-
     # The configurations without extinction.
     # 1 - If including extinction lines.
     # 2 - SEDs used.
@@ -54,5 +51,10 @@ def pz_chunks():
             S['seds'] = seds
 
             df = df.append(S, ignore_index=True)
+
+    # This applies to all configurations.
+    sed_dir = '~/data/photoz/seds/cosmos_noext'
+    df['sep_OIII'] = True
+    df['sed_dir'] = sed_dir
 
     return df
