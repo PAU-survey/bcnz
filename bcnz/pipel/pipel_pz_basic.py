@@ -46,8 +46,8 @@ def get_model():
 
     model = xd.Job('fmod_adjust')
     model.depend['bbsyn_coeff'] = xd.Common('bbsyn_coeff')
-    model.depend['ab_cont'] = ab_cont
-    model.depend['ab_lines'] = ab_lines
+    model.depend['model_cont'] = ab_cont
+    model.depend['model_lines'] = ab_lines
 
     model_rebinned = xd.Job('model_rebin')
     model_rebinned.config.update({'dz': 0.001, 'zmax': 1.0})
@@ -60,14 +60,20 @@ def get_galcat():
        then one selection internally in the 
     """
 
-    nbsubset = xd.Job('nbpzsubset')
-    nbsubset.depend['input'] = xd.Common('galcat')
-    nbsubset.depend['ref_cat'] = xd.Common('ref_cat')
+    cat1 = xd.Job('bcnz_fix_noise')
+    cat1.depend['input'] = xd.Common('galcat')
 
-    select_data = xd.Job('bcnz_fix_noise')
-    select_data.depend['input'] = nbsubset
+    cat2 = xd.Job('nbpzsubset')
+    cat2.depend['input'] = cat1
+    cat2.depend['ref_cat'] = xd.Common('ref_cat')
 
-    return select_data
+    # Here we make the r-band adjustment after selecting
+    # galaxies with many narrow bands. Saves some trouble.
+    cat3 = xd.Job('rband_adjust')
+    cat3.depend['bbsyn_coeff'] = xd.Common('bbsyn_coeff')
+    cat3.depend['galcat'] = cat2
+
+    return cat3
 
 def get_bbsyn_coeff():
     """The synthetic broad band coefficients."""
