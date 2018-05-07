@@ -82,9 +82,14 @@ def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False, bands=False,
 
         inter_calib.depend['model_{}'.format(key)] = modelD[key]
 
+    # Add the zero-points.
+    galcat_zp = xd.Job('apply_zp')
+    galcat_zp.depend['zp'] = inter_calib
+    galcat_zp.depend['galcat'] = inter_calib.galcat
+
     # Just limit the number of galaxies...
     galcat_lim = xd.Job('limit_ngal')
-    galcat_lim.depend['galcat'] = inter_calib
+    galcat_lim.depend['galcat'] = galcat_zp
     galcat_lim.config['ngal'] = ngal
 
     # Linking the photo-z runs.
