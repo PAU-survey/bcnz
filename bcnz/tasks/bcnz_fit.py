@@ -2,7 +2,7 @@
 
 from __future__ import print_function
 
-from IPython.core import debugger
+from IPython.core import debugger as ipdb
 import os
 import sys
 import time
@@ -107,15 +107,10 @@ class bcnz_fit:
         flux, flux_err, var_inv = self.get_arrays(data_df)
 
         t1 = time.time()
-#        A = np.einsum('gf,zsf,ztf->gzst', var_inv, f_mod, f_mod)
         A = np.einsum('gf,zfs,zft->gzst', var_inv, f_mod, f_mod)
-
-        # Bad hack..
-#        A = np.clip(A, 1e-50, np.infty)
         print('time A',  time.time() - t1)
 
         t1 = time.time()
-#        b = np.einsum('gf,gf,zsf->gzs', var_inv, flux, f_mod)
         b = np.einsum('gf,gf,zfs->gzs', var_inv, flux, f_mod)
         print('time b',  time.time() - t1)
 
@@ -157,8 +152,6 @@ class bcnz_fit:
 
         norm = xr.DataArray(v, coords=coords_norm, dims=\
                             ('gal','z','model'))
-
-#        ipdb.set_trace()
 
         return chi2, norm
 
@@ -250,9 +243,12 @@ class bcnz_fit:
         return pzcat, pz
 
     def fix_fmod_format(self, fmod_in):
-        f_mod = fmod_in.to_xarray().f_mod
+        """Converts the dataframe to an xarray."""
 
-        model = ['sed', 'EBV'] if 'EBV' in f_mod.dims else ['sed']
+        inds = ['z', 'band', 'sed', 'ext_law', 'EBV']
+        f_mod = fmod_in.reset_index().set_index(inds).to_xarray().flux
+
+        model = ['sed', 'EBV', 'ext_law']
         f_mod = f_mod.stack(model=model)
 
         f_mod_full = f_mod
