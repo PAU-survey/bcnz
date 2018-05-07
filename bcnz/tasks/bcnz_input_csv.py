@@ -9,7 +9,7 @@ import pandas as pd
 class bcnz_input_csv:
     """Input as a csv file."""
 
-    version = 1.02
+    version = 1.03
     config = {'file_name': 'pau821_onlyzs35_003_NB2BB.csv'}
 
     # This should not be in the configuration, since it
@@ -36,9 +36,13 @@ class bcnz_input_csv:
         flux_cols = sel('flux_', NB2) + sel('flux_', BB_in)
         err_cols = sel('flux_err_', NB2) + sel('flux_err_', BB_in)
         flux = cat_in[flux_cols].rename(columns=dict(zip(flux_cols, NB + BB_out)))
-        err = cat_in[err_cols].rename(columns=dict(zip(err_cols, NB + BB_out)))
+        flux_err = cat_in[err_cols].rename(columns=dict(zip(err_cols, NB + BB_out)))
 
-        cat = pd.concat({'flux': flux, 'flux_err': err}, axis=1)
+        # Magic value in the ascii files signaling a magnitude is non-observed.
+        flux = flux.replace(-99., np.nan)
+        flux_err = flux_err.replace(-99., np.nan)
+
+        cat = pd.concat({'flux': flux, 'flux_err': flux_err}, axis=1)
         cat['ref_id'] = cat_in.ref_id
 
         fields = ['ra', 'dec', 'I_auto', 'zspec', 'conf', 'r50']
