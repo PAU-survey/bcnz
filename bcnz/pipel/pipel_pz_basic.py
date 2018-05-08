@@ -50,7 +50,7 @@ def get_model():
     model.depend['model_lines'] = ab_lines
 
     model_rebinned = xd.Job('model_rebin')
-    model_rebinned.config.update({'dz': 0.001, 'zmax': 1.0})
+    model_rebinned.config.update({'dz': 0.001, 'zmax': 1.2})
     model_rebinned.depend['model'] = model
 
     return model_rebinned

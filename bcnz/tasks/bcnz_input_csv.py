@@ -42,6 +42,12 @@ class bcnz_input_csv:
         flux = flux.replace(-99., np.nan)
         flux_err = flux_err.replace(-99., np.nan)
 
+        # Convert to PAU flux units...
+        ab_factor = 10**(0.4*26)
+        cosmos_scale = ab_factor * 10**(0.4*48.6)
+        flux *= cosmos_scale
+        flux_err *= cosmos_scale
+
         cat = pd.concat({'flux': flux, 'flux_err': flux_err}, axis=1)
         cat['ref_id'] = cat_in.ref_id
 
