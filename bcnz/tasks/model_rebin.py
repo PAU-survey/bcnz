@@ -16,7 +16,7 @@ descr = {
 class model_rebin:
     """Rebing the redshift grid of the model."""
 
-    version = 1.0
+    version = 1.02
     config = {'zmin': 0.01, 'zmax': 1.2, 'dz': 0.001}
   
     # This rebinning is probably not needed. Instead on can estimate
@@ -37,11 +37,11 @@ class model_rebin:
             sub = model.loc[key]
             spl = splrep(sub.z, sub.flux)
 
-            part = pd.DataFrame({'z': sub.z, 'flux': splev(sub.z, spl)})
+            part = pd.DataFrame({'z': zgrid, 'flux': splev(zgrid, spl)})
             rebinned = rebinned.append(part)
 
         print('time', time.time() - t1)
-        rebinned = rebinned.reset_index().set_index(inds)
+        rebinned = rebinned.reset_index().set_index(inds+['z'])
 
         return rebinned
 
