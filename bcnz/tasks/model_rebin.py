@@ -38,6 +38,11 @@ class model_rebin:
             spl = splrep(sub.z, sub.flux)
 
             part = pd.DataFrame({'z': zgrid, 'flux': splev(zgrid, spl)})
+
+            # I needed to set these manually...
+            for k1, v1 in zip(model.index.names, key):
+                part[k1] = v1
+
             rebinned = rebinned.append(part)
 
         print('time', time.time() - t1)
