@@ -33,7 +33,8 @@ descr = {
 #  'use_lines': 'If including emission lines',
 #  'use_ext': 'If including extinction'
   'width_frac': 'Percentage on each side',
-  'towrite': 'The fields to write'
+  'towrite': 'The fields to write',
+  'scale_input': 'If scaling the input for numerical reasons.'
 }
 
 class bcnz_fit:
@@ -54,7 +55,8 @@ class bcnz_fit:
       'chi2_algo': 'min',
       'use_ext': False,
       'width_frac': 0.01,
-      'towrite': ['best_model']
+      'towrite': ['best_model'],
+      'scale_input': True
     }
 
     def check_conf(self):
@@ -71,6 +73,17 @@ class bcnz_fit:
         dims = ('gal', 'band')
         flux = xr.DataArray(data_df['flux'][filters], dims=dims)
         flux_err = xr.DataArray(data_df['flux_err'][filters], dims=dims)
+
+        # Previously I found that using on flux system or another made a
+        # difference.
+        if self.config['scale_input']:
+            print('Convert away from PAU fluxes...')
+            ab_factor = 10**(0.4*26)
+            cosmos_scale = ab_factor * 10**(0.4*48.6)
+
+            flux /= cosmos_scale
+            flux_err /= cosmos_scale
+
 
         # Not exacly the best, but Numpy had problems with the fancy
         # indexing.

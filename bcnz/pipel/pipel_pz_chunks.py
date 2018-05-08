@@ -31,7 +31,7 @@ def get_model(part):
 
     return model_rebinned
 
-def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False, bands=False,
+def pipel(chunks=False, prevot_calib=True, prevot_pzrun=True, bands=False,
           ngal=0, Niter=1000):
     """Pipeline for BCNZv2 when running with many chunks."""
 
