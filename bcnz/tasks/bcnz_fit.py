@@ -42,7 +42,7 @@ class bcnz_fit:
 
     # Some of these configuration options are no longer valid and 
     # moved into the flux_model code...
-    version = 1.11
+    version = 1.12
     config = {
       'filters': [],
       'seds': [],
@@ -258,6 +258,7 @@ class bcnz_fit:
     def fix_fmod_format(self, fmod_in):
         """Converts the dataframe to an xarray."""
 
+
         inds = ['z', 'band', 'sed', 'ext_law', 'EBV']
         f_mod = fmod_in.reset_index().set_index(inds).to_xarray().flux
 
@@ -266,6 +267,8 @@ class bcnz_fit:
 
         f_mod_full = f_mod
         f_mod = f_mod_full.sel(band=self.config['filters'])
+
+        assert not np.isnan(f_mod_full).any(), 'Missing entries'
 
         return f_mod, f_mod_full
 
