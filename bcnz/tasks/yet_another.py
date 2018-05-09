@@ -34,10 +34,9 @@ class yet_another:
         # Seperating this book keeping also makes it simpler to write
         # up different algorithms.
 
-        filters = self.config['fit_bands']
         dims = ('gal', 'band')
-        flux = xr.DataArray(data_df['flux'][filters], dims=dims)
-        flux_err = xr.DataArray(data_df['flux_err'][filters], dims=dims)
+        flux = xr.DataArray(data_df['flux'], dims=dims)
+        flux_err = xr.DataArray(data_df['flux_err'], dims=dims)
 
         # Previously I found that using on flux system or another made a
         # difference.
@@ -66,9 +65,10 @@ class yet_another:
     def run_photoz(self, models, galcat):
         """Run the photo-z over all the different chunks."""
 
+        fit_bands = self.config['fit_bands']
         flux, flux_err, var_inv = self.get_arrays(galcat)
-
-        #ipdb.set_trace()
+        xflux = flux.sel(band=fit_bands)
+        xvar_inv = var_inv.sel(band=fit_bands)
 
         # Setting up the return datastructure.. Yes, this takes too much
         # code.
@@ -83,20 +83,20 @@ class yet_another:
 
         chi2D = {}
         ratioD = {}
-
         t1 = time.time()
+
         for j, f_mod in enumerate(models):
             # TODO: Here I should consider doing a linear interpolation. It might
             # reduce my karma.
 
             f_mod = f_mod.sel(z=galcat.zs.values, method='nearest')
-            assert not np.isnan(f_mod).any(), 'Missing entries'
+            fmod_lim = f_mod.sel(band=fit_bands) #self.config['fit_bands'])
+            assert not np.isnan(fmod_lim).any(), 'Missing entries'
 
-            fmod_lim = f_mod.sel(bands=self.config['fit_bands'])
             print('Model', j)
             t2 = time.time()
-            A = np.einsum('gf,gfs,gft->gst', var_inv, fmod_lim, fmod_lim)
-            b = np.einsum('gf,gf,gfs->gs', var_inv, flux, fmod_lim)
+            A = np.einsum('gf,gfs,gft->gst', xvar_inv, fmod_lim, fmod_lim)
+            b = np.einsum('gf,gf,gfs->gs', xvar_inv, xflux, fmod_lim)
 
             v = 100*np.ones_like(b)
 
@@ -108,15 +108,17 @@ class yet_another:
                 vn = m0*v
                 v = vn
 
-            # Estimates the best-fit model... 
+
             F = np.einsum('gfs,gs->gf', f_mod, v)
-            F = xr.DataArray(F, dims=('gal', 'band'), coords=coords_ratio)
-            chi2 = (var_inv*(flux - F)**2.).sum(dim='band')
+            F = xr.DataArray(F, dims=('gal', 'band'), coords=\
+                              {'gal': gal, 'band': f_mod.band})
+
+            xF = F.sel(band=fit_bands)
+            chi2 = (xvar_inv*(xflux - xF)**2.).sum(dim='band')
 
             chi2D[j] = chi2
             ratioD[j] = F / flux
 
-            ipdb.set_trace()
 
         chi2 = xr.concat([chi2D[x] for x in chunk], dim='chunk')
         chi2.coords['chunk'] = chunk
