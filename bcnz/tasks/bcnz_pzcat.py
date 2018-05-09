@@ -22,7 +22,7 @@ descr = {'odds_lim': 'Limit within to estimate the ODDS',
 class bcnz_pzcat:
     """Catalogs for the photometric redshifts."""
 
-    version = 1.0
+    version = 1.01
     config = {'odds_lim': 0.0035,
               'width_frac': 0.01,
               'priors': False}
@@ -58,6 +58,10 @@ class bcnz_pzcat:
         cat['pz_width'] = pz_width
         cat.index = pz.gal.values
         cat.index.name = 'ref_id'
+
+        # Hack in test of a different quality parameter...
+        chi2_min = chi2.min(dim=['chunk', 'z'])
+        cat['qual_par'] = (chi2_min*pz_width).values
 
         return cat
 
