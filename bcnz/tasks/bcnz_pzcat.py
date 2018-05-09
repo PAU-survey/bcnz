@@ -24,7 +24,8 @@ class bcnz_pzcat:
 
     version = 1.0
     config = {'odds_lim': 0.0035,
-              'width_frac': 0.01}
+              'width_frac': 0.01,
+              'priors': False}
 
     def entry(self, chi2):
         pz = np.exp(-0.5*chi2)
@@ -33,7 +34,15 @@ class bcnz_pzcat:
 
         pz = pz / pz_norm
 
-#        hmm = pz.sum(dim='ref_id')
+        if self.config['priors']:
+            prior_chunk = pz.sum(dim=['ref_id', 'z'])
+            prior_chunk = prior_chunk / prior_chunk.sum()
+
+            pz = pz*prior_chunk
+            pz_norm = pz.sum(dim=['chunk', 'z'])
+            pz = pz / pz_norm
+
+
         pz = pz.sum(dim='chunk')
 
         # Most of this should be moved into the libpzqual
