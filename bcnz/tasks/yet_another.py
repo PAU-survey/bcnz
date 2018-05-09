@@ -19,7 +19,7 @@ descr = {'fit_bands': 'Which bands to fit',
 class yet_another:
     """Yet another attempt on calibration the zero-points."""
 
-    version = 1.0
+    version = 1.01
     config = {'fit_bands': [],
               'Niter': 1000,
               'scale_input': True}
@@ -77,16 +77,12 @@ class yet_another:
         z = models[0].z 
         band = flux.band
 
-#        dims_chi2 = ('chunk', 'gal', 'z')
-#        coords_chi2 = {'chunk': chunk, 'gal': gal}
-#        coords_model = {'chunk': chunk, 'gal': gal, 'band': band}
-
         dims_chi2 = ('gal',)
         coords_chi2 = {'gal': gal}
-        coords_model = {'gal': gal, 'band': band}
+        coords_ratio = {'gal': gal, 'band': band}
 
         chi2D = {}
-        modelD = {}
+        ratioD = {}
 
         t1 = time.time()
         for j, f_mod in enumerate(models):
@@ -112,60 +108,23 @@ class yet_another:
 
             # Estimates the best-fit model... 
             F = np.einsum('gfs,gs->gf', f_mod, v)
-            F = xr.DataArray(F, dims=('gal', 'band'), coords=coords_model)
+            F = xr.DataArray(F, dims=('gal', 'band'), coords=coords_ratio)
             chi2 = (var_inv*(flux - F)**2.).sum(dim='band')
 
             chi2D[j] = chi2
-            modelD[j] = F
+            ratioD[j] = F / flux
 
 
         chi2 = xr.concat([chi2D[x] for x in chunk], dim='chunk')
         chi2.coords['chunk'] = chunk
 
-        model = xr.concat([modelD[x] for x in chunk], dim='chunk')
-        model.coords['chunk'] = chunk
-
-        # Scaling back, so the funky units doesn't leave this function...
-        if self.config['scale_input']:
-            ab_factor = 10**(0.4*26)
-            cosmos_scale = ab_factor * 10**(0.4*48.6)
-            model *= cosmos_scale
+        # Here we don't need to scale back since we are using the ratio.
+        ratio = xr.concat([ratioD[x] for x in chunk], dim='chunk')
+        ratio.coords['chunk'] = chunk
 
         print('time', time.time() - t1)
 
-        return chi2, model
-
-
-#    def find_best_model(self, modelD, flux_model, flux, flux_err, chi2):
-#        """Find the best flux model."""
-#
-#        # Just get a normal list of the models.
-#        model_parts = [str(x.values) for x in flux_model.part]
-#
-#        fmin = self.minimize_free if self.config['free_ampl'] else self.minimize
-#        for j,key in enumerate(model_parts):
-#            print('Part', j)
-#
-#            chi2_part, F = fmin(modelD[key], flux, flux_err)
-#            chi2[j,:] = chi2_part.sum(dim='band')
-#            flux_model[j,:] = F
-#
-#        # Ok, this is not the only possible assumption!
-#        best_part = chi2.argmin(dim='part')
-#        best_flux = flux_model.isel_points(ref_id=range(len(flux)), part=best_part)
-#        best_flux = xr.DataArray(best_flux, dims=('ref_id', 'band'), \
-#                    coords={'ref_id': flux.ref_id, 'band': flux.band})
-#
-#        return best_flux
-
-#    def entry(self, galcat):
-#        # Loads model exactly at the spectroscopic redshift for each galaxy.
-#        galcat = self.sel_subset(galcat)
-#        modelD = self.get_model(galcat.zs)
-#
-#        zp, zp_details = self.zero_points(modelD, galcat)
-#
-#        return zp, zp_details
+        return chi2, ratio
 
     def fix_fmod_format(self, fmod_in):
         """Converts the dataframe to an xarray."""
@@ -201,21 +160,22 @@ class yet_another:
         return models
 
     def entry(self, models, galcat):
-        chi2, model = self.run_photoz(models, galcat)
+        chi2, ratio = self.run_photoz(models, galcat)
 
-        return chi2, model
+        chi2 = chi2.to_dataframe('chi2')
+        ratio = ratio.to_dataframe('ratio')
+
+        return chi2, ratio 
 
     def run(self):
         models = self.load_models()
         galcat = self.input.galcat.result
 
-        chi2, model = self.entry(models, galcat)
-        chi2 = chi2.to_dataframe('chi2')
-        model = model.to_dataframe('chi2')
+        chi2, ratio = self.entry(models, galcat)
 
         # Yes, this should not be needed.
         path = self.output.empty_file('default')
         store = pd.HDFStore(path, 'w')
         store.append('chi2', chi2)
-        store.append('model', model)
+        store.append('ratio', ratio)
         store.close()
