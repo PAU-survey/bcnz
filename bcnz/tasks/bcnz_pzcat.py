@@ -22,7 +22,7 @@ descr = {'odds_lim': 'Limit within to estimate the ODDS',
 class bcnz_pzcat:
     """Catalogs for the photometric redshifts."""
 
-    version = 1.01
+    version = 1.02
     config = {'odds_lim': 0.0035,
               'width_frac': 0.01,
               'priors': False}
@@ -62,6 +62,12 @@ class bcnz_pzcat:
         # Hack in test of a different quality parameter...
         chi2_min = chi2.min(dim=['chunk', 'z'])
         cat['qual_par'] = (chi2_min*pz_width).values
+
+        odds0p2 = libpzqual.odds(pz, zb, self.config['odds_lim'])
+
+        cat['Qz'] = (chi2_min*pz_width / odds0p2.values).values
+
+        ipdb.set_trace()
 
         return cat
 
