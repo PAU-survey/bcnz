@@ -19,7 +19,7 @@ descr = {'fit_bands': 'Which bands to fit',
 class yet_another:
     """Yet another attempt on calibration the zero-points."""
 
-    version = 1.01
+    version = 1.02
     config = {'fit_bands': [],
               'Niter': 1000,
               'scale_input': True}
@@ -90,11 +90,13 @@ class yet_another:
             # reduce my karma.
 
             f_mod = f_mod.sel(z=galcat.zs.values, method='nearest')
+            assert not np.isnan(f_mod).any(), 'Missing entries'
 
+            fmod_lim = f_mod.sel(bands=self.config['fit_bands'])
             print('Model', j)
             t2 = time.time()
-            A = np.einsum('gf,gfs,gft->gst', var_inv, f_mod, f_mod)
-            b = np.einsum('gf,gf,gfs->gs', var_inv, flux, f_mod)
+            A = np.einsum('gf,gfs,gft->gst', var_inv, fmod_lim, fmod_lim)
+            b = np.einsum('gf,gf,gfs->gs', var_inv, flux, fmod_lim)
 
             v = 100*np.ones_like(b)
 
@@ -114,6 +116,7 @@ class yet_another:
             chi2D[j] = chi2
             ratioD[j] = F / flux
 
+            ipdb.set_trace()
 
         chi2 = xr.concat([chi2D[x] for x in chunk], dim='chunk')
         chi2.coords['chunk'] = chunk
@@ -134,11 +137,6 @@ class yet_another:
 
         model = ['sed', 'EBV', 'ext_law']
         f_mod = f_mod.stack(model=model)
-
-        f_mod_full = f_mod
-        f_mod = f_mod_full.sel(band=self.config['fit_bands'])
-
-        assert not np.isnan(f_mod).any(), 'Missing entries'
 
         return f_mod
 
