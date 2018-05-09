@@ -27,35 +27,6 @@ class yet_another:
     def check_config(self):
         assert self.config['fit_bands'], 'Need to set: fit_bands'
 
-#    def run_photoz(self, f_mod, flux, flux_err):
-#        """Minimize the model difference at a specific redshift."""
-#
-#        # Otherwise we will get nans in the result.
-#        var_inv = 1./flux_err**2
-#        var_inv = var_inv.fillna(0.)
-#        xflux = flux.fillna(0.)
-#
-#        A = np.einsum('gf,gfs,gft->gst', var_inv, f_mod, f_mod)
-#        b = np.einsum('gf,gf,gfs->gs', var_inv, xflux, f_mod)
-#
-#        v = np.ones_like(b)
-#        t1 = time.time()
-#        for i in range(self.config['Niter']):
-#            a = np.einsum('gst,gt->gs', A, v)
-#            m0 = b / a
-#            vn = m0*v
-#            v = vn
-#
-#        gal_id = np.array(flux.ref_id)
-#        coords = {'ref_id': gal_id, 'band': f_mod.band}
-#        coords_norm = {'ref_id': gal_id, 'model': np.array(f_mod.sed)}
-#        F = np.einsum('gfs,gs->gf', f_mod, v)
-#        flux_model = xr.DataArray(F, coords=coords, dims=('ref_id', 'band'))
-#
-#        chi2 = var_inv*(flux - F)**2
-#        chi2.values = np.where(chi2==0., np.nan, chi2)
-#
-#        return chi2, F
 
     def get_arrays(self, data_df):
         """Read in the arrays and present them as xarrays."""
@@ -222,8 +193,6 @@ class yet_another:
         for nr in range(nparts):
             job = self.input.depend['model_{}'.format(nr)]
 
-#            ipdb.set_trace()
-
             print('nr', nr, 'taskid', job.file_path)
 
             model_in = job.result
@@ -243,7 +212,7 @@ class yet_another:
         chi2, model = self.entry(models, galcat)
         chi2 = chi2.to_dataframe('chi2')
         model = model.to_dataframe('chi2')
-#
+
         # Yes, this should not be needed.
         path = self.output.empty_file('default')
         store = pd.HDFStore(path, 'w')
