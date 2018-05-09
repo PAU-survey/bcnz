@@ -79,6 +79,7 @@ class bcnz_run_all:
         t1 = time.time()
         for j, f_mod in enumerate(models):
             print('Model', j)
+            t2 = time.time()
             A = np.einsum('gf,zfs,zft->gzst', var_inv, f_mod, f_mod)
             b = np.einsum('gf,gf,zfs->gzs', var_inv, flux, f_mod)
 
@@ -90,11 +91,6 @@ class bcnz_run_all:
 
                 m0 = b / a
                 vn = m0*v
-
-                # Comparing with chi2 would require evaluating this in each
-                # iteration..
-                adiff = np.abs(vn-v)
-
                 v = vn
            
             # Estimates the best-fit model... 
@@ -105,47 +101,7 @@ class bcnz_run_all:
 
         print('time', time.time() - t1)
 
-
-        ipdb.set_trace()
-
-        F = np.einsum('zfs,gzs->gzf', f_mod, v)
-        F = xr.DataArray(F, coords=coords, dims=('gal', 'z', 'band'))
-
-        chi2 = var_inv*(flux - F)**2
-
-
-        t1 = time.time()
-        A = np.einsum('gf,zfs,zft->gzst', var_inv, f_mod, f_mod)
-        print('time A',  time.time() - t1)
-
-        t1 = time.time()
-        b = np.einsum('gf,gf,zfs->gzs', var_inv, flux, f_mod)
-        print('time b',  time.time() - t1)
-
-        Ap = np.where(A > 0, A, 0)
-        An = np.where(A < 0, -A, 0)
-
-        v = 100*np.ones_like(b)
-
-        gal_id = np.array(data_df.index)
-        coords = {'gal': gal_id, 'band': f_mod.band, 'z': f_mod.z}
-        coords_norm = {'gal': gal_id, 'z': f_mod.z, 'model': f_mod.model}
-
-        if (Ap < 0).any():
-            Ap = np.clip(Ap, 1e-50, np.infty)
-
-        t1 = time.time()
-        for i in range(self.config['Niter']):
-            a = np.einsum('gzst,gzt->gzs', Ap, v)
-
-            m0 = b / a
-            vn = m0*v
-
-            # Comparing with chi2 would require evaluating this in each
-            # iteration..
-            adiff = np.abs(vn-v)
-
-            v = vn
+        return chi2
 
     def fix_fmod_format(self, fmod_in):
         """Converts the dataframe to an xarray."""
