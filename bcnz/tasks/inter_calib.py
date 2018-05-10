@@ -283,6 +283,7 @@ class inter_calib:
 
         # Just simple input transformations.
         flux, flux_err, chi2, zp_tot, flux_model = self._prepare_input(modelD, galcat)
+        flux_orig = flux.copy()
 
         zp_details = {}
         for i in range(self.config['Nrounds']):
@@ -297,10 +298,14 @@ class inter_calib:
             zp_tot *= zp
             zp_details[i] = zp_tot.copy()
 
+            # We mostly need this for debug and the paper.
+            if i == self.config['Nrounds'] - 1:
+                ratio_all = best_flux / flux_orig
+
         zp_tot = zp_tot.to_series()
         zp_details = pd.DataFrame(zp_details, index=flux.band)
 
-        return zp_tot, zp_details
+        return zp_tot, zp_details, ratio_all
 
     def get_model(self, zs):
         """Load and store the models as different xarrays."""
@@ -351,15 +356,16 @@ class inter_calib:
         galcat = self.sel_subset(galcat)
         modelD = self.get_model(galcat.zs)
 
-        zp, zp_details = self.zero_points(modelD, galcat)
+        zp, zp_details, ratio_all = self.zero_points(modelD, galcat)
+        ratio_all = ratio_all.to_dataframe('ratio')
 
-        return zp, zp_details
+        return zp, zp_details, ratio_all
 
     def run(self):
         galcat = self.input.galcat.result
 
         t1 = time.time()
-        zp, zp_details = self.entry(galcat)
+        zp, zp_details, ratio_all = self.entry(galcat)
         print('Time calibrating:', time.time() - t1)
 
         # Yes, this should not be needed.
@@ -367,4 +373,5 @@ class inter_calib:
         store = pd.HDFStore(path, 'w')
         store['default'] = zp
         store['zp_details'] = zp_details
+        store['ratio_all'] = ratio_all
         store.close()
