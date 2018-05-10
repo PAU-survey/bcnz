@@ -10,7 +10,7 @@ import xarray as xr
 # Here we inherit to avoid copying the code..
 import bcnz_run_all
 
-class bcnz_fit_test2(bcnz_run_all.bcnz_run_all):
+class bcnz_m0quant(bcnz_run_all.bcnz_run_all):
     """Version testing the convergence of the algorithm."""
 
     # The usage of this version of the code is to output some metrics
