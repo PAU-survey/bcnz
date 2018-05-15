@@ -4,6 +4,7 @@
 from IPython.core import debugger as ipdb
 import time
 import numpy as np
+import pandas as pd
 import xarray as xr
 
 descr = {}
@@ -37,28 +38,35 @@ class chi2_comb:
     def get_chi2(self, files):
         """Estimate the chi2 array."""
 
-        # Just because of how the indexes are stored..
+        # Number of redshift bins. Just because of how the
+        # indices are stored.
         nz = len(files[0].pz.index.get_level_values(1).unique())
 
         i = 0
         ngal = 50
-        K = []
+#        K = []
         while True:
             chi2_all = self._chi2_part(files, i, ngal, nz)
             if not len(chi2_all):
                 break
 
             chi2_all.coords['chunk'] = range(len(files))
-            K.append(chi2_all)
+#            K.append(chi2_all)
 
             i += 1
 
-        chi2 = xr.concat(K,dim='ref_id')
-        return chi2
+            yield chi2_all.to_dataframe('chi2')
 
-    def entry(self):
+
+    def get_files(self):
+        """Interface for opening the files."""
+
         nrcats = len(list(filter(lambda x: x.startswith('pzcat_'), dir(self.input))))
         files = [self.input.depend['pzcat_{}'.format(x)].get_store() for x in range(nrcats)]
+
+        return files
+    
+    def entry(self):
 
         t1 = time.time()
         chi2 = self.get_chi2(files)
@@ -69,5 +77,16 @@ class chi2_comb:
         return chi2
 
     def run(self):
-        self.output.result = self.entry()
+        path = self.output.empty_file('default')
+        store = pd.HDFStore(path, 'w')
 
+        files = self.get_files()
+        for chi2 in iter(self.get_chi2(files)):
+            print('Appending one..')
+
+            store.append('default', chi2)
+
+        for fb in files:
+            fb.close()
+
+        store.close()
