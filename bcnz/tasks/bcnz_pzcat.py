@@ -22,7 +22,7 @@ descr = {'odds_lim': 'Limit within to estimate the ODDS',
 class bcnz_pzcat:
     """Catalogs for the photometric redshifts."""
 
-    version = 1.03
+    version = 1.04
     config = {'odds_lim': 0.0035,
               'width_frac': 0.01,
               'priors': 'none',
@@ -143,8 +143,5 @@ class bcnz_pzcat:
         return cat
 
     def run(self):
-        # Ok, this is *bad*
-        path = '/home/eriksen/tmp/p540/chi2_v1.h5'
-        chi2 = xr.open_dataset(path).chi2
-
+        chi2 = self.input.chi2.result
         self.output.result = self.entry(chi2)
