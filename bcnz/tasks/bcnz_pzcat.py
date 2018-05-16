@@ -22,10 +22,27 @@ descr = {'odds_lim': 'Limit within to estimate the ODDS',
 class bcnz_pzcat:
     """Catalogs for the photometric redshifts."""
 
-    version = 1.02
+    version = 1.03
     config = {'odds_lim': 0.0035,
               'width_frac': 0.01,
-              'priors': False}
+              'priors': 'none',
+              'nsmooth': 5}
+
+    def test(self, pz):
+        from matplotlib import pyplot as plt
+
+#        y1 = pz[0].sum(dim='ref_id')
+#        y2 = pz[1].sum(dim='ref_id')
+#        y3 = pz[2].sum(dim='ref_id')
+#
+#        from scipy.ndimage.filters import gaussian_filter
+#        hmm = pz.sum(dim='ref_id')
+
+        hmm = pz.sum(dim=['ref_id', 'chunk'])
+
+
+        ipdb.set_trace()
+
 
     def entry(self, chi2):
         pz = np.exp(-0.5*chi2)
@@ -34,14 +51,68 @@ class bcnz_pzcat:
 
         pz = pz / pz_norm
 
-        if self.config['priors']:
+#        self.test(pz)
+
+        if self.config['priors'] == 'none':
+            pass
+        elif self.config['priors'] == 'chunk':
             prior_chunk = pz.sum(dim=['ref_id', 'z'])
             prior_chunk = prior_chunk / prior_chunk.sum()
 
             pz = pz*prior_chunk
             pz_norm = pz.sum(dim=['chunk', 'z'])
             pz = pz / pz_norm
+        elif self.config['priors'] == 'both':
+            prior_both = pz.sum(dim=['ref_id'])
 
+            ipdb.set_trace()
+
+            pz = pz*prior_both
+            pz_norm = pz.sum(dim=['chunk', 'z'])
+            pz = pz / pz_norm
+        elif self.config['priors'] == 'test':
+            from scipy.ndimage.filters import gaussian_filter
+            prior_test = gaussian_filter(pz.sum(dim='ref_id'), [0., 10.])
+            prior_test = xr.DataArray(prior_test, dims=('chunk', 'z'), \
+                         coords={'chunk': pz['chunk'], 'z': pz.z})
+
+            pz = pz*prior_test
+            pz_norm = pz.sum(dim=['chunk', 'z'])
+            pz = pz / pz_norm
+        elif self.config['priors'] == 'test17':
+            # Attempting chunk and z priors separately.
+            from scipy.ndimage.filters import gaussian_filter
+
+            prior_z = pz.sum(dim=['chunk', 'ref_id'])
+            prior_z.values[:] = gaussian_filter(prior_z, self.config['nsmooth'])
+            prior_z /= prior_z.sum()
+
+            prior_chunk = pz.sum(dim=['ref_id', 'z'])
+            prior_chunk = prior_chunk / prior_chunk.sum()
+
+            pz = pz*(prior_z*prior_chunk)
+            pz_norm = pz.sum(dim=['chunk', 'z'])
+            pz = pz / pz_norm
+
+        elif self.config['priors'] == 'test18':
+            # Attempting chunk and z priors separately.
+            from scipy.ndimage.filters import gaussian_filter
+
+            prior_z = pz.sum(dim=['chunk', 'ref_id'])
+            prior_z.values[:] = gaussian_filter(prior_z, self.config['nsmooth'])
+            prior_z /= prior_z.sum()
+
+            prior_chunk = pz.sum(dim=['ref_id', 'z'])
+            prior_chunk = prior_chunk / prior_chunk.sum()
+
+            pz = pz*(prior_z*prior_chunk)
+            pz_norm = pz.sum(dim=['chunk', 'z'])
+            pz = pz / pz_norm
+
+            ipdb.set_trace()
+        else:
+            raise ValueError('Invalid prior type')
+#            ipdb.set_trace()
 
         pz = pz.sum(dim='chunk')
 
@@ -67,14 +138,13 @@ class bcnz_pzcat:
 
         cat['Qz'] = (chi2_min*pz_width / odds0p2.values).values
 
-        ipdb.set_trace()
+#        ipdb.set_trace()
 
         return cat
 
     def run(self):
-        #chi2 = self.input.chi2.result
+        # Ok, this is *bad*
         path = '/home/eriksen/tmp/p540/chi2_v1.h5'
-
         chi2 = xr.open_dataset(path).chi2
 
         self.output.result = self.entry(chi2)
