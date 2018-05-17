@@ -93,7 +93,7 @@ def pipel(chunks=False, prevot_calib=True, prevot_pzrun=True, bands=False,
     galcat_lim.config['ngal'] = ngal
 
     # Linking the photo-z runs.
-    bcnz_comb_ext = xd.Job('bcnz_comb_ext')
+    chi2_comb = xd.Job('chi2_comb')
     for key,row in chunks.iterrows():
         if (not prevot_pzrun) and (row.ext_law == 'SMC_prevot'):
             continue
@@ -102,6 +102,9 @@ def pipel(chunks=False, prevot_calib=True, prevot_pzrun=True, bands=False,
         pzcat.depend['model'] = modelD[key]
         pzcat.depend['galcat'] = galcat_lim
 
-        bcnz_comb_ext.depend['pzcat_{}'.format(key)] = pzcat
+        chi2_comb.depend['pzcat_{}'.format(key)] = pzcat
 
-    return bcnz_comb_ext
+    bcnz_pzcat = xd.Job('bcnz_pzcat')
+    bcnz_pzcat.depend['chi2'] = chi2_comb
+
+    return bcnz_pzcat
