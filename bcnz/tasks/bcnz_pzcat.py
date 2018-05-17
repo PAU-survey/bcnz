@@ -22,27 +22,11 @@ descr = {'odds_lim': 'Limit within to estimate the ODDS',
 class bcnz_pzcat:
     """Catalogs for the photometric redshifts."""
 
-    version = 1.04
+    version = 1.05
     config = {'odds_lim': 0.0035,
               'width_frac': 0.01,
               'priors': 'none',
               'nsmooth': 5}
-
-    def test(self, pz):
-        from matplotlib import pyplot as plt
-
-#        y1 = pz[0].sum(dim='ref_id')
-#        y2 = pz[1].sum(dim='ref_id')
-#        y3 = pz[2].sum(dim='ref_id')
-#
-#        from scipy.ndimage.filters import gaussian_filter
-#        hmm = pz.sum(dim='ref_id')
-
-        hmm = pz.sum(dim=['ref_id', 'chunk'])
-
-
-        ipdb.set_trace()
-
 
     def entry(self, chi2):
         pz = np.exp(-0.5*chi2)
@@ -127,18 +111,20 @@ class bcnz_pzcat:
         cat['zb'] = zb.values
         cat['odds'] = odds.values
         cat['pz_width'] = pz_width
+
         cat.index = pz.gal.values
         cat.index.name = 'ref_id'
 
-        # Hack in test of a different quality parameter...
+        cat['chi2'] = chi2.min(dim=['chunk', 'z']).sel(ref_id=cat.index)
+
+        # These are now in the "libpzqual" file. I could
+        # consider moving them here..
         chi2_min = chi2.min(dim=['chunk', 'z'])
         cat['qual_par'] = (chi2_min*pz_width).values
 
         odds0p2 = libpzqual.odds(pz, zb, self.config['odds_lim'])
 
         cat['Qz'] = (chi2_min*pz_width / odds0p2.values).values
-
-#        ipdb.set_trace()
 
         return cat
 
