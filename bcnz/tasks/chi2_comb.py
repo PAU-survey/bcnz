@@ -10,8 +10,9 @@ import xarray as xr
 descr = {}
 
 class chi2_comb:
+    """Combine the chi^2 from different photo-z runs."""
 
-    version = 1.0
+    version = 1.01
     config = {}
 
     def _chi2_part(self, files, i, ngal, nz):
@@ -43,19 +44,17 @@ class chi2_comb:
         nz = len(files[0].pz.index.get_level_values(1).unique())
 
         i = 0
-        ngal = 50
-#        K = []
+        ngal = 50 # Don't change this.. Seriously!!
         while True:
             chi2_all = self._chi2_part(files, i, ngal, nz)
             if not len(chi2_all):
                 break
 
             chi2_all.coords['chunk'] = range(len(files))
-#            K.append(chi2_all)
 
             i += 1
 
-            yield chi2_all.to_dataframe('chi2')
+            yield chi2_all
 
 
     def get_files(self):
@@ -67,26 +66,23 @@ class chi2_comb:
         return files
     
     def entry(self):
-
         t1 = time.time()
         chi2 = self.get_chi2(files)
         print('time', time.time() - t1)
 
-        chi2 = chi2.to_dataframe('chi2')
-
         return chi2
 
     def run(self):
-        path = self.output.empty_file('default')
-        store = pd.HDFStore(path, 'w')
-
         files = self.get_files()
+        assert len(files), 'No input files'
+
+        K = []
         for chi2 in iter(self.get_chi2(files)):
             print('Appending one..')
+            K.append(chi2)
 
-            store.append('default', chi2)
-
+        # Be nice..
         for fb in files:
             fb.close()
 
-        store.close()
+        self.output.result = xr.concat(K, dim='ref_id')
