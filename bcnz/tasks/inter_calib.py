@@ -174,6 +174,8 @@ class inter_calib:
         err = flux_err.values
         bestmodel = best_model
 
+        #assert not (sig < 0).any(), 'Having negative values here will give serious issues..'
+        
         nbands = len(flux.band)
         zp_mag = np.zeros(nbands)
         for i in range(nbands):
@@ -195,12 +197,11 @@ class inter_calib:
         """Estimate the zero-point."""
 
         err_inv = 1. / flux_err
-
         X = (best_flux, flux, err_inv)
-        zp_min = self.config['zp_min'] 
 
+        zp_min = self.config['zp_min'] 
         if zp_min == 'mag':
-            zp = self.zp_mag(*X)
+            zp = self.zp_mag(best_flux, flux, flux_err)
         elif zp_min == 'flux':
             def cost_flux(R, model, flux, err_inv):
                 return float(np.abs((err_inv*(flux*R[0] - model)).median()))
@@ -226,6 +227,10 @@ class inter_calib:
         flux = galcat['flux'][fit_bands].stack().to_xarray()
         flux_err = galcat['flux_err'][fit_bands].stack().to_xarray()
 
+        SN = flux / flux_err
+        flux = flux.where(self.config['SN_min'] < SN)
+        flux_err = flux_err.where(self.config['SN_min'] < SN)
+
         # this should have been changed in the input..        
         if 'level_1' in flux.dims:
             flux = flux.rename({'level_1': 'band'})
@@ -237,6 +242,7 @@ class inter_calib:
             cosmos_scale = ab_factor * 10**(0.4*48.6)
             flux /= cosmos_scale
             flux_err /= cosmos_scale
+
 
         # Empty structure for storint the best flux model.
         dims = ('part', 'ref_id', 'band')
@@ -346,8 +352,9 @@ class inter_calib:
         galcat = galcat[~np.isnan(galcat.zs)]
 
         # This cut was needed to avoid negative numbers in the logarithm.
-        SN = galcat.flux / galcat.flux_err
-        galcat = galcat.loc[self.config['SN_min'] < SN.min(axis=1)]
+        #SN = galcat.flux / galcat.flux_err
+        #ipdb.set_trace()
+        #galcat = galcat.loc[self.config['SN_min'] < SN.min(axis=1)]
 
         return galcat
 
