@@ -109,20 +109,9 @@ class find_em(inter_calib.inter_calib):
             Flines[:,:] = 0.
 
         F = Fcont + Flines
+        chi2 = (var_inv*(F - flux)**2)
 
-#        flux = flux.rename({'ref_id': 'gal'})
-
-
-        ipdb.set_trace()
-
-
-#        L.append(np.einsum('gz,zfs,gzs->gzf', k, f_mod.sel(band=NBlist), v))
-#        L.append(np.einsum('zfs,gzs->gzf', f_mod.sel(band=BBlist), v))
-
-
-
-
-
+        return chi2, Fcont, Flines
 
 
     def find_best_model(self, modelD, cont_model, lines_model, flux, flux_err, chi2):
@@ -135,41 +124,41 @@ class find_em(inter_calib.inter_calib):
         for j,key in enumerate(model_parts):
             print('Part', j)
 
-            chi2_part, Fcont, Flinesm = fmin(modelD[key], flux, flux_err)
+            chi2_part, Fcont, Flines = fmin(modelD[key], flux, flux_err)
             chi2[j,:] = chi2_part.sum(dim='band')
 
             cont_model[j,:] = Fcont
             lines_model[j,:] = Flines
 
-
         # Ok, this is not the only possible assumption!
+        dims = ('ref_id', 'band')
+        coords ={'ref_id': flux.ref_id, 'band': flux.band}
         best_part = chi2.argmin(dim='part')
-        best_flux = flux_model.isel_points(ref_id=range(len(flux)), part=best_part)
-        best_flux = xr.DataArray(best_flux, dims=('ref_id', 'band'), \
-                    coords={'ref_id': flux.ref_id, 'band': flux.band})
+
+        best_cont = cont_model.isel_points(ref_id=range(len(flux)), part=best_part)
+        best_cont = xr.DataArray(best_cont, dims=dims, coords=coords)
+
+        best_lines = lines_model.isel_points(ref_id=range(len(flux)), part=best_part)
+        best_lines = xr.DataArray(best_lines, dims=dims, coords=coords)
+
+        best_flux = xr.Dataset({'cont': best_cont, 'lines': best_lines})
 
         return best_flux
 
     def entry(self, galcat):
         modelD = self.get_model(galcat.zs)
         flux, flux_err, chi2, zp_tot, cont_model = self._prepare_input(modelD, galcat)
-
-        # This seems a bit wrong here...
-        flux = flux.rename({'gal': 'ref_id'})
-        flux_err = flux_err.rename({'gal': 'ref_id'})
-
         lines_model = cont_model.copy()
 
         best_flux = self.find_best_model(modelD, cont_model, lines_model, flux, flux_err, chi2)
 
-
+        return best_flux
 
 
     def run(self):
         galcat = self.input.galcat.result
         galcat = galcat[~np.isnan(galcat.zs)]
+        best_flux = self.entry(galcat)
 
-        self.entry(galcat)
-
-
-        ipdb.set_trace()
+        path = self.output.empty_file('default')
+        best_flux.to_netcdf(path)
