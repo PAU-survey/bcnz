@@ -190,16 +190,6 @@ class bcnz_try10:
         b_BB = np.einsum('gf,gf,zfs->gzs', var_inv.sel(band=BBlist), flux.sel(band=BBlist), \
                f_mod.sel(band=BBlist))
 
-#        # We might need this...
-#        scale_to = self.config['scale_to']
-#        if not len(scale_to):
-#            scale_to = BBlist
-#
-#        var_inv_BB = var_inv.sel(band=scale_to)
-#        flux_BB = flux.sel(band=scale_to)
-#        f_mod_BB = f_mod.sel(band=scale_to)
-#        S1 = (var_inv_BB*flux_BB).sum(dim='band')
-
         # Testing to scale to the narrow bands. In that case the code above is not needed.
         scale_to = NBlist
         var_inv_NB = var_inv.sel(band=scale_to)
@@ -237,28 +227,6 @@ class bcnz_try10:
 
                 b = b_BB + k[:,:,np.newaxis]*b_NB
                 A = A_BB + k[:,:,np.newaxis,np.newaxis]**2*A_NB
-
-        if False: #True:
-# TODO: Delete this when knowing the algorithm below seems to work.
-            # Testing with the old algorithm..
-            v_scaled = v.copy()
-            k_scaled = k.copy()
-            k = np.ones((len(flux), len(f_mod.z)))
-            b = b_NB + k[:,:,np.newaxis]*b_BB
-            A = A_NB + k[:,:,np.newaxis,np.newaxis]**2*A_BB
-
-            v = 100*np.ones_like(b)
-            for i in range(self.config['Niter']):
-                a = np.einsum('gzst,gzt->gzs', A, v)
-
-                m0 = b / a
-                vn = m0*v
-                v = vn
-
-            # Some more tests...
-            F = np.einsum('zfs,gzs->gzf', f_mod, v_scaled)
-            F = xr.DataArray(F, coords=coords, dims=('gal', 'z', 'band'))
-            chi2 = var_inv*(flux - F)**2
 
         # I was comparing with the standard algorithm above...
         v_scaled = v
