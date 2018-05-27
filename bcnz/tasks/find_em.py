@@ -60,8 +60,8 @@ class find_em(inter_calib.inter_calib):
         v = 100*np.ones_like(b)
 
         gal_id = flux.ref_id.values
-        coords = {'gal': gal_id, 'band': f_mod.band}
-        coords_norm = {'gal': gal_id, 'model': f_mod.sed}
+        coords = {'ref_id': gal_id, 'band': f_mod.band}
+        coords_norm = {'ref_id': gal_id, 'model': f_mod.sed}
 
 
         for i in range(self.config['Niter']):
@@ -94,7 +94,7 @@ class find_em(inter_calib.inter_calib):
         L.append(np.einsum('gfs,gs->gf', f_mod[:,~isNB,~isline], v[:,~isline]))
         Fcont = np.hstack(L)
         coords['band'] = NBlist + BBlist
-        Fcont = xr.DataArray(Fcont, coords=coords, dims=('gal', 'band'))
+        Fcont = xr.DataArray(Fcont, coords=coords, dims=('ref_id', 'band'))
 
         # Otherwise we get problems in the cases when emission lines are not added...
         if isline.any(): 
@@ -103,14 +103,19 @@ class find_em(inter_calib.inter_calib):
             L.append(np.einsum('gfs,gs->gf', f_mod[:,~isNB,~isline], v[:,isline]))
             Flines = np.hstack(L)
             coords['band'] = NBlist + BBlist
-            Flines = xr.DataArray(Flines, coords=coords, dims=('gal', 'band'))
+            Flines = xr.DataArray(Flines, coords=coords, dims=('ref_id', 'band'))
         else:
             Flines = Fcont.copy()
             Flines[:,:] = 0.
 
         F = Fcont + Flines
 
-#        ipdb.set_trace()
+#        flux = flux.rename({'ref_id': 'gal'})
+
+
+        ipdb.set_trace()
+
+
 #        L.append(np.einsum('gz,zfs,gzs->gzf', k, f_mod.sel(band=NBlist), v))
 #        L.append(np.einsum('zfs,gzs->gzf', f_mod.sel(band=BBlist), v))
 
@@ -120,7 +125,7 @@ class find_em(inter_calib.inter_calib):
 
 
 
-    def find_best_model(self, modelD, cont_model, em_model, flux, flux_err, chi2):
+    def find_best_model(self, modelD, cont_model, lines_model, flux, flux_err, chi2):
         """Find the best flux model."""
 
         # Just get a normal list of the models.
@@ -130,13 +135,11 @@ class find_em(inter_calib.inter_calib):
         for j,key in enumerate(model_parts):
             print('Part', j)
 
-#            ipdb.set_trace()
-
-            chi2_part, Fcont, Fem = fmin(modelD[key], flux, flux_err)
+            chi2_part, Fcont, Flinesm = fmin(modelD[key], flux, flux_err)
             chi2[j,:] = chi2_part.sum(dim='band')
 
             cont_model[j,:] = Fcont
-            em_model[j,:] = Fem
+            lines_model[j,:] = Flines
 
 
         # Ok, this is not the only possible assumption!
@@ -150,9 +153,14 @@ class find_em(inter_calib.inter_calib):
     def entry(self, galcat):
         modelD = self.get_model(galcat.zs)
         flux, flux_err, chi2, zp_tot, cont_model = self._prepare_input(modelD, galcat)
-        em_model = cont_model.copy()
 
-        best_flux = self.find_best_model(modelD, cont_model, em_model, flux, flux_err, chi2)
+        # This seems a bit wrong here...
+        flux = flux.rename({'gal': 'ref_id'})
+        flux_err = flux_err.rename({'gal': 'ref_id'})
+
+        lines_model = cont_model.copy()
+
+        best_flux = self.find_best_model(modelD, cont_model, lines_model, flux, flux_err, chi2)
 
 
 
