@@ -22,7 +22,7 @@ descr = {'odds_lim': 'Limit within to estimate the ODDS',
 class bcnz_pzcat:
     """Catalogs for the photometric redshifts."""
 
-    version = 1.05
+    version = 1.06
     config = {'odds_lim': 0.0035,
               'width_frac': 0.01,
               'priors': 'none',
@@ -123,8 +123,13 @@ class bcnz_pzcat:
         cat['qual_par'] = (chi2_min*pz_width).values
 
         odds0p2 = libpzqual.odds(pz, zb, self.config['odds_lim'])
-
         cat['Qz'] = (chi2_min*pz_width / odds0p2.values).values
+
+        # We need the chunk which contribute most to the redshift
+        # peak..
+        iz = pz.argmin(dim='z')
+        points = chi2.isel_points(ref_id=range(len(chi2.ref_id)), z=iz)
+        cat['best_chunk'] = points.argmin(dim='chunk')
 
         return cat
 
