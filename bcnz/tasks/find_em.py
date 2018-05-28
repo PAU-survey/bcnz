@@ -17,7 +17,7 @@ class find_em(inter_calib.inter_calib):
     # This code reuse some of the parts used for the intercalibration.
     # One should not actually need to also code the photo-z minimization
     # here, but I have not updated the inter_calib version yet....
-    version = 1.0
+    version = 1.011
     config = {'fit_bands': [],
               'Niter': 1000,
               'SN_min': -20,
@@ -99,8 +99,8 @@ class find_em(inter_calib.inter_calib):
         # Otherwise we get problems in the cases when emission lines are not added...
         if isline.any(): 
             L = []
-            L.append(np.einsum('g,gfs,gs->gf', k, f_mod[:,isNB,~isline], v[:,isline]))
-            L.append(np.einsum('gfs,gs->gf', f_mod[:,~isNB,~isline], v[:,isline]))
+            L.append(np.einsum('g,gfs,gs->gf', k, f_mod[:,isNB,isline], v[:,isline]))
+            L.append(np.einsum('gfs,gs->gf', f_mod[:,~isNB,isline], v[:,isline]))
             Flines = np.hstack(L)
             coords['band'] = NBlist + BBlist
             Flines = xr.DataArray(Flines, coords=coords, dims=('ref_id', 'band'))
@@ -151,6 +151,11 @@ class find_em(inter_calib.inter_calib):
         lines_model = cont_model.copy()
 
         best_flux = self.find_best_model(modelD, cont_model, lines_model, flux, flux_err, chi2)
+
+        if self.config['cosmos_scale']:
+            ab_factor = 10**(0.4*26)
+            cosmos_scale = ab_factor * 10**(0.4*48.6)
+            best_flux *= cosmos_scale
 
         return best_flux
 
