@@ -15,7 +15,7 @@ class line_overlap:
        in the observed frame.
     """
 
-    version = 1.0
+    version = 1.01
     config = {'min_curve': 0.01}
 
 
@@ -47,11 +47,7 @@ class line_overlap:
                 L.append(part)
 
         print('time', time.time() - t1)
-
-        df = pd.concat(L, axis=0)
-
-
-        ipdb.set_trace()
+        df = pd.concat(L, axis=0, ignore_index=True)
 
         return df 
 
@@ -61,3 +57,4 @@ class line_overlap:
         lines = self.input.lines.result
 
         self.output.result = self.entry(galcat, F, lines)
+
