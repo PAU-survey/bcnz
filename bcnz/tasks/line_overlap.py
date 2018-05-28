@@ -9,6 +9,7 @@ import numpy as np
 
 descr = {'min_curve': 'Minimum values of the filter curve'}
 
+
 class line_overlap:
     """Estimates the overlap between an emission lines and a filter
        in the observed frame.
@@ -26,6 +27,8 @@ class line_overlap:
         t1 = time.time()
         L = []
 
+        from matplotlib import pyplot as plt
+
         min_curve = self.config['min_curve']
         for band in F.index.unique():
             sub = F.loc[band]
@@ -34,11 +37,10 @@ class line_overlap:
 
             for line,lmb in lines.lmb.items():
                 val = splev(lmb*(1+zs), spl, ext=1)
-                der = splev(lmb*(1+zs), spl, ext=1, der=1)
                 S = pd.Series(val)
 
                 tosel = min_curve < val
-                part = pd.DataFrame({'ref_id': cat.index[tosel], 'k': val[tosel]})
+                part = pd.DataFrame({'ref_id': zs.index[tosel], 'k': val[tosel]})
                 part['band'] = band
                 part['line'] = line
 
@@ -47,6 +49,9 @@ class line_overlap:
         print('time', time.time() - t1)
 
         df = pd.concat(L, axis=0)
+
+
+        ipdb.set_trace()
 
         return df 
 
