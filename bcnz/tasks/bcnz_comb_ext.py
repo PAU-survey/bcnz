@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
-from IPython.core import debugger
+from IPython.core import debugger as ipdb
 import os
 import sys
 import time
@@ -31,7 +31,7 @@ descr = {'use_pz': 'TODO: what is this???',
 class bcnz_comb_ext:
     """Combine the different extinction runs."""
 
-    version = 1.27
+    version = 1.29
     config = {'use_pz': False, 'flat_priors': True,
               'odds_lim': 0.01, 'width_frac': 0.01,
               'Niter': 1}
@@ -240,6 +240,11 @@ class bcnz_comb_ext:
         pzcat['odds'] = libpzqual.odds(pz, zb, self.config['odds_lim'])
         pzcat['pz_width'] = libpzqual.pz_width(pz, zb, self.config['width_frac'])
         pzcat['zb'] = zb
+
+        # Here we use the same width_frac as for ps_width
+        chi2_min = chi2.min(dim=['z', 'run'])
+        pzcat['Qz'] = libpzqual.Qz(pz, chi2_min, pzcat.pz_width, zb, 0.02)
+        pzcat['Qz2'] = libpzqual.Qz(pz, chi2_min, pzcat.pz_width, zb, 0.01)
 
         A = pz_runs.isel_points(ref_id=range(len(izmin)), z=izmin)
         A = A[0 < A.sum(dim='run')]
