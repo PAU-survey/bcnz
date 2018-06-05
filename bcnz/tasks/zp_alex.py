@@ -13,7 +13,7 @@ class zp_alex:
        factor.
     """
 
-    version = 1.02
+    version = 1.04
     config = {'file_name': 'sys_50iter_pau821_onlyzs35_003_NB2BB.csv',
               'Nrounds': -1}
 
@@ -37,7 +37,6 @@ class zp_alex:
         path = os.path.join(self.d, self.config['file_name'])
         zp_all = pd.read_csv(path)
         zp_all = self.convert_names(zp_all)
-
 
         if 0 < self.config['Nrounds']:
             zp_mag = zp_all.iloc[:self.config['Nrounds']].sum(axis=0)

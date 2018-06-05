@@ -8,7 +8,7 @@ descr = {}
 class apply_zp:
     """Apply zero-points per band."""
 
-    version = 1.0
+    version = 1.02
     config = {}
 
     # Note: One can consider adding the functionality
