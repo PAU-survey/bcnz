@@ -29,7 +29,7 @@ class inter_calib:
               'fit_bands': [],
               'Nrounds': 19,
               'Niter': 1000,
-              'zp_min': 'mag', # yes, this in not my preferred option...
+              'zp_min': 'flux',
               'learn_rate': 1.0, # Temporarily disabled
               'SN_min': 1.,
               'min_ri_ratio': 0.5, # Temporarily disabled
