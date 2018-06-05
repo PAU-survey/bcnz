@@ -106,7 +106,6 @@ class bcnz_run_all:
     def fix_fmod_format(self, fmod_in):
         """Converts the dataframe to an xarray."""
 
-
         inds = ['z', 'band', 'sed', 'ext_law', 'EBV']
         f_mod = fmod_in.reset_index().set_index(inds).to_xarray().flux
 
@@ -137,7 +136,6 @@ class bcnz_run_all:
         models = self.load_models()
 
         ipdb.set_trace()
-
 
     def run(self):
 #        self.entry()

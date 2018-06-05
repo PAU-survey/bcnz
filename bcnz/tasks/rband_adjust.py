@@ -93,6 +93,6 @@ class rband_adjust:
         # this pattern.
         path = self.output.empty_file('default')
         store = pd.HDFStore(path, 'w')
-        store['ratio'] = ratio
+        store['ratio'] = obs2syn
         store.append('default', cat_out)
         store.close()

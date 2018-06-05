@@ -7,7 +7,8 @@ import xarray as xr
 
 descr = {'norm_band': 'Band used for the normalization',
          'funky_limit': 'If adding limits to match Alex code.',
-         'use_lines': 'If using emission lines'}
+         'use_lines': 'If using emission lines',
+         'actually_scale': 'If applying the scaling. Useful shortcut.'}
 
 class fmod_adjust:
     """Adjust the model to reflect that the syntetic narrow bands is not
@@ -15,9 +16,10 @@ class fmod_adjust:
     """
 
     version = 1.10
-    config = {'norm_band': '', 'funky_limit': True,
+    config = {'norm_band': 'subaru_r', 'funky_limit': True,
               'lines_upper': 0.1226,
-              'use_lines': True}
+              'use_lines': True, 
+              'actually_scale': True}
 
     def check_config(self):
         assert self.config['norm_band'], \
@@ -81,6 +83,14 @@ class fmod_adjust:
         # Here the different parts will have a different zbinning! For the
         # first round I plan adding another layer doing the rebinning. After
         # doing the comparison, we should not rebin at all.
+
+        # Special case of not actually doing anything ...
+        if not self.config['actually_scale']:
+            comb = pd.concat([model_cont, model_lines])
+            comb = comb.set_index(['band', 'z', 'sed', 'ext_law', 'EBV'])
+
+            return comb
+
         out_cont = self.scale_model(coeff, model_cont)
         if self.config['use_lines']:
             out_lines = self.scale_model(coeff, model_lines)

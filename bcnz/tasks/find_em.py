@@ -17,7 +17,7 @@ class find_em(inter_calib.inter_calib):
     # This code reuse some of the parts used for the intercalibration.
     # One should not actually need to also code the photo-z minimization
     # here, but I have not updated the inter_calib version yet....
-    version = 1.011
+    version = 1.012
     config = {'fit_bands': [],
               'Niter': 1000,
               'SN_min': -20,
@@ -62,7 +62,6 @@ class find_em(inter_calib.inter_calib):
         gal_id = flux.ref_id.values
         coords = {'ref_id': gal_id, 'band': f_mod.band}
         coords_norm = {'ref_id': gal_id, 'model': f_mod.sed}
-
 
         for i in range(self.config['Niter']):
             a = np.einsum('gst,gt->gs', A, v)
@@ -111,6 +110,8 @@ class find_em(inter_calib.inter_calib):
         F = Fcont + Flines
         chi2 = (var_inv*(F - flux)**2)
 
+#        ipdb.set_trace()
+
         return chi2, Fcont, Flines
 
 
@@ -132,7 +133,7 @@ class find_em(inter_calib.inter_calib):
 
         # Ok, this is not the only possible assumption!
         dims = ('ref_id', 'band')
-        coords ={'ref_id': flux.ref_id, 'band': flux.band}
+        coords = {'ref_id': flux.ref_id, 'band': flux.band}
         best_part = chi2.argmin(dim='part')
 
         best_cont = cont_model.isel_points(ref_id=range(len(flux)), part=best_part)
@@ -142,6 +143,9 @@ class find_em(inter_calib.inter_calib):
         best_lines = xr.DataArray(best_lines, dims=dims, coords=coords)
 
         best_flux = xr.Dataset({'cont': best_cont, 'lines': best_lines})
+
+        #F = best_flux.cont + best_flux.lines
+        #ipdb.set_trace()
 
         return best_flux
 

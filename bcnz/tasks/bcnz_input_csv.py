@@ -9,7 +9,7 @@ import pandas as pd
 class bcnz_input_csv:
     """Input as a csv file."""
 
-    version = 1.03
+    version = 1.04
     config = {'file_name': 'pau821_onlyzs35_003_NB2BB.csv'}
 
     # This should not be in the configuration, since it

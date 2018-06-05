@@ -293,6 +293,8 @@ class inter_calib:
 
         zp_details = {}
         for i in range(self.config['Nrounds']):
+            print('Round', i)
+
             best_flux = self.find_best_model(modelD, flux_model, flux, flux_err, chi2)
 
             zp = self.calc_zp(best_flux, flux, flux_err)

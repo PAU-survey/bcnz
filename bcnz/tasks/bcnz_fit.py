@@ -268,7 +268,7 @@ class bcnz_fit:
         f_mod_full = f_mod
         f_mod = f_mod_full.sel(band=self.config['filters'])
 
-        assert not np.isnan(f_mod_full).any(), 'Missing entries'
+        assert not np.isnan(f_mod).any(), 'Missing entries'
 
         return f_mod, f_mod_full
 
