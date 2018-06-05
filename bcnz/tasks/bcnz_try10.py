@@ -36,7 +36,7 @@ descr = {
   'towrite': 'The fields to write',
   'scale_input': 'If scaling the input for numerical reasons.',
   'Nskip': 'Number of entries to skip when scaling the broad bands',
-  'scale_to': 'Which bands to scale it to'
+#  'scale_to': 'Which bands to scale it to'
 }
 
 class bcnz_try10:
@@ -61,7 +61,7 @@ class bcnz_try10:
       'towrite': ['best_model'],
       'scale_input': True,
       'Nskip': 10,
-      'scale_to': []
+#      'scale_to': []
     }
 
     def check_conf(self):
