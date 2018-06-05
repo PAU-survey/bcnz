@@ -4,7 +4,7 @@
 import os
 import xdolphin as xd
 
-def filters(): #fjc_filters):
+def filters(fjc_filters):
     """The filter curves."""
 
     # Scaled down version of the function I use for the
@@ -14,8 +14,10 @@ def filters(): #fjc_filters):
 
     # Here the default is intentionally the same wrong filter
     # curves which Alex is using...
-    #pau_filters = xd.Job('paudm_filters')
-    pau_filters = xd.Job('fjc_filters')
+    if fjc_filters:
+        pau_filters = xd.Job('fjc_filters')
+    else:
+        pau_filters = xd.Job('paudm_filters')
 
     F = xd.Job('join_output')
     F.depend['pau'] = pau_filters

@@ -10,7 +10,7 @@ import pipel_pz_chunks
 
 import pipel_pz_basic
 
-def pipel(memba, **kwargs):
+def pipel(memba, fjc_filters=True, **kwargs):
     """Photo-z pipeline for the PAU data."""
 
     # Here we intentionally don't set a default memba
@@ -23,7 +23,7 @@ def pipel(memba, **kwargs):
          'bbsyn_coeff': pipel_pz_basic.get_bbsyn_coeff(),
          'ref_cat': xd.Job('paudm_cosmos'),
          'galcat': pipel_galcat.galcat(),
-         'filters': pipel_filters.filters()}
+         'filters': pipel_filters.filters(fjc_filters)}
 
     xpipel = xd.Job()
     xpipel.depend['pzcat'] = pipel_pz_chunks.pipel(**kwargs)
