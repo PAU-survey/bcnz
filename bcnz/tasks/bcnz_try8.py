@@ -43,7 +43,7 @@ class bcnz_try8:
     # This code is an experiment with adding the free amplitude between
     # the two systems. Previously this was kind of working!
 
-    version = 1.12
+    version = 1.14
     config = {
       'filters': [],
       'seds': [],
@@ -211,11 +211,11 @@ class bcnz_try8:
 
             v = vn
 
+            #if i == self.config['Niter'] - 1:
+            #    print('triggered k adjustment')
             S1 = np.einsum('gzt,gzt->gz', b_BB, v)
             S2 = np.einsum('gzs,gzst,gzt->gz', v, A_BB, v)
             k = S1 / S2
-
-            #ipdb.set_trace()
 
             b = b_NB + k[:,:,np.newaxis]*b_BB
             A = A_NB + k[:,:,np.newaxis,np.newaxis]**2*A_BB

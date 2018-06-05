@@ -35,6 +35,7 @@ descr = {
   'width_frac': 'Percentage on each side',
   'towrite': 'The fields to write',
   'scale_input': 'If scaling the input for numerical reasons.',
+  'Nskip': 'Number of entries to skip when scaling the broad bands',
   'scale_to': 'Which bands to scale it to'
 }
 
@@ -224,29 +225,33 @@ class bcnz_try9:
                 S2 = np.einsum('gf,zfs,gzs->gz', var_inv_BB, f_mod_BB, v)
                 k = (S1.values/S2.T).T
 
+                # Just to avoid crazy values ...
+                k = np.clip(k, 0.1, 10)
+
                 b = b_NB + k[:,:,np.newaxis]*b_BB
                 A = A_NB + k[:,:,np.newaxis,np.newaxis]**2*A_BB
 
+        if False: #True:
 # TODO: Delete this when knowing the algorithm below seems to work.
-#        # Testing with the old algorithm..
-#        v_scaled = v.copy()
-#        k_scaled = k.copy()
-#        k = np.ones((len(flux), len(f_mod.z)))
-#        b = b_NB + k[:,:,np.newaxis]*b_BB
-#        A = A_NB + k[:,:,np.newaxis,np.newaxis]**2*A_BB
-#
-#        v = 100*np.ones_like(b)
-#        for i in range(self.config['Niter']):
-#            a = np.einsum('gzst,gzt->gzs', A, v)
-#
-#            m0 = b / a
-#            vn = m0*v
-#            v = vn
-#
-#        # Some more tests...
-#        F = np.einsum('zfs,gzs->gzf', f_mod, v_scaled)
-#        F = xr.DataArray(F, coords=coords, dims=('gal', 'z', 'band'))
-#        chi2 = var_inv*(flux - F)**2
+            # Testing with the old algorithm..
+            v_scaled = v.copy()
+            k_scaled = k.copy()
+            k = np.ones((len(flux), len(f_mod.z)))
+            b = b_NB + k[:,:,np.newaxis]*b_BB
+            A = A_NB + k[:,:,np.newaxis,np.newaxis]**2*A_BB
+
+            v = 100*np.ones_like(b)
+            for i in range(self.config['Niter']):
+                a = np.einsum('gzst,gzt->gzs', A, v)
+
+                m0 = b / a
+                vn = m0*v
+                v = vn
+
+            # Some more tests...
+            F = np.einsum('zfs,gzs->gzf', f_mod, v_scaled)
+            F = xr.DataArray(F, coords=coords, dims=('gal', 'z', 'band'))
+            chi2 = var_inv*(flux - F)**2
 
         # I was comparing with the standard algorithm above...
         v_scaled = v
