@@ -4,7 +4,7 @@
 # Library containing the methods for estimating photo-z quality
 # parameters.
 
-from IPython.core import debugger
+from IPython.core import debugger as ipdb
 import numpy as np
 import xarray as xr
 
@@ -94,6 +94,15 @@ def pz_width(pz, zb, width_frac):
                     - dz1.values)
 
     return pz_width
+
+def Qz(pz, chi2_min, pz_width, zb, odds_lim=0.02):
+    """Other quality parameter."""
+
+    odds0p02 = odds(pz, zb, odds_lim)
+    Qz_val = chi2_min*pz_width / odds0p02.values
+
+    return Qz_val
+
 
 # Ok, this should be elsewhere...
 def get_arrays(data_df, filters):

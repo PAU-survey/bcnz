@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
-from IPython.core import debugger
+from IPython.core import debugger as ipdb
 import sys
 import time
 import numpy as np
@@ -12,89 +12,31 @@ from scipy.optimize import minimize
 from matplotlib import pyplot as plt
 
 descr = {
-  'fix_to_synbb': 'If fixing to the synthetic band',
-  'bb_norm': 'Which broad band which is used for normalization',
   'fit_bands': 'Bands used in the fit',
   'Nrounds': 'How many rounds in the zero-point calibration',
   'Niter': 'Number of iterations in minimization',
-  'zp_min': 'How to estimate the zero-points'
+  'zp_min': 'How to estimate the zero-points',
+  'learn_rate': 'Learning rate',
+  'SN_min': 'Minimum median SN',
+  'min_ri_ratio': 'Minimum ri flux ratio'
 }
 
 class inter_calib:
     """Calibration between the broad and the narrow bands."""
 
-    version = 1.21
-    config = {'fix_to_synbb': True,
-              'free_ampl': False,
-              'bb_norm': 'cfht_r',
+    version = 1.25
+    config = {'free_ampl': False,
               'fit_bands': [],
-              'Nrounds': 5,
+              'Nrounds': 19,
               'Niter': 1000,
-              'zp_min': 'flux2'}
+              'zp_min': 'mag', # yes, this in not my preferred option...
+              'learn_rate': 1.0, # Temporarily disabled
+              'SN_min': 1.,
+              'min_ri_ratio': 0.5, # Temporarily disabled
+              'cosmos_scale': False}
 
     def check_config(self):
         assert self.config['fit_bands'], 'Need to set: fit_bands'
-
-    def find_trans(self, coeff):
-        bb_norm = self.config['bb_norm']
-        coeff = coeff[coeff.bb == bb_norm]
-
-        trans = coeff.set_index(['bb','nb']).to_xarray().val
-        trans = trans.rename({'nb': 'band'})
-
-        return trans
-
-    def find_synbb(self, coeff, galcat):
-        """Syntetic flux in one of the bands."""
-
-        # This handles missing flux values.
-        # Note: There might be more precise ways of doing this..
-        trans = self.find_trans(coeff)
-        flux = galcat['flux'][trans.band.values].stack().to_xarray()
-        missing_band = np.isnan(flux)
-        flux = flux.fillna(0.)
-
-        synbb = flux.dot(trans)
-
-        missing_flux = 1.*missing_band.dot(trans)
-        synbb = synbb/(1.-missing_flux)
-
-        return synbb
-
-    def fix_to_synbb(self, coeff, galcat):
-        """Fix the data to a synthetic band."""
-
-        bb_norm = self.config['bb_norm']
-
-        # The synthetic broad band.
-        trans = self.find_trans(coeff)
-        _flux = galcat['flux'][trans.band.values].stack().to_xarray()
-        syn_bb = _flux.dot(trans)
-        syn_bb = self.find_synbb(coeff, galcat)
-
-        data_bb = galcat.flux[bb_norm]
-
-        ratio = syn_bb / data_bb.to_xarray()
-        ratio = ratio.squeeze('bb')
-
-        flux = galcat['flux'].stack().to_xarray()
-        flux_err = galcat['flux_err'].stack().to_xarray()
-
-        # To be absolutely sure the order is the same..
-        ratio = ratio.sel(ref_id=flux.ref_id)
-
-        # TODO: Consider adding the error on the synthetic broad bands.
-        if self.config['fix_to_synbb']:
-            # Yeah, this is ugly... Here we need to only scale the broad bands.
-            isBB = list(filter(lambda x: not x.startswith('NB'), flux.band.values))
-            for i,touse in enumerate(isBB):
-                if not touse:
-                    continue
-
-                flux.values[:,i] *= ratio
-                flux_err.values[:,i] *= ratio
-
-        return ratio, flux, flux_err
 
     def minimize(self, f_mod, flux, flux_err):
         """Minimize the model difference at a specific redshift."""
@@ -125,7 +67,6 @@ class inter_calib:
         chi2.values = np.where(chi2==0., np.nan, chi2)
 
         return chi2, F
-
 
     def minimize_free(self, f_mod, flux, flux_err):
         """Minimize the model difference at a specific redshift."""
@@ -183,82 +124,6 @@ class inter_calib:
 
         return chi2, F
 
-# Note: The commented version is adding the free factor in the fluxes. I experimented
-# with this when including k in the model seemingly gave wrong result. One should remove
-# t_tot, since this makes little sense. k is the *total* amplitude after multiple
-# iterations.
-#
-#    def minimize_free(self, f_mod, flux, flux_err):
-#        """Minimize the model difference at a specific redshift."""
-#
-#        # Otherwise we will get nans in the result.
-#        var_inv = 1./flux_err**2
-#        var_inv = var_inv.fillna(0.)
-#        xflux = flux.fillna(0.)
-#
-#        NB = list(filter(lambda x: x.startswith('NB'), flux.band.values))
-#        BB = list(filter(lambda x: not x.startswith('BB'), flux.band.values))
-#        A = np.einsum('gf,gfs,gft->gst', var_inv, f_mod, f_mod)
-#        b_NB = np.einsum('gf,gf,gfs->gs', var_inv.sel(band=NB), xflux.sel(band=NB), f_mod.sel(band=NB))
-#        b_BB = np.einsum('gf,gf,gfs->gs', var_inv.sel(band=BB), xflux.sel(band=BB), f_mod.sel(band=BB))
-#        C = np.einsum('gf,gf->g', var_inv.sel(band=BB), \
-#                      xflux.sel(band=BB)**2)
-#
-#        k = np.ones((len(xflux)))
-#        k_tot = k.copy()
-#        b = b_NB + b_BB # np.einsum('g,gf->gf', k, b_BB)
-#
-#        v = np.ones_like(b)
-#        t1 = time.time()
-#        for i in range(self.config['Niter']):
-#            a = np.einsum('gst,gt->gs', A, v)
-#            m0 = b / a
-#            vn = m0*v
-#
-#            # Minimize the chi2 (see notes).
-#
-#
-#            k = np.einsum('g,gs,gs->g',1./C, b_BB, vn)
-#            b_BB = np.einsum('g,gf->gf', k, b_BB)
-#            b = b_NB + b_BB
-#            C = k**2*C
-#
-##            print('k', k[5], 'ktot', k_tot[5])
-##            ipdb.set_trace()
-#
-#
-##            print(k_tot.median())
-##            print(np.median(k_tot))
-##            ipdb.set_trace()
-#            if np.isnan(k_tot).any():
-#                ipdb.set_trace()
-#
-#            k_tot *= k
-#
-#            print(np.median(k_tot))
-#            v = vn
-#
-##        ipdb.set_trace()
-#
-#        gal_id = np.array(flux.ref_id)
-#        coords = {'ref_id': gal_id, 'band': f_mod.band}
-#        coords_norm = {'ref_id': gal_id, 'model': np.array(f_mod.sed)}
-#        F = np.einsum('gfs,gs->gf', f_mod, v)
-#        flux_model = xr.DataArray(F, coords=coords, dims=('ref_id', 'band'))
-#
-#        isbb = np.array(list(map(lambda x: not x.startswith('NB'), flux.band.values)))
-#
-#        flux[:,isbb] *= k_tot[:,np.newaxis]
-#
-#        chi2 = var_inv*(flux - F)**2
-#        chi2.values = np.where(chi2==0., np.nan, chi2)
-#
-#
-#        ipdb.set_trace()
-#
-#
-#        return chi2, F
-#
 
     def _zp_min_cost(self, cost, best_flux, flux, err_inv):
         """Estimate the zero-point through minimizing a cost function."""
@@ -277,19 +142,54 @@ class inter_calib:
 
         return zp
 
-    def _zp_flux_chi2(self, best_flux, flux, err_inv):
-        """Find the zero-points by minimizing a chi2 expression."""
+    def zp_mag(self, best_model, flux, flux_err):
+        """Zero-points when using an expression minimizing the median
+           of a magnitude distribution.
+        """
 
-        # This could be done recursively, but the first round had
-        # very few outliers..
-        X = (best_flux / flux).median(dim='ref_id')
-        F = err_inv*((best_flux / flux) - X)
+        # The below code is copied from Alex with minimal
+        # changes. This code hopefully disappears soon..
+        def cost(x, sig,err,bestmodel):
+            shift = x
+            shift = 10**(-0.4*shift)
+            sig = sig * shift
+            err = err * shift
+            S = -2.5*np.log10(sig)-48.6
+            E = 2.5*np.log10(1+err/sig)
+            Em = 2.5*np.log10(1-err/sig)
+            M = -2.5*np.log10(bestmodel)-48.6
+            S[np.isinf(S)] = np.nan
+            E[np.isinf(E)] = np.nan
+            # Em[np.isinf(Em)] = np.nan
+            M[np.isinf(M)] = np.nan
+            arr = (S-M) / E
+            # arr = np.where(S>M, (S-M) / Em, (S-M) / E)
+            arr[(arr<-5)|(arr>5)] = np.nan
+            median = np.nanmedian(arr)
+            val = np.abs(median)
 
-        flux.values[0.2 < np.abs(F)] = np.nan
-        P1 = (flux*best_flux*err_inv**2).sum(dim='ref_id')
-        P2 = ((flux*err_inv)**2).sum(dim='ref_id')
+            return val
 
-        zp = P1 / P2
+        sig = flux.values
+        err = flux_err.values
+        bestmodel = best_model
+
+        #assert not (sig < 0).any(), 'Having negative values here will give serious issues..'
+        
+        nbands = len(flux.band)
+        zp_mag = np.zeros(nbands)
+        for i in range(nbands):
+            print('Running for band:', i)
+
+            S,E,M = (sig[:,i], err[:,i], bestmodel[:,i])
+            E = E[~np.isnan(S)]
+            M = M[~np.isnan(S)]
+            S = S[~np.isnan(S)]
+            res = minimize(cost, x0=[0.,], args=(S,E,M), method='SLSQP', bounds=((-0.1, 0.1),))
+
+            zp_mag[i] = res.x[0]
+
+        zp = 10**(-0.4*zp_mag)
 
         return zp
 
@@ -297,33 +197,11 @@ class inter_calib:
         """Estimate the zero-point."""
 
         err_inv = 1. / flux_err
-
         X = (best_flux, flux, err_inv)
+
         zp_min = self.config['zp_min'] 
-
-#        ipdb.set_trace()
-
         if zp_min == 'mag':
-            # Code to follow quite closely what Alex did.
-            def cost_mag(R, bestmodel, sig, err_inv):
-                shift = 10**(-0.4*R[0])
-                err = 1./err_inv
-
-                sig = sig * shift
-                err = err * shift
-
-                S = -2.5*np.log10(sig)-48.6
-                E = 2.5*np.log10(1+err/sig)
-                M = -2.5*np.log10(bestmodel)-48.6
-
-                median = np.nanmedian((S-M)/E)
-                val = np.abs(median)
-
-                return val
-
-            print('starting minimize')
-            zp = self._zp_min_cost(cost_mag, *X)
-            zp = 10**(-0.4*zp)
+            zp = self.zp_mag(best_flux, flux, flux_err)
         elif zp_min == 'flux':
             def cost_flux(R, model, flux, err_inv):
                 return float(np.abs((err_inv*(flux*R[0] - model)).median()))
@@ -341,55 +219,101 @@ class inter_calib:
 
         return zp
 
-    def zero_points(self, modelD, flux, flux_err):
-        """Estimate the zero-points."""
+    def _prepare_input(self, modelD, galcat):
+        """Change the format on some of the input values."""
 
+        # The observations.
         fit_bands = self.config['fit_bands']
-        flux = flux.sel(band=fit_bands)
-#        flux = flux.fillna(0.)
-        flux_err = flux_err.sel(band=fit_bands)
+        flux = galcat['flux'][fit_bands].stack().to_xarray()
+        flux_err = galcat['flux_err'][fit_bands].stack().to_xarray()
 
-        model_parts = list(modelD.keys())
-        model_parts.sort()
+        SN = flux / flux_err
+        flux = flux.where(self.config['SN_min'] < SN)
+        flux_err = flux_err.where(self.config['SN_min'] < SN)
 
-        coords_chi2 = {'ref_id': flux.ref_id, 'part': model_parts}
+        # this should have been changed in the input..        
+        if 'level_1' in flux.dims:
+            flux = flux.rename({'level_1': 'band'})
+            flux_err = flux_err.rename({'level_1': 'band'})
+
+        # ... just to have completely the same.
+        if self.config['cosmos_scale']:
+            ab_factor = 10**(0.4*26)
+            cosmos_scale = ab_factor * 10**(0.4*48.6)
+            flux /= cosmos_scale
+            flux_err /= cosmos_scale
+
+
+        # Empty structure for storint the best flux model.
+        dims = ('part', 'ref_id', 'band')
+        _model_parts = list(modelD.keys())
+        _model_parts.sort()
+        coords_flux = {'ref_id': flux.ref_id, 'part': _model_parts, 'band': fit_bands}
+        flux_model = np.zeros((len(modelD), len(flux), len(fit_bands)))
+        flux_model = xr.DataArray(flux_model, dims=dims, coords=coords_flux)
+
+        # Datastructure for storing the results...
+        coords_chi2 = {'ref_id': flux.ref_id, 'part': _model_parts}
         chi2 = np.zeros((len(modelD), len(flux)))
         chi2 = xr.DataArray(chi2, dims=('part', 'ref_id'), coords=coords_chi2)
-
-        coords_flux = {'ref_id': flux.ref_id, 'part': model_parts, 'band': fit_bands}
-        flux_model = np.zeros((len(modelD), len(flux), len(fit_bands)))
-        flux_model = xr.DataArray(flux_model, dims=('part', 'ref_id', 'band'), \
-                     coords=coords_flux)
 
         zp_tot = xr.DataArray(np.ones(len(flux.band)), dims=('band'), \
                  coords={'band': flux.band})
 
-        bb_norm = self.config['bb_norm']
+        return flux, flux_err, chi2, zp_tot, flux_model
+
+    def find_best_model(self, modelD, flux_model, flux, flux_err, chi2):
+        """Find the best flux model."""
+
+        # Just get a normal list of the models.
+        model_parts = [str(x.values) for x in flux_model.part]
 
         fmin = self.minimize_free if self.config['free_ampl'] else self.minimize
-        for i in range(self.config['Nrounds']):
-            for j,key in enumerate(model_parts):
-                print('Iteration', i, 'Part', j)
+        for j,key in enumerate(model_parts):
+            print('Part', j)
 
-                f_mod = modelD[key]
-                chi2_part, F = fmin(f_mod, flux, flux_err)
-                chi2[j,:] = chi2_part.sum(dim='band')
-                flux_model[j,:] = F
-   
-            best_part = chi2.argmin(dim='part')
-            best_flux = flux_model.isel_points(ref_id=range(len(flux)), part=best_part)
-            best_flux = xr.DataArray(best_flux, dims=('ref_id', 'band'), \
-                        coords={'ref_id': flux.ref_id, 'band': flux.band})
+            chi2_part, F = fmin(modelD[key], flux, flux_err)
+            chi2[j,:] = chi2_part.sum(dim='band')
+            flux_model[j,:] = F
+
+        # Ok, this is not the only possible assumption!
+        best_part = chi2.argmin(dim='part')
+        best_flux = flux_model.isel_points(ref_id=range(len(flux)), part=best_part)
+        best_flux = xr.DataArray(best_flux, dims=('ref_id', 'band'), \
+                    coords={'ref_id': flux.ref_id, 'band': flux.band})
+
+        return best_flux
+
+    def zero_points(self, modelD, galcat): 
+        """Estimate the zero-points."""
+
+        # Just simple input transformations.
+        flux, flux_err, chi2, zp_tot, flux_model = self._prepare_input(modelD, galcat)
+        flux_orig = flux.copy()
+
+        zp_details = {}
+        for i in range(self.config['Nrounds']):
+            print('Round', i)
+
+            best_flux = self.find_best_model(modelD, flux_model, flux, flux_err, chi2)
 
             zp = self.calc_zp(best_flux, flux, flux_err)
-            zp_tot *= zp
+            zp = 1 + self.config['learn_rate']*(zp - 1.)
 
-            print('zp round: {}'.format(i))
-            print(zp.values)
             flux = flux*zp
             flux_err = flux_err*zp
 
-        return flux, flux_err, zp_tot
+            zp_tot *= zp
+            zp_details[i] = zp_tot.copy()
+
+            # We mostly need this for debug and the paper.
+            if i == self.config['Nrounds'] - 1:
+                ratio_all = best_flux / flux_orig
+
+        zp_tot = zp_tot.to_series()
+        zp_details = pd.DataFrame(zp_details, index=flux.band)
+
+        return zp_tot, zp_details, ratio_all
 
     def get_model(self, zs):
         """Load and store the models as different xarrays."""
@@ -397,54 +321,66 @@ class inter_calib:
         t1 = time.time()
         f_modD = {}
         fit_bands = self.config['fit_bands']
+
+        inds = ['band', 'sed', 'ext_law', 'EBV', 'z']
         for key, dep in self.input.depend.items():
             if not key.startswith('model'):
                 continue
 
-            f_mod = dep.result.to_xarray().f_mod
-            f_mod = f_mod.sel(z=zs.values, method='nearest')
-
+            # Later the code depends on this order.
+            f_mod = dep.result.reset_index().set_index(inds)
+            f_mod = f_mod.to_xarray().flux
             f_mod = f_mod.sel(band=fit_bands)
-            if 1 < len(f_mod.EBV):
-                ipdb.set_trace()
+            f_mod = f_mod.sel(z=zs.values, method='nearest')
 
             if 'EBV' in f_mod.dims:
                 f_mod = f_mod.squeeze('EBV')
 
-            # Later the code depends on this order.
-            f_mod = f_mod.transpose('z', 'band', 'sed')
+            if 'ext_law' in f_mod.dims:
+                f_mod = f_mod.squeeze('ext_law')
 
-            f_modD[key] = f_mod
+            f_modD[key] = f_mod.transpose('z', 'band', 'sed')
 
         print('Time loading model:', time.time() - t1)
 
         return f_modD
 
-    def entry(self, coeff, galcat):
-        zs = galcat.zs
-        modelD = self.get_model(zs)
+    def sel_subset(self, galcat):
+        """Select which subset to use for finding the zero-points."""
 
-        ratio, flux, flux_err = self.fix_to_synbb(coeff, galcat)
-        xflux, xflux_err, zp = self.zero_points(modelD, flux, flux_err)
+        # Note: I should add the cuts here after making sure that the
+        # two pipelines give the same results.
 
-        # Combines the two xarrays into a single sparse dataframe. *not* nice.
-        xflux = xflux.to_dataframe('X').reset_index().pivot('ref_id', 'band', 'X')
-        xflux_err = xflux_err.to_dataframe('X').reset_index().pivot('ref_id', 'band', 'X')
-        cat_out = pd.concat({'flux': xflux, 'flux_err': xflux_err}, axis=1)
+        galcat = galcat[~np.isnan(galcat.zs)]
 
-        return cat_out, zp, ratio
+        # This cut was needed to avoid negative numbers in the logarithm.
+        #SN = galcat.flux / galcat.flux_err
+        #ipdb.set_trace()
+        #galcat = galcat.loc[self.config['SN_min'] < SN.min(axis=1)]
+
+        return galcat
+
+    def entry(self, galcat):
+        # Loads model exactly at the spectroscopic redshift for each galaxy.
+        galcat = self.sel_subset(galcat)
+        modelD = self.get_model(galcat.zs)
+
+        zp, zp_details, ratio_all = self.zero_points(modelD, galcat)
+        ratio_all = ratio_all.to_dataframe('ratio')
+
+        return zp, zp_details, ratio_all
 
     def run(self):
-        coeff = self.input.bbsyn_coeff.result
         galcat = self.input.galcat.result
 
         t1 = time.time()
-        galcat_out, zp, ratio = self.entry(coeff, galcat)
+        zp, zp_details, ratio_all = self.entry(galcat)
         print('Time calibrating:', time.time() - t1)
 
+        # Yes, this should not be needed.
         path = self.output.empty_file('default')
         store = pd.HDFStore(path, 'w')
-        store['default'] = galcat_out
-        store['zp'] = zp.to_dataframe('zp')
-        store['ratio'] = ratio.to_dataframe('ratio')
+        store['default'] = zp
+        store['zp_details'] = zp_details
+        store['ratio_all'] = ratio_all
         store.close()

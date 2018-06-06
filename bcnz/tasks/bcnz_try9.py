@@ -17,9 +17,7 @@ from scipy.integrate import trapz, simps
 from matplotlib import pyplot as plt
 import xdolphin as xd
 
-import sys
-sys.path.append('/home/eriksen/source/bcnz/bcnz/tasks')
-sys.path.append('/nfs/pic.es/user/e/eriksen/source/bcnz/bcnz/tasks')
+sys.path.append('/home/eriksen/code/bcnz/bcnz/tasks')
 sys.path.append(os.path.expanduser('~/Dropbox/pauphotoz/bcnz/bcnz/tasks'))
 import libpzqual
 
@@ -36,15 +34,18 @@ descr = {
 #  'use_ext': 'If including extinction'
   'width_frac': 'Percentage on each side',
   'towrite': 'The fields to write',
-  'scale_input': 'If scaling the input for numerical reasons.'
+  'scale_input': 'If scaling the input for numerical reasons.',
+  'Nskip': 'Number of entries to skip when scaling the broad bands',
+  'scale_to': 'Which bands to scale it to'
 }
 
-class bcnz_fit:
+class bcnz_try9:
     """Fitting a linear combination to the observations."""
 
-    # Some of these configuration options are no longer valid and 
-    # moved into the flux_model code...
-    version = 1.12
+    # This code is an experiment with adding the free amplitude between
+    # the two systems. Previously this was kind of working!
+
+    version = 1.16
     config = {
       'filters': [],
       'seds': [],
@@ -58,7 +59,9 @@ class bcnz_fit:
       'use_ext': False,
       'width_frac': 0.01,
       'towrite': ['best_model'],
-      'scale_input': True
+      'scale_input': True,
+      'Nskip': 10,
+      'scale_to': []
     }
 
     def check_conf(self):
@@ -148,10 +151,6 @@ class bcnz_fit:
             m0 = b / a
             vn = m0*v
 
-            # Comparing with chi2 would require evaluating this in each
-            # iteration..
-            adiff = np.abs(vn-v)
-
             v = vn
 
         print('time minimize',  time.time() - t1)
@@ -169,6 +168,141 @@ class bcnz_fit:
                             ('gal','z','model'))
 
         return chi2, norm
+
+
+    def chi2_min_free(self, f_mod, data_df):
+        """Minimize the chi2 expression."""
+
+        flux, flux_err, var_inv = self.get_arrays(data_df)
+
+        NBlist = list(filter(lambda x: x.startswith('NB'), flux.band.values))
+        BBlist = list(filter(lambda x: not x.startswith('NB'), flux.band.values))
+
+        A = np.einsum('gf,zfs,zft->gzst', var_inv, f_mod, f_mod)
+        b = np.einsum('gf,gf,zfs->gzs', var_inv, flux, f_mod)
+
+        A_NB = np.einsum('gf,zfs,zft->gzst', var_inv.sel(band=NBlist), \
+               f_mod.sel(band=NBlist), f_mod.sel(band=NBlist))
+        b_NB = np.einsum('gf,gf,zfs->gzs', var_inv.sel(band=NBlist), flux.sel(band=NBlist), \
+               f_mod.sel(band=NBlist))
+        A_BB = np.einsum('gf,zfs,zft->gzst', var_inv.sel(band=BBlist), \
+               f_mod.sel(band=BBlist), f_mod.sel(band=BBlist))
+        b_BB = np.einsum('gf,gf,zfs->gzs', var_inv.sel(band=BBlist), flux.sel(band=BBlist), \
+               f_mod.sel(band=BBlist))
+
+        # We might need this...
+        scale_to = self.config['scale_to']
+        if not len(scale_to):
+            scale_to = BBlist
+
+        var_inv_BB = var_inv.sel(band=scale_to)
+        flux_BB = flux.sel(band=scale_to)
+        f_mod_BB = f_mod.sel(band=scale_to)
+        S1 = (var_inv_BB*flux_BB).sum(dim='band')
+
+        # Since we need these entries in the beginning...
+        k = np.ones((len(flux), len(f_mod.z)))
+        b = b_NB + k[:,:,np.newaxis]*b_BB
+        A = A_NB + k[:,:,np.newaxis,np.newaxis]**2*A_BB
+
+        v = 100*np.ones_like(b)
+
+        gal_id = np.array(data_df.index)
+        coords = {'gal': gal_id, 'band': f_mod.band, 'z': f_mod.z}
+        coords_norm = {'gal': gal_id, 'z': f_mod.z, 'model': f_mod.model}
+
+        t1 = time.time()
+        for i in range(self.config['Niter']):
+            a = np.einsum('gzst,gzt->gzs', A, v)
+
+            m0 = b / a
+            vn = m0*v
+
+            v = vn
+            # Extra step for the amplitude
+            if 0 < i and i % self.config['Nskip'] == 0:
+                # Testing a new form for scaling the amplitude...
+                S2 = np.einsum('gf,zfs,gzs->gz', var_inv_BB, f_mod_BB, v)
+                k = (S1.values/S2.T).T
+
+                # Just to avoid crazy values ...
+                k = np.clip(k, 0.1, 10)
+
+                b = b_NB + k[:,:,np.newaxis]*b_BB
+                A = A_NB + k[:,:,np.newaxis,np.newaxis]**2*A_BB
+
+        if False: #True:
+# TODO: Delete this when knowing the algorithm below seems to work.
+            # Testing with the old algorithm..
+            v_scaled = v.copy()
+            k_scaled = k.copy()
+            k = np.ones((len(flux), len(f_mod.z)))
+            b = b_NB + k[:,:,np.newaxis]*b_BB
+            A = A_NB + k[:,:,np.newaxis,np.newaxis]**2*A_BB
+
+            v = 100*np.ones_like(b)
+            for i in range(self.config['Niter']):
+                a = np.einsum('gzst,gzt->gzs', A, v)
+
+                m0 = b / a
+                vn = m0*v
+                v = vn
+
+            # Some more tests...
+            F = np.einsum('zfs,gzs->gzf', f_mod, v_scaled)
+            F = xr.DataArray(F, coords=coords, dims=('gal', 'z', 'band'))
+            chi2 = var_inv*(flux - F)**2
+
+        # I was comparing with the standard algorithm above...
+        v_scaled = v
+        k_scaled = k
+
+        L = []
+        L.append(np.einsum('zfs,gzs->gzf', f_mod.sel(band=NBlist), v_scaled))
+        L.append(np.einsum('gz,zfs,gzs->gzf', k_scaled, f_mod.sel(band=BBlist), v_scaled))
+
+        Fx = np.dstack(L)
+        coords['band'] = NBlist + BBlist
+        Fx = xr.DataArray(Fx, coords=coords, dims=('gal', 'z', 'band'))
+
+        # Now with another scaling...
+        chi2x = var_inv*(flux - Fx)**2
+        Fx = xr.DataArray(Fx, coords=coords, dims=('gal', 'z', 'band'))
+        chi2x = var_inv*(flux - Fx)**2
+
+#        S = pd.Series((chi2x / chi2).values.flatten())
+#        S = S[S < 10]
+#        S.hist(bins=100)
+#        plt.show()
+        chi2x = chi2x.sum(dim='band')
+
+#        ipdb.set_trace()
+
+        norm = xr.DataArray(v_scaled, coords=coords_norm, dims=\
+                            ('gal','z','model'))
+
+        return chi2x, norm
+
+#        ipdb.set_trace()
+#
+#        Fx = np.einsum('zfs,gzs->gzf', f_mod, v_scaled)
+#        ipdb.set_trace()
+#
+#        print('time minimize',  time.time() - t1)
+#
+#        F = np.einsum('zfs,gzs->gzf', f_mod, v)
+#        F = xr.DataArray(F, coords=coords, dims=('gal', 'z', 'band'))
+#        chi2 = var_inv*(flux - F)**2
+#
+#        pb = np.exp(-0.5*chi2.sum(dim='band'))
+#        pb = pb / (1e-100 + pb.sum(dim='z'))
+#        chi2 = chi2.sum(dim='band')
+#
+#        norm = xr.DataArray(v, coords=coords_norm, dims=\
+#                            ('gal','z','model'))
+#
+#        return chi2, norm
+
 
     def best_model(self, norm, f_mod, peaks):
         """Estimate the best fit model."""

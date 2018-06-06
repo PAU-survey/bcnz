@@ -8,15 +8,15 @@ import numpy as np
 import pandas as pd
 
 
-class extinction_lagaile:
-    """Extinction laws in the Lagaile paper."""
+class extinction_laigle:
+    """Extinction laws in the Laigle COSMOS paper."""
 
     version = 1.0
     config = {}
 
+    d = '~/data/photoz/ext_laws'
     def entry(self):
-        d = '/home/eriksen/data/photoz/ext_laws'
-        g = os.path.join(d, '*.dat')
+        g = os.path.join(os.path.expanduser(self.d), '*.dat')
        
         df = pd.DataFrame() 
         for path in glob.glob(g):
@@ -24,6 +24,8 @@ class extinction_lagaile:
             part['ext_law'] = os.path.basename(path).replace('.dat','')
 
             df = df.append(part, ignore_index=True)
+
+        assert len(df), 'No extinction curves found'
 
         return df
 
