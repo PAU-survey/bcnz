@@ -15,6 +15,7 @@ from scipy.interpolate import splrep, splev, splint
 from scipy.integrate import trapz, simps
 
 sys.path.append('/home/eriksen/code/bcnz/bcnz/tasks')
+sys.path.append('/nfs/pic.es/user/e/eriksen/code/bcnz/bcnz/tasks')
 sys.path.append(os.path.expanduser('~/Dropbox/pauphotoz/bcnz/bcnz/tasks'))
 import libpzqual
 
@@ -174,6 +175,9 @@ class bcnz_try10:
 
         NBlist = list(filter(lambda x: x.startswith('NB'), flux.band.values))
         BBlist = list(filter(lambda x: not x.startswith('NB'), flux.band.values))
+
+#        return self.config['filters'] #var_inv
+#        return var_inv.shape
 
         A = np.einsum('gf,zfs,zft->gzst', var_inv, f_mod, f_mod)
         b = np.einsum('gf,gf,zfs->gzs', var_inv, flux, f_mod)

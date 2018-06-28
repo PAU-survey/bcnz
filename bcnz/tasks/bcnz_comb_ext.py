@@ -18,7 +18,7 @@ descr = {'use_pz': 'Combine the result using the full pdf',
 
 # Ok, this should not have to be loaded...
 sys.path.append('/home/eriksen/source/bcnz/bcnz/tasks')
-sys.path.append('/nfs/pic.es/user/e/eriksen/source/bcnz/bcnz/tasks')
+sys.path.append('/nfs/pic.es/user/e/eriksen/code/bcnz/bcnz/tasks')
 sys.path.append(os.path.expanduser('~/Dropbox/pauphotoz/bcnz/bcnz/tasks'))
 
 import libpzqual
