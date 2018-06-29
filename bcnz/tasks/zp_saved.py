@@ -8,7 +8,7 @@ import pandas as pd
 descr = {'name': 'Name of the stored file'}
 
 class zp_saved:
-    version = 1.0
+    version = 1.02
     config = {'name': 'v1'}
 
     d = '/home/eriksen/papers/paupz/calib'
@@ -17,6 +17,6 @@ class zp_saved:
         path = os.path.join(self.d, fname)
 
         zp = pd.read_csv(path, names=['band', 'zp'])
-        zp = zp.set_index('band')
+        zp = zp.set_index('band').zp
 
         self.output.result = zp
