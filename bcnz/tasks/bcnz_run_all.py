@@ -115,7 +115,8 @@ class bcnz_run_all:
         f_mod_full = f_mod
         f_mod = f_mod_full.sel(band=self.config['filters'])
 
-        assert not np.isnan(f_mod_full).any(), 'Missing entries'
+#        ipdb.set_trace()
+#        assert not np.isnan(f_mod_full).any(), 'Missing entries'
 
         return f_mod #, f_mod_full
 
