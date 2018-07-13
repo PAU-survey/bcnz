@@ -19,7 +19,7 @@ class fmod_adjust:
     config = {'norm_band': 'subaru_r', 'funky_limit': True,
               'lines_upper': 0.1226,
               'use_lines': True, 
-              'actually_scale': True}
+              'actually_scale': False} #True}
 
     def check_config(self):
         assert self.config['norm_band'], \
