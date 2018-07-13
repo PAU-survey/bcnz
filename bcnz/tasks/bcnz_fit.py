@@ -18,7 +18,7 @@ from matplotlib import pyplot as plt
 import xdolphin as xd
 
 import sys
-sys.path.append('/home/eriksen/source/bcnz/bcnz/tasks')
+sys.path.append('/home/eriksen/code/bcnz/bcnz/tasks')
 sys.path.append('/nfs/pic.es/user/e/eriksen/source/bcnz/bcnz/tasks')
 sys.path.append(os.path.expanduser('~/Dropbox/pauphotoz/bcnz/bcnz/tasks'))
 import libpzqual
