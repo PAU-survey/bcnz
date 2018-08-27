@@ -130,6 +130,9 @@ class inter_calib_free:
                 b = b_BB + k[:,None]*b_NB
                 A = A_BB + k[:,None,None]**2*A_NB
 
+        print('k median', pd.Series(k).median())
+
+#        ipdb.set_trace()
         # I was comparing with the standard algorithm above...
         v_scaled = v
         k_scaled = k
@@ -332,6 +335,8 @@ class inter_calib_free:
 
             zp = self.calc_zp(best_flux, flux, flux_err)
             zp = 1 + self.config['learn_rate']*(zp - 1.)
+
+            ipdb.set_trace()
 
             flux = flux*zp
             flux_err = flux_err*zp

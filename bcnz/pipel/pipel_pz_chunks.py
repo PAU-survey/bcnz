@@ -103,6 +103,9 @@ def pipel(chunks=False, prevot_calib=True, prevot_pzrun=False, bands=False,
 
         chi2_comb.depend['pzcat_{}'.format(key)] = pzcat
 
+#    ipdb.set_trace()
+
+
     bcnz_pzcat = xd.Job('bcnz_pzcat')
     bcnz_pzcat.depend['chi2'] = chi2_comb
 
