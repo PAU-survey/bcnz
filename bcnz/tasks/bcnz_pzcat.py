@@ -32,7 +32,16 @@ class bcnz_pzcat:
               'normalization': 'global'}
 
     def entry(self, chi2):
-        ipdb.set_trace()
+        # Implemented to answer Enriques question.
+        chi2_abs = chi2
+        normalization = self.config['normalization']
+        if normalization == 'global':
+            pass
+        elif normalization == 'chunk2':
+            chi2_min = chi2.min('z')
+            chi2 = chi2 - chi2_min
+        else:
+            raise NotImplemented()
 
         pz = np.exp(-0.5*chi2)
         pz_norm = pz.sum(dim=['chunk', 'z'])
@@ -120,11 +129,11 @@ class bcnz_pzcat:
         cat.index = pz.gal.values
         cat.index.name = 'ref_id'
 
-        cat['chi2'] = chi2.min(dim=['chunk', 'z']).sel(ref_id=cat.index)
+        cat['chi2'] = chi2_abs.min(dim=['chunk', 'z']).sel(ref_id=cat.index)
 
         # These are now in the "libpzqual" file. I could
         # consider moving them here..
-        chi2_min = chi2.min(dim=['chunk', 'z'])
+        chi2_min = chi2_abs.min(dim=['chunk', 'z'])
         cat['qual_par'] = (chi2_min*pz_width).values
 
         odds0p2 = libpzqual.odds(pz, zb, self.config['odds_lim'])
