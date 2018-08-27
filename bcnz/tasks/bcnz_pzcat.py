@@ -18,7 +18,8 @@ sys.path.append(os.path.expanduser('~/Dropbox/pauphotoz/bcnz/bcnz/tasks'))
 import libpzqual
 
 descr = {'odds_lim': 'Limit within to estimate the ODDS',
-         'width_frac': 'Fraction used when estimating the pz_width'}
+         'width_frac': 'Fraction used when estimating the pz_width',
+         'normalization': 'What normalization to use (experimental)'}
 
 class bcnz_pzcat:
     """Catalogs for the photometric redshifts."""
@@ -27,9 +28,12 @@ class bcnz_pzcat:
     config = {'odds_lim': 0.0035,
               'width_frac': 0.01,
               'priors': 'none',
-              'nsmooth': 5}
+              'nsmooth': 5,
+              'normalization': 'global'}
 
     def entry(self, chi2):
+        ipdb.set_trace()
+
         pz = np.exp(-0.5*chi2)
         pz_norm = pz.sum(dim=['chunk', 'z'])
         pz_norm = pz_norm.clip(1e-200, np.infty)
