@@ -120,9 +120,15 @@ class inter_calib_free:
             # Extra step for the amplitude
             if 0 < i and i % self.config['Nskip'] == 0:
                 # Testing a new form for scaling the amplitude...
+                flux_mod = np.einsum('gfs,gs->gf', f_mod_NB, v)
+                S1 = np.einsum('gf,gf,gf->g', var_inv_NB, flux_NB, flux_mod)
+                S2 = np.einsum('gf,gf->g', var_inv_NB, flux_mod**2)
 
-                S2 = np.einsum('gf,gfs,gs->g', var_inv_NB, f_mod_NB, v)
-                k = (S1.values/S2.T).T
+                k = S1 / S2
+
+#                ipdb.set_trace()
+#                S2 = np.einsum('gf,gfs,gs->g', var_inv_NB, f_mod_NB, v)
+#                k = (S1.values/S2.T).T
 
                 # Just to avoid crazy values ...
                 k = np.clip(k, 0.1, 10)
@@ -139,7 +145,7 @@ class inter_calib_free:
 
         L = []
         L.append(np.einsum('g,gfs,gs->gf', k_scaled, f_mod.sel(band=NBlist), v_scaled))
-        L.append(np.einsum('zfs,gs->gf', f_mod.sel(band=BBlist), v_scaled))
+        L.append(np.einsum('gfs,gs->gf', f_mod.sel(band=BBlist), v_scaled))
 
         Fx = np.hstack(L)
 
@@ -156,6 +162,7 @@ class inter_calib_free:
 #        norm = xr.DataArray(v_scaled, coords=coords_norm, dims=\
 #                            ('gal','model'))
 
+#        from matplotlib import pyplot as plt
 #        ipdb.set_trace()
 
         return chi2x, Fx
@@ -335,8 +342,6 @@ class inter_calib_free:
 
             zp = self.calc_zp(best_flux, flux, flux_err)
             zp = 1 + self.config['learn_rate']*(zp - 1.)
-
-            ipdb.set_trace()
 
             flux = flux*zp
             flux_err = flux_err*zp
