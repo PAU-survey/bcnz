@@ -53,6 +53,8 @@ class rband_adjust:
 #        X = 455 + 10*np.arange(40)
         NB = list(map('NB{}'.format, 455 + 10*np.arange(40)))
 
+        ipdb.set_trace()
+
         vec = bbsyn_coeff.pivot('bb', 'nb', 'val')[NB].values[0]
         synbb = np.dot(pau_syn, vec)
 
@@ -77,7 +79,8 @@ class rband_adjust:
         pau_syn = self.fix_missing_data(cat_in)
         synbb = self.find_synbb(pau_syn, bbsyn_coeff)
 
-        obs2syn = cat_in.flux.subaru_r / synbb
+        synband = self.config['synband']
+        obs2syn = cat_in.flux[synband] / synbb
         cat_out = self.scale_fluxes(cat_in, obs2syn)
 
         return obs2syn, cat_out
