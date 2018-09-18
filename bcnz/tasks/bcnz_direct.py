@@ -78,7 +78,8 @@ class bcnz_direct(chi2_comb.chi2_comb):
 
         path = self.output.empty_file('default')
         store = pd.HDFStore(path)
-        for chi2 in gen:
+        for i,chi2 in enumerate(gen):
+            print('batch', i)
             pzcat = self.calc_pzcat(chi2)
 
             store.append('default', pzcat)
