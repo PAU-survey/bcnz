@@ -7,12 +7,13 @@ import sys
 import numpy as np
 import pandas as pd
 
-import chi2_comb
 
 # Yes, this is not exactly nice ...
 sys.path.append('/home/eriksen/code/bcnz/bcnz/tasks')
 sys.path.append('/nfs/pic.es/user/e/eriksen/code/bcnz/bcnz/tasks')
 sys.path.append(os.path.expanduser('~/Dropbox/pauphotoz/bcnz/bcnz/tasks'))
+
+import chi2_comb
 import libpzqual
 
 descr = {'odds_lim': 'Limit within to estimate the ODDS',
