@@ -22,7 +22,7 @@ descr = {'odds_lim': 'Limit within to estimate the ODDS',
 class bcnz_direct(chi2_comb.chi2_comb):
     """Directly constructing the catalogs without priors."""
 
-    version = 1.0
+    version = 1.02
     config = {'odds_lim': 0.0035,
               'width_frac': 0.01}
 
@@ -69,6 +69,9 @@ class bcnz_direct(chi2_comb.chi2_comb):
         iz = pz.argmin(dim='z')
         points = chi2.isel_points(ref_id=range(len(chi2.ref_id)), z=iz)
         cat['best_chunk'] = points.argmin(dim='chunk')
+
+
+        ipdb.set_trace()
 
         return cat
 
