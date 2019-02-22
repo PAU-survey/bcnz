@@ -59,6 +59,7 @@ class cosmos_laigle:
         flux_err.columns = bands
 
         cat = pd.concat({'flux': flux, 'flux_err': flux_err}, axis=1)
+#        cat['id_laigle'] = cat_in.ID.astype(np.int)
 
         # Yes, different definition and rounding error.
         cat[cat < -99] = np.nan
@@ -68,6 +69,8 @@ class cosmos_laigle:
         cosmos_scale = ab_factor * 10**(0.4*48.6)
         cat *= cosmos_scale
 
+        # Adding this here, since otherwise it gets scaled.
+        cat['id_laigle'] = cat_in.ID
 #        for key_from, key_to in otherD.items():
 #            cat[key_to] = cat_in[key_from]
 
@@ -98,18 +101,27 @@ class cosmos_laigle:
         def f(x):
             return hdul[1].data[x]
 
-        # This is needed, since the input file is very large. Astropy did not
-        # have a suitable option for selecting columns.
+        # Since I don't know a general way to change the endianness.
+        fields = [
+        ('NUMBER', 'id_laigle', '<i8'),
+        ('TYPE', 'type', '<i2'), 
+        ('ALPHA_J2000', 'ra', '<f8'), 
+        ('DELTA_J2000', 'dec', '<f8')]
+
         D = {}
-        for key in ['NUMBER', 'TYPE', 'ALPHA_J2000', 'DELTA_J2000']:
-            D[key] = f(key)
+        for key, to_field, dtype in fields:
+            D[to_field] = f(key).astype(dtype)
 
         other = pd.DataFrame(D)
+
+        ipdb.set_trace()
 
         # Otherwise the hirarchical columns gives problems.
         other = other.rename(columns={'NUMBER': 'id_laigle', 'TYPE': 'type'})
         for key,val in other.items():
             cat[key] = val
+
+
 
     def fixes(self, cat):
         if self.config['rm_stars']:
