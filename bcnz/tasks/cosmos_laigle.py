@@ -28,6 +28,7 @@ class cosmos_laigle:
     fname_other = 'COSMOS2015_Laigle+_v1.1.fits'
 
     def load_cat(self):
+        # The joy of FITS files.
         path = os.path.join(os.path.expanduser(self.d), self.fname_pdz)
         dat = Table.read(path, format='fits')
         df = dat.to_pandas()
@@ -50,7 +51,6 @@ class cosmos_laigle:
 
 #        # Strictly not needed, but there are many columns.
         cols = list(otherD.keys()) + flux_cols + err_cols
-#        cat_in = pd.read_csv(path, sep=',', header=0, usecols=cols)
         cat_in = self.load_cat()[cols]
 
         flux = cat_in[flux_cols]
@@ -59,7 +59,6 @@ class cosmos_laigle:
         flux_err.columns = bands
 
         cat = pd.concat({'flux': flux, 'flux_err': flux_err}, axis=1)
-#        cat['id_laigle'] = cat_in.ID.astype(np.int)
 
         # Yes, different definition and rounding error.
         cat[cat < -99] = np.nan
@@ -71,25 +70,10 @@ class cosmos_laigle:
 
         # Adding this here, since otherwise it gets scaled.
         cat['id_laigle'] = cat_in.ID
-#        for key_from, key_to in otherD.items():
-#            cat[key_to] = cat_in[key_from]
 
         return cat
 
 
-    def OLDother_cols(self, cat):
-        """Add other columns not present in the first file."""
-
-        # DELETE THIS SOON...
-        path = os.path.join(os.path.expanduser(self.d), self.fname_other)
-
-        fields = ['NUMBER', 'EBV', 'TYPE']
-        other = pd.read_csv(path, usecols=fields)
-
-        # Otherwise the hirarchical columns gives problems.
-        other = other.rename(columns={'NUMBER': 'id_laigle', 'TYPE': 'type'})
-        for key,val in other.items():
-            cat[key] = val
 
     def other_cols(self, cat):
 
@@ -114,14 +98,10 @@ class cosmos_laigle:
 
         other = pd.DataFrame(D)
 
-        ipdb.set_trace()
-
         # Otherwise the hirarchical columns gives problems.
-        other = other.rename(columns={'NUMBER': 'id_laigle', 'TYPE': 'type'})
+        assert (cat.id_laigle == other.id_laigle).all()
         for key,val in other.items():
             cat[key] = val
-
-
 
     def fixes(self, cat):
         if self.config['rm_stars']:
