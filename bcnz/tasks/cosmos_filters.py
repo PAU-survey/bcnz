@@ -45,7 +45,7 @@ filter_dir = Path('/home/eriksen/data/photoz/COSMOS2015_filters')
 class cosmos_filters:
     """Combine all the filters coming from COSMOS."""
 
-    version = 1.0
+    version = 1.02
     config = {}
 
     def entry(self):
@@ -56,11 +56,12 @@ class cosmos_filters:
             path = filter_dir / (fname + suf)
 
             lmb, y = np.loadtxt(path).T
-            part = pd.DataFrame({'band': band, 'lmb': lmb, 'reponse': y})
+            part = pd.DataFrame({'band': band, 'lmb': lmb, 'response': y})
             L.append(part)
 
         df = pd.concat(L, ignore_index='True')
-        
+        df = df.set_index('band') 
+
         return df
 
     def run(self):
