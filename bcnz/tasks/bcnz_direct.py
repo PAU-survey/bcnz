@@ -7,12 +7,13 @@ import sys
 import numpy as np
 import pandas as pd
 
-import chi2_comb
 
 # Yes, this is not exactly nice ...
 sys.path.append('/home/eriksen/code/bcnz/bcnz/tasks')
 sys.path.append('/nfs/pic.es/user/e/eriksen/code/bcnz/bcnz/tasks')
 sys.path.append(os.path.expanduser('~/Dropbox/pauphotoz/bcnz/bcnz/tasks'))
+
+import chi2_comb
 import libpzqual
 
 descr = {'odds_lim': 'Limit within to estimate the ODDS',
@@ -45,11 +46,13 @@ class bcnz_direct(chi2_comb.chi2_comb):
         zb = libpzqual.zb(pz)
         odds = libpzqual.odds(pz, zb, self.config['odds_lim'])
         pz_width = libpzqual.pz_width(pz, zb, self.config['width_frac'])
+        zb_mean = libpzqual.zb_bpz2(pz)
 
         cat = pd.DataFrame()
         cat['zb'] = zb.values
         cat['odds'] = odds.values
         cat['pz_width'] = pz_width
+        cat['zb_mean'] = zb_mean.values
 
         cat.index = pz.gal.values
         cat.index.name = 'ref_id'
@@ -69,9 +72,6 @@ class bcnz_direct(chi2_comb.chi2_comb):
         iz = pz.argmin(dim='z')
         points = chi2.isel_points(ref_id=range(len(chi2.ref_id)), z=iz)
         cat['best_chunk'] = points.argmin(dim='chunk')
-
-
-        ipdb.set_trace()
 
         return cat
 

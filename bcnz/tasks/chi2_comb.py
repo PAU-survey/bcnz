@@ -61,7 +61,15 @@ class chi2_comb:
         """Interface for opening the files."""
 
         nrcats = len(list(filter(lambda x: x.startswith('pzcat_'), dir(self.input))))
-        files = [self.input.depend['pzcat_{}'.format(x)].get_store() for x in range(nrcats)]
+
+        # This part is more verbose since I need to debug...
+        files = []
+        for x in range(nrcats):
+            job = self.input.depend['pzcat_{}'.format(x)]
+            print('x', x)
+            files.append(job.get_store())
+
+        #files = [self.input.depend['pzcat_{}'.format(x)].get_store() for x in range(nrcats)]
 
         return files
     
