@@ -79,6 +79,11 @@ class inter_calib_free:
 
         var_inv = 1. / flux_err**2
 
+        # Problematic entries.        
+        mask = np.isnan(flux)
+        var_inv.values[mask] = 0.
+        flux = flux.fillna(0.)
+
         A = np.einsum('gf,gfs,gft->gst', var_inv, f_mod, f_mod)
         b = np.einsum('gf,gf,gfs->gs', var_inv, flux, f_mod)
 
@@ -163,7 +168,7 @@ class inter_calib_free:
 #                            ('gal','model'))
 
 #        from matplotlib import pyplot as plt
-#        ipdb.set_trace()
+
 
         return chi2x, Fx
 
@@ -316,8 +321,14 @@ class inter_calib_free:
             print('Part', j)
 
             chi2_part, F = fmin(modelD[key], flux, flux_err)
+
             chi2[j,:] = chi2_part.sum(dim='band')
-            flux_model[j,:] = F
+
+            # Weird ref_id, gal index issue..
+            assert (flux_model.ref_id.values == F.gal.values).all()
+            assert (flux_model.band == F.band).all()
+            flux_model.values[j,:] = F.values
+            #flux_model[j,:] = F
 
         # Ok, this is not the only possible assumption!
         best_part = chi2.argmin(dim='part')

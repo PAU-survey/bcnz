@@ -4,13 +4,8 @@
 import os
 import xdolphin as xd
 
-def filters(fjc_filters):
+def filters(fjc_filters, new_bbfilters):
     """The filter curves."""
-
-    # Scaled down version of the function I use for the
-    # calibration ...
-    cfht_filters = xd.Job('cfht_filters')
-    subaru_filters = xd.Job('subaru_filters')
 
     # Here the default is intentionally the same wrong filter
     # curves which Alex is using...
@@ -21,7 +16,14 @@ def filters(fjc_filters):
 
     F = xd.Job('join_output')
     F.depend['pau'] = pau_filters
-    F.depend['cfht'] = cfht_filters
-    F.depend['subaru'] = subaru_filters
+
+    # Scaled down version of the function I use for the
+    # calibration ...
+    if new_bbfilters:
+        F.depend['cosmos_bb'] = xd.Job('cosmos_filters')
+    else:
+        F.depend['cfht_filters'] = xd.Job('cfht_filters')
+        F.depend['subaru_filters'] = xd.Job('subaru_filters')
+
 
     return F

@@ -53,8 +53,6 @@ class rband_adjust:
 #        X = 455 + 10*np.arange(40)
         NB = list(map('NB{}'.format, 455 + 10*np.arange(40)))
 
-        ipdb.set_trace()
-
         vec = bbsyn_coeff.pivot('bb', 'nb', 'val')[NB].values[0]
         synbb = np.dot(pau_syn, vec)
 
@@ -89,9 +87,6 @@ class rband_adjust:
     def run(self):
         cat_in = self.input.galcat.result
         bbsyn_coeff = self.input.bbsyn_coeff.result
-
-        ipdb.set_trace()
-
 
         obs2syn, cat_out = self.entry(cat_in, bbsyn_coeff)
 
