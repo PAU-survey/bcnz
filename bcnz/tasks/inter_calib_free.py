@@ -85,9 +85,6 @@ class inter_calib_free:
         var_inv.values[mask] = 0.
         flux = flux.fillna(0.)
 
-        A = np.einsum('gf,gfs,gft->gst', var_inv, f_mod, f_mod)
-        b = np.einsum('gf,gf,gfs->gs', var_inv, flux, f_mod)
-
         A_NB = np.einsum('gf,gfs,gft->gst', var_inv.sel(band=NBlist), \
                f_mod.sel(band=NBlist), f_mod.sel(band=NBlist))
         b_NB = np.einsum('gf,gf,gfs->gs', var_inv.sel(band=NBlist), flux.sel(band=NBlist), \
@@ -421,14 +418,14 @@ class inter_calib_free:
         cat = pd.concat(D, axis=1)
         cat['zs'] = galcat.zs
 
-        return galcat
+        return cat
 
     def setup_lists(self):
         fit_bands = self.config['fit_bands']
         all_nb = [f'NB{x}' for x in 455+10*np.arange(40)]
 
-        self.nb_list = [x for x in fit_bands if (x in all_nb)]
-        self.bb_list = [x for x in fit_bands if not (x in all_nb)]
+        self.NBlist = [x for x in fit_bands if (x in all_nb)]
+        self.BBlist = [x for x in fit_bands if not (x in all_nb)]
 
     def entry(self, galcat):
         self.setup_lists()
