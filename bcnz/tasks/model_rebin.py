@@ -37,7 +37,7 @@ class model_rebin:
             sub = model.loc[key]
             spl = splrep(sub.z, sub.flux)
 
-            part = pd.DataFrame({'z': zgrid, 'flux': splev(zgrid, spl)})
+            part = pd.DataFrame({'z': zgrid, 'flux': splev(zgrid, spl, ext=2)})
 
             # I needed to set these manually...
             for k1, v1 in zip(model.index.names, key):
