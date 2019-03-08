@@ -25,7 +25,7 @@ descr = {
 class inter_calib_free:
     """Calibration between the broad and the narrow bands."""
 
-    version = 1.25
+    version = 1.27
     config = {'free_ampl': True, #False,
               'Nskip': 10,
               'fit_bands': [],
@@ -71,8 +71,9 @@ class inter_calib_free:
         return chi2, F
 
     def minimize_free(self, f_mod, flux, flux_err):
-        NBlist = list(filter(lambda x: x.startswith('NB'), flux.band.values))
-        BBlist = list(filter(lambda x: not x.startswith('NB'), flux.band.values))
+        # List of which bands to fit.
+        NBlist = self.NBlist #list(filter(lambda x: x.startswith('NB'), flux.band.values))
+        BBlist = self.BBlist #list(filter(lambda x: not x.startswith('NB'), flux.band.values))
 
         flux = flux.rename({'ref_id': 'gal'})
         flux_err = flux_err.rename({'ref_id': 'gal'})
@@ -270,10 +271,9 @@ class inter_calib_free:
     def _prepare_input(self, modelD, galcat):
         """Change the format on some of the input values."""
 
-        # The observations.
-        fit_bands = self.config['fit_bands']
-        flux = galcat['flux'][fit_bands].stack().to_xarray()
-        flux_err = galcat['flux_err'][fit_bands].stack().to_xarray()
+        # Here we store all observations.
+        flux = galcat['flux'].stack().to_xarray()
+        flux_err = galcat['flux_err'].stack().to_xarray()
 
         SN = flux / flux_err
         flux = flux.where(self.config['SN_min'] < SN)
@@ -296,8 +296,11 @@ class inter_calib_free:
         dims = ('part', 'ref_id', 'band')
         _model_parts = list(modelD.keys())
         _model_parts.sort()
-        coords_flux = {'ref_id': flux.ref_id, 'part': _model_parts, 'band': fit_bands}
+
+        fit_bands = self.config['fit_bands']
+        coords_flux = {'ref_id': flux.ref_id, 'part': _model_parts, 'band': list(fit_bands)}
         flux_model = np.zeros((len(modelD), len(flux), len(fit_bands)))
+
         flux_model = xr.DataArray(flux_model, dims=dims, coords=coords_flux)
 
         # Datastructure for storing the results...
@@ -412,9 +415,24 @@ class inter_calib_free:
         #ipdb.set_trace()
         #galcat = galcat.loc[self.config['SN_min'] < SN.min(axis=1)]
 
+        # Removing other bands, since it internally gives a problem.
+        fit_bands = self.config['fit_bands']
+        D = {'flux': galcat.flux[fit_bands], 'flux_err': galcat.flux_err[fit_bands]}
+        cat = pd.concat(D, axis=1)
+        cat['zs'] = galcat.zs
+
         return galcat
 
+    def setup_lists(self):
+        fit_bands = self.config['fit_bands']
+        all_nb = [f'NB{x}' for x in 455+10*np.arange(40)]
+
+        self.nb_list = [x for x in fit_bands if (x in all_nb)]
+        self.bb_list = [x for x in fit_bands if not (x in all_nb)]
+
     def entry(self, galcat):
+        self.setup_lists()
+
         # Loads model exactly at the spectroscopic redshift for each galaxy.
         galcat = self.sel_subset(galcat)
         modelD = self.get_model(galcat.zs)
