@@ -37,7 +37,7 @@ descr = {
 #  'scale_to': 'Which bands to scale it to'
 }
 
-class bcnz_try10:
+class bcnz_photoz_simple:
     """Fitting a linear combination to the observations."""
 
     # This code is an experiment with adding the free amplitude between
@@ -172,7 +172,6 @@ class bcnz_try10:
 
     def run(self):
         galcat = self.input.galcat.result
-
 
         f_mod, f_mod_full = self.fix_fmod_format(self.input.model.result)
 
