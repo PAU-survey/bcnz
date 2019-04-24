@@ -384,13 +384,19 @@ class bcnz_try10:
 
         return f_mod, f_mod_full
 
-    def run(self):
-        self.check_conf()
+    def find_amplitude(self, f_mod, galcat):
+        """To cleanup the run method."""
 
         algo = self.config['chi2_algo']
         key = 'chi2_{}'.format(algo)
         assert hasattr(self, key), 'No such key: {}'.format(key)
         f_algo = getattr(self, key)
+
+        return f_algo(f_mod, galcat)
+
+    def run(self):
+        self.check_conf()
+
 
         galcat = self.input.galcat.result
         f_mod, f_mod_full = self.fix_fmod_format(self.input.model.result)
@@ -406,8 +412,7 @@ class bcnz_try10:
             print('batch', i, 'tot', i*chunksize)
 
             index_name = galcat.index.name
-
-            chi2, norm = f_algo(f_mod, galcat)
+            chi2, norm = self.find_amplitude(f_mod, galcat)
             peaks, pz = self.photoz(chi2, norm)
             best_model = self.best_model(norm, f_mod_full, peaks)
 
