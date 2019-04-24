@@ -130,7 +130,6 @@ def get_arrays(data_df, filters):
 
     return flux, flux_err, var_inv
 
-
 def get_pzcat(chi2, odds_lim, width_frac):
     """Get photo-z catalogue from the p(z)."""
 
@@ -139,22 +138,18 @@ def get_pzcat(chi2, odds_lim, width_frac):
     pz_norm = pz_norm.clip(1e-200, np.infty)
 
     pz = pz / pz_norm
-
     pz = pz.sum(dim='chunk')
 
     # Most of this should be moved into the libpzqual
     # library.
     pz = pz.rename({'ref_id': 'gal'})
-    zb = libpzqual.zb(pz)
-    odds = libpzqual.odds(pz, zb, self.config['odds_lim'])
-    pz_width = libpzqual.pz_width(pz, zb, self.config['width_frac'])
-    zb_mean = libpzqual.zb_bpz2(pz)
 
+    zbx = zb(pz).values
     cat = pd.DataFrame()
-    cat['zb'] = zb.values
-    cat['odds'] = odds.values
-    cat['pz_width'] = pz_width
-    cat['zb_mean'] = zb_mean.values
+    cat['zb'] = zbx
+    cat['odds'] = odds(pz, zbz, odds_lim).values
+    cat['pz_width'] = pz_width(pz, zbz, width_frac).values
+    cat['zb_mean'] = zb_bpz2(pz).values
 
     cat.index = pz.gal.values
     cat.index.name = 'ref_id'
