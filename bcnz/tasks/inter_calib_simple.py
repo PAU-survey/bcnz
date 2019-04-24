@@ -142,7 +142,7 @@ class inter_calib_simple:
             print('Part', j)
 
             K = (modelD[key], flux, flux_err, NBlist, BBlist)
-            chi2_part, F = libpzcore.minimize_at_z(*K)
+            chi2_part, F = libpzcore.minimize_at_z(*K, **self.config)
             chi2[j,:] = chi2_part.sum(dim='band')
 
             # Weird ref_id, gal index issue..
