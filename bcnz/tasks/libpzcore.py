@@ -128,7 +128,7 @@ def galcat_to_arrays(data_df, filters, scale_input=True):
 
     # Previously I found that using on flux system or another made a
     # difference.
-    if self.config['scale_input']:
+    if scale_input:
         print('Convert away from PAU fluxes...')
         ab_factor = 10**(0.4*26)
         cosmos_scale = ab_factor * 10**(0.4*48.6)
@@ -157,6 +157,9 @@ def minimize_all_z(f_mod, data_df, filters):
 
     NBlist = list(filter(lambda x: x.startswith('NB'), flux.band.values))
     BBlist = list(filter(lambda x: not x.startswith('NB'), flux.band.values))
+
+    print(var_inv)
+    print(f_mod)
 
     A = np.einsum('gf,zfs,zft->gzst', var_inv, f_mod, f_mod)
     b = np.einsum('gf,gf,zfs->gzs', var_inv, flux, f_mod)
@@ -230,3 +233,20 @@ def minimize_all_z(f_mod, data_df, filters):
                         ('gal','z','model'))
 
     return chi2x, norm
+
+def bestfit_all_z(modelD, data_df, filters):
+    """Combines the chi2 estimate for all models into a single structure."""
+
+    keys = list(modelD.keys())
+    L = []
+    for key in keys:
+        print('key', key)
+        L.append(minimize_all_z(modelD[key], data_df, filters))
+
+    index = pd.Index(keys, name='run')
+    chi2L, normL = zip(*L)
+
+    chi2 = xr.concat(chi2L, dim=dim)
+    norm = xr.concat(normL, dim=dim)
+
+    return chi2, norm
