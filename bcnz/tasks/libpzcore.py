@@ -230,4 +230,3 @@ def minimize_all_z(f_mod, data_df, filters):
                         ('gal','z','model'))
 
     return chi2x, norm
-

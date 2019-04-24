@@ -108,10 +108,10 @@ def Qz(pz, chi2_min, pz_width, zb, odds_lim=0.02):
 def get_arrays(data_df, filters):
     """Read in the arrays and present them as xarrays."""
 
+    raise ValueError('Where is this used??')
+
     # Seperating this book keeping also makes it simpler to write
     # up different algorithms.
-
-#    filters = self.config['filters']
     dims = ('gal', 'band')
     flux = xr.DataArray(data_df['flux'][filters], dims=dims)
     flux_err = xr.DataArray(data_df['flux_err'][filters], dims=dims)
@@ -129,4 +129,51 @@ def get_arrays(data_df, filters):
 
 
     return flux, flux_err, var_inv
+
+
+def get_pzcat(chi2, odds_lim, width_frac):
+    """Get photo-z catalogue from the p(z)."""
+
+    pz = np.exp(-0.5*chi2)
+    pz_norm = pz.sum(dim=['chunk', 'z'])
+    pz_norm = pz_norm.clip(1e-200, np.infty)
+
+    pz = pz / pz_norm
+
+    pz = pz.sum(dim='chunk')
+
+    # Most of this should be moved into the libpzqual
+    # library.
+    pz = pz.rename({'ref_id': 'gal'})
+    zb = libpzqual.zb(pz)
+    odds = libpzqual.odds(pz, zb, self.config['odds_lim'])
+    pz_width = libpzqual.pz_width(pz, zb, self.config['width_frac'])
+    zb_mean = libpzqual.zb_bpz2(pz)
+
+    cat = pd.DataFrame()
+    cat['zb'] = zb.values
+    cat['odds'] = odds.values
+    cat['pz_width'] = pz_width
+    cat['zb_mean'] = zb_mean.values
+
+    cat.index = pz.gal.values
+    cat.index.name = 'ref_id'
+
+    cat['chi2'] = chi2.min(dim=['chunk', 'z']).sel(ref_id=cat.index)
+
+    # These are now in the "libpzqual" file. I could
+    # consider moving them here..
+    chi2_min = chi2.min(dim=['chunk', 'z'])
+    cat['qual_par'] = (chi2_min*pz_width).values
+
+    odds0p2 = libpzqual.odds(pz, zb, self.config['odds_lim'])
+    cat['Qz'] = (chi2_min*pz_width / odds0p2.values).values
+
+    # We need the chunk which contribute most to the redshift
+    # peak..
+    iz = pz.argmin(dim='z')
+    points = chi2.isel_points(ref_id=range(len(chi2.ref_id)), z=iz)
+    cat['best_chunk'] = points.argmin(dim='chunk')
+
+    return cat
 
