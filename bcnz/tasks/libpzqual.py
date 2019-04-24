@@ -54,7 +54,7 @@ def odds(pz, zb, odds_lim):
     E = np.arange(len(pz))
 
     def C(zbins):
-        return cumsum.isel_points(gal=E, z=zbins).values
+        return cumsum.isel_points(ref_id=E, z=zbins).values
 
     cdf1 = db1*C(i1+1) + (1.-db1)*C(i1)
     cdf2 = db2*C(i2+1) + (1.-db2)*C(i2)
@@ -78,12 +78,12 @@ def pz_width(pz, zb, width_frac):
     ind2 = (cumsum > 1-frac).argmax(axis=1) -1
 
     igal = range(len(cumsum))
-    y1_a = cumsum.isel_points(z=ind1, gal=igal)
-    dy1 = (cumsum.isel_points(z=ind1+1, gal=igal) - y1_a) / \
+    y1_a = cumsum.isel_points(z=ind1, ref_id=igal)
+    dy1 = (cumsum.isel_points(z=ind1+1, ref_id=igal) - y1_a) / \
           (cumsum.z[ind1+1].values - cumsum.z[ind1].values)
 
-    y2_a = cumsum.isel_points(z=ind2, gal=igal)
-    dy2 = (cumsum.isel_points(z=ind2+1, gal=igal) - y2_a) / \
+    y2_a = cumsum.isel_points(z=ind2, ref_id=igal)
+    dy2 = (cumsum.isel_points(z=ind2+1, ref_id=igal) - y2_a) / \
           (cumsum.z[ind2+1].values - cumsum.z[ind2].values)
 
     dz1 = (frac - y1_a) / dy1
@@ -134,15 +134,15 @@ def get_pzcat(chi2, odds_lim, width_frac):
     """Get photo-z catalogue from the p(z)."""
 
     pz = np.exp(-0.5*chi2)
-    pz_norm = pz.sum(dim=['chunk', 'z'])
+    pz_norm = pz.sum(dim=['run', 'z'])
     pz_norm = pz_norm.clip(1e-200, np.infty)
 
     pz = pz / pz_norm
-    pz = pz.sum(dim='chunk')
+    pz = pz.sum(dim='run')
 
     # Most of this should be moved into the libpzqual
     # library.
-    pz = pz.rename({'ref_id': 'gal'})
+    print(pz)
 
     zbx = zb(pz).values
     cat = pd.DataFrame()
@@ -154,11 +154,11 @@ def get_pzcat(chi2, odds_lim, width_frac):
     cat.index = pz.gal.values
     cat.index.name = 'ref_id'
 
-    cat['chi2'] = chi2.min(dim=['chunk', 'z']).sel(ref_id=cat.index)
+    cat['chi2'] = chi2.min(dim=['run', 'z']).sel(ref_id=cat.index)
 
     # These are now in the "libpzqual" file. I could
     # consider moving them here..
-    chi2_min = chi2.min(dim=['chunk', 'z'])
+    chi2_min = chi2.min(dim=['run', 'z'])
     cat['qual_par'] = (chi2_min*pz_width).values
 
     odds0p2 = libpzqual.odds(pz, zb, self.config['odds_lim'])
@@ -168,7 +168,7 @@ def get_pzcat(chi2, odds_lim, width_frac):
     # peak..
     iz = pz.argmin(dim='z')
     points = chi2.isel_points(ref_id=range(len(chi2.ref_id)), z=iz)
-    cat['best_chunk'] = points.argmin(dim='chunk')
+    cat['best_run'] = points.argmin(dim='run')
 
     return cat
 

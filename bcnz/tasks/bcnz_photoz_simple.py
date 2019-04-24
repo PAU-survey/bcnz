@@ -62,7 +62,7 @@ class bcnz_photoz_simple:
 #      'scale_to': []
     }
 
-    def check_conf(self):
+    def check_config(self):
         assert self.config['filters'], 'Need to set filters'
         assert not self.config['seds'], 'This option is not used...'
 
@@ -124,9 +124,7 @@ class bcnz_photoz_simple:
         for i,galcat in enumerate(Rin):
             print('batch', i, 'tot', i*chunksize)
 
-            index_name = galcat.index.name
-
-            chi2, norm = libpzcore.minimize_all_z(modelD, galcat, self.config['filters'])
+            chi2, norm = libpzcore.bestfit_all_z(self.config, modelD, galcat)
             pzcat = libpzqual.get_pzcat(chi2, self.config['odds_lim'], self.config['width_frac'])
             store.append('default', pzcat)
 

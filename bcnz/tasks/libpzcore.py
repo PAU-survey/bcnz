@@ -3,6 +3,7 @@
 
 import time
 import numpy as np
+import pandas as pd
 import xarray as xr
 
 def model_at_z(zs, modelD, fit_bands):
@@ -150,19 +151,11 @@ def galcat_to_arrays(data_df, filters, scale_input=True):
     return flux, flux_err, var_inv
 
 
-def minimize_all_z(f_mod, data_df, filters):
+def minimize_all_z(config, ref_id, f_mod, flux, var_inv):
     """Minimize the chi2 expression."""
-
-    flux, flux_err, var_inv = galcat_to_arrays(data_df, filters)
 
     NBlist = list(filter(lambda x: x.startswith('NB'), flux.band.values))
     BBlist = list(filter(lambda x: not x.startswith('NB'), flux.band.values))
-
-    print(var_inv)
-    print(f_mod)
-
-    A = np.einsum('gf,zfs,zft->gzst', var_inv, f_mod, f_mod)
-    b = np.einsum('gf,gf,zfs->gzs', var_inv, flux, f_mod)
 
     A_NB = np.einsum('gf,zfs,zft->gzst', var_inv.sel(band=NBlist), \
            f_mod.sel(band=NBlist), f_mod.sel(band=NBlist))
@@ -187,12 +180,12 @@ def minimize_all_z(f_mod, data_df, filters):
 
     v = 100*np.ones_like(b)
 
-    gal_id = np.array(data_df.index)
-    coords = {'gal': gal_id, 'band': f_mod.band, 'z': f_mod.z}
-    coords_norm = {'gal': gal_id, 'z': f_mod.z, 'model': f_mod.model}
+    ref_id = np.array(ref_id)
+    coords = {'ref_id': ref_id, 'band': f_mod.band, 'z': f_mod.z}
+    coords_norm = {'ref_id': ref_id, 'z': f_mod.z, 'model': f_mod.model}
 
     t1 = time.time()
-    for i in range(self.config['Niter']):
+    for i in range(config['Niter']):
         a = np.einsum('gzst,gzt->gzs', A, v)
 
         m0 = b / a
@@ -200,7 +193,7 @@ def minimize_all_z(f_mod, data_df, filters):
 
         v = vn
         # Extra step for the amplitude
-        if 0 < i and i % self.config['Nskip'] == 0:
+        if 0 < i and i % config['Nskip'] == 0:
             # Testing a new form for scaling the amplitude...
             S2 = np.einsum('gf,zfs,gzs->gz', var_inv_NB, f_mod_NB, v)
             k = (S1.values/S2.T).T
@@ -221,32 +214,37 @@ def minimize_all_z(f_mod, data_df, filters):
 
     Fx = np.dstack(L)
     coords['band'] = NBlist + BBlist
-    Fx = xr.DataArray(Fx, coords=coords, dims=('gal', 'z', 'band'))
+    Fx = xr.DataArray(Fx, coords=coords, dims=('ref_id', 'z', 'band'))
 
     # Now with another scaling...
     chi2x = var_inv*(flux - Fx)**2
-    Fx = xr.DataArray(Fx, coords=coords, dims=('gal', 'z', 'band'))
+    Fx = xr.DataArray(Fx, coords=coords, dims=('ref_id', 'z', 'band'))
     chi2x = var_inv*(flux - Fx)**2
     chi2x = chi2x.sum(dim='band')
 
     norm = xr.DataArray(v_scaled, coords=coords_norm, dims=\
-                        ('gal','z','model'))
+                        ('ref_id','z','model'))
 
     return chi2x, norm
 
-def bestfit_all_z(modelD, data_df, filters):
+def bestfit_all_z(config, modelD, data_df):
     """Combines the chi2 estimate for all models into a single structure."""
+
+    flux, _, var_inv = galcat_to_arrays(data_df, config['filters'])
 
     keys = list(modelD.keys())
     L = []
     for key in keys:
         print('key', key)
-        L.append(minimize_all_z(modelD[key], data_df, filters))
+        L.append(minimize_all_z(config, data_df.index, modelD[key], flux, var_inv))
 
-    index = pd.Index(keys, name='run')
+    dim = pd.Index(keys, name='run')
     chi2L, normL = zip(*L)
 
     chi2 = xr.concat(chi2L, dim=dim)
     norm = xr.concat(normL, dim=dim)
+
+    print(chi2)
+    print(norm)
 
     return chi2, norm
