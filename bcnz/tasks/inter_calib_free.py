@@ -7,6 +7,7 @@ import time
 import numpy as np
 import pandas as pd
 import xarray as xr
+from tqdm import tqdm
 from scipy.optimize import minimize
 
 from matplotlib import pyplot as plt
@@ -346,9 +347,7 @@ class inter_calib_free:
         flux_orig = flux.copy()
 
         zp_details = {}
-        for i in range(self.config['Nrounds']):
-            print('Round', i)
-
+        for i in tqdm(range(self.config['Nrounds'])):
             best_flux = self.find_best_model(modelD, flux_model, flux, flux_err, chi2)
 
             zp = self.calc_zp(best_flux, flux, flux_err)
