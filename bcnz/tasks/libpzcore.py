@@ -38,9 +38,6 @@ def model_at_z(zs, modelD, fit_bands):
 def minimize_at_z(f_mod, flux, flux_err, NBlist, BBlist, **config):
     """Minimize at a known redshift."""
 
-    flux = flux.rename({'ref_id': 'gal'})
-    flux_err = flux_err.rename({'ref_id': 'gal'})
-
     var_inv = 1. / flux_err**2
 
     # Problematic entries.        
@@ -71,9 +68,9 @@ def minimize_at_z(f_mod, flux, flux_err, NBlist, BBlist, **config):
 
     v = 100*np.ones_like(b)
 
-    gal_id = flux.gal.values
-    coords = {'gal': gal_id, 'band': f_mod.band}
-    coords_norm = {'gal': gal_id, 'model': f_mod.sed}
+    ref_id = flux.ref_id.values
+    coords = {'ref_id': ref_id, 'band': f_mod.band}
+    coords_norm = {'ref_id': ref_id, 'model': f_mod.sed}
 
 
     t1 = time.time()
@@ -110,7 +107,7 @@ def minimize_at_z(f_mod, flux, flux_err, NBlist, BBlist, **config):
     Fx = np.hstack(L)
 
     coords['band'] = NBlist + BBlist
-    Fx = xr.DataArray(Fx, coords=coords, dims=('gal', 'band'))
+    Fx = xr.DataArray(Fx, coords=coords, dims=('ref_id', 'band'))
 
     chi2x = var_inv*(flux - Fx)**2
 

@@ -2,7 +2,7 @@
 # encoding: UTF8
 
 import copy
-import ipdb
+from IPython.core import debugger as ipdb
 import numpy as np
 
 import xdolphin as xd
