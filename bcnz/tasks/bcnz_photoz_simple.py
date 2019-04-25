@@ -50,7 +50,7 @@ class bcnz_photoz_simple:
       'zmin': 0.01,
       'zmax': 2.0,
       'dz': 0.01,
-      'odds_lim': 0.01,
+      'odds_lim': 0.0035,
       'Niter': 300,
       'line_weight': 2.,
       'chi2_algo': 'min',
