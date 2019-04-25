@@ -66,26 +66,6 @@ class bcnz_photoz_simple:
         assert self.config['filters'], 'Need to set filters'
         assert not self.config['seds'], 'This option is not used...'
 
-    def best_model(self, norm, f_mod, peaks):
-        """Estimate the best fit model."""
-
-        # Moving this to a separate task is not as easy as it seems. The amplitude 
-        # data is huge and creates problems.
-        L = [] 
-
-        fluxA = np.zeros((len(peaks), len(f_mod.band)))
-        for i,gal in enumerate(peaks.index):
-            zgal = peaks.loc[gal].zb
-            norm_gal = norm.sel(gal=gal, z=zgal).values
-            fmod_gal = f_mod.sel(z=zgal).values
-
-            fluxA[i] = np.dot(fmod_gal, norm_gal)
-
-        coords = {'gal': norm.gal, 'band': f_mod.band}
-        flux = xr.DataArray(fluxA, dims=('gal', 'band'), coords=coords)
-
-        return flux
-
     def get_models(self):
         """Dictionary with all the current models."""
  
@@ -122,10 +102,13 @@ class bcnz_photoz_simple:
         path = self.output.empty_file('default')
         store = pd.HDFStore(path)
         for i,galcat in enumerate(Rin):
-            print('batch', i, 'tot', i*chunksize)
 
+            t1 = time.time()
             chi2, norm = libpzcore.bestfit_all_z(self.config, modelD, galcat)
             pzcat = libpzqual.get_pzcat(chi2, self.config['odds_lim'], self.config['width_frac'])
             store.append('default', pzcat)
+
+            print('time', time.time() - t1)
+
 
         store.close()

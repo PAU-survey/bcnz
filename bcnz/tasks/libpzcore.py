@@ -120,14 +120,13 @@ def galcat_to_arrays(data_df, filters, scale_input=True):
     # Seperating this book keeping also makes it simpler to write
     # up different algorithms.
 
-    dims = ('gal', 'band')
+    dims = ('ref_id', 'band')
     flux = xr.DataArray(data_df['flux'][filters], dims=dims)
     flux_err = xr.DataArray(data_df['flux_err'][filters], dims=dims)
 
     # Previously I found that using on flux system or another made a
     # difference.
     if scale_input:
-        print('Convert away from PAU fluxes...')
         ab_factor = 10**(0.4*26)
         cosmos_scale = ab_factor * 10**(0.4*48.6)
 
@@ -232,16 +231,12 @@ def bestfit_all_z(config, modelD, data_df):
     keys = list(modelD.keys())
     L = []
     for key in keys:
-        print('key', key)
         L.append(minimize_all_z(config, data_df.index, modelD[key], flux, var_inv))
 
-    dim = pd.Index(keys, name='run')
+    dim = pd.Index([int(x) for x in keys], name='run')
     chi2L, normL = zip(*L)
 
     chi2 = xr.concat(chi2L, dim=dim)
     norm = xr.concat(normL, dim=dim)
-
-    print(chi2)
-    print(norm)
 
     return chi2, norm

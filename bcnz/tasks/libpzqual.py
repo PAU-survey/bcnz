@@ -6,6 +6,7 @@
 
 from IPython.core import debugger as ipdb
 import numpy as np
+import pandas as pd
 import xarray as xr
 
 def zb(pz):
@@ -23,14 +24,14 @@ def zb_bpz2(pz):
 
     return zbx
 
-def odds(pz, zb, odds_lim):
+def odds(pz, zbx, odds_lim):
     """ODDS quality paramter."""
 
     # Very manual determination of the ODDS through the
     # cumsum function. xarray is n version 0.9.5 not
     # supporting integration.
-    z1 = zb - odds_lim*(1.+zb)
-    z2 = zb + odds_lim*(1.+zb)
+    z1 = zbx - odds_lim*(1.+zbx)
+    z2 = zbx + odds_lim*(1.+zbx)
 
     # When the galaxy is close to the end of the grid.
     z = pz.z.values
@@ -142,30 +143,27 @@ def get_pzcat(chi2, odds_lim, width_frac):
 
     # Most of this should be moved into the libpzqual
     # library.
-    print(pz)
-
     zbx = zb(pz).values
     cat = pd.DataFrame()
     cat['zb'] = zbx
-    cat['odds'] = odds(pz, zbz, odds_lim).values
-    cat['pz_width'] = pz_width(pz, zbz, width_frac).values
+    cat['odds'] = odds(pz, zbx, odds_lim)
+    cat['pz_width'] = pz_width(pz, zbx, width_frac)
     cat['zb_mean'] = zb_bpz2(pz).values
-
-    cat.index = pz.gal.values
+    cat.index = pz.ref_id.values
     cat.index.name = 'ref_id'
 
     cat['chi2'] = chi2.min(dim=['run', 'z']).sel(ref_id=cat.index)
 
     # These are now in the "libpzqual" file. I could
     # consider moving them here..
+    pz_widthx = cat.pz_width.values
     chi2_min = chi2.min(dim=['run', 'z'])
-    cat['qual_par'] = (chi2_min*pz_width).values
+    cat['qual_par'] = (chi2_min*pz_widthx).values
 
-    odds0p2 = libpzqual.odds(pz, zb, self.config['odds_lim'])
-    cat['Qz'] = (chi2_min*pz_width / odds0p2.values).values
+    odds0p2 = odds(pz, cat.zb, odds_lim)
+    cat['Qz'] = (chi2_min*pz_widthx / odds0p2.values).values
 
-    # We need the chunk which contribute most to the redshift
-    # peak..
+    # The run which contribute most to the redshift peak ...
     iz = pz.argmin(dim='z')
     points = chi2.isel_points(ref_id=range(len(chi2.ref_id)), z=iz)
     cat['best_run'] = points.argmin(dim='run')
