@@ -161,12 +161,11 @@ def get_pzcat(chi2, odds_lim, width_frac):
     cat['qual_par'] = (chi2_min*pz_widthx).values
 
     odds0p2 = odds(pz, cat.zb, odds_lim)
-    cat['Qz'] = (chi2_min*pz_widthx / odds0p2.values).values
+    cat['qz'] = (chi2_min*pz_widthx / odds0p2.values).values
 
     # The run which contribute most to the redshift peak ...
     iz = pz.argmin(dim='z')
     points = chi2.isel_points(ref_id=range(len(chi2.ref_id)), z=iz)
     cat['best_run'] = points.argmin(dim='run')
 
-    return cat
-
+    return cat, pz
