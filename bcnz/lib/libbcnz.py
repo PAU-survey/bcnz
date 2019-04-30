@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
+import libpzqual
+
 def galcat_to_arrays(data_df, filters, scale_input=True):
     """Convert the galcat dataframe to arrays."""
 
@@ -152,12 +154,22 @@ def minimize_all_z(data_df, config, modelD):
 
     return chi2, norm
 
+def get_model(name, model, norm, pzcat, z):
+    """Get the model magnitudes at a given redshift."""
+    
+    tmp_model = model.sel_points(z=z, run=pzcat.best_run.values, dim='ref_id')
+    tmp_norm = norm.sel_points(ref_id=pzcat.index, z=z, run=pzcat.best_run.values)
+    tmp_norm = tmp_norm.rename({'points': 'ref_id'})
+    best_model = (tmp_model * tmp_norm).sum(dim='model')
+    
+    return best_model 
+
 def photoz_wrapper(data_df, config, modelD):
     """Estimates the photoz for the models for a given configuration."""
 
     print('data type', type(data_df))
     chi2, norm = minimize_all_z(data_df, config, modelD)
-    pzcat, pz = get_pzcat(chi2, config['odds_lim'], config['width_frac'])
+    pzcat, pz = libpzqual.get_pzcat(chi2, config['odds_lim'], config['width_frac'])
 
     # Convert the model to an xarray!
     keys = list(modelD.keys())
