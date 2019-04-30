@@ -120,9 +120,23 @@ def galcat_to_arrays(data_df, filters, scale_input=True):
     # Seperating this book keeping also makes it simpler to write
     # up different algorithms.
 
-    dims = ('ref_id', 'band')
-    flux = xr.DataArray(data_df['flux'][filters], dims=dims)
-    flux_err = xr.DataArray(data_df['flux_err'][filters], dims=dims)
+    hirarchical = True
+    if hirarchical:
+        # Bit of a hack..
+        bands = [x.replace('flux_err_','') for x in data_df.columns \
+                 if x.startswith('flux_err_')]
+        cols_flux = [f'flux_{x}' for x in bands]
+        cols_error = [f'flux_err_{x}' for x in bands]
+
+        D = {'dims': ('ref_id', 'band'), 'coords': 
+             {'band': bands, 'ref_id': data_df.index}}
+
+        flux = xr.DataArray(data_df[cols_flux].values, **D)
+        flux_err = xr.DataArray(data_df[cols_error].values, **D)
+    else:
+        dims = ('ref_id', 'band')
+        flux = xr.DataArray(data_df['flux'][filters], dims=dims)
+        flux_err = xr.DataArray(data_df['flux_err'][filters], dims=dims)
 
     # Previously I found that using on flux system or another made a
     # difference.
@@ -147,11 +161,15 @@ def galcat_to_arrays(data_df, filters, scale_input=True):
     return flux, flux_err, var_inv
 
 
-def minimize_all_z(config, ref_id, f_mod, flux, var_inv):
+def _core_allz(config, ref_id, f_mod, flux, var_inv):
     """Minimize the chi2 expression."""
 
     NBlist = list(filter(lambda x: x.startswith('NB'), flux.band.values))
     BBlist = list(filter(lambda x: not x.startswith('NB'), flux.band.values))
+
+#    print(f
+    print('var_inv',  var_inv.shape, var_inv.coords)
+    print('f_mod',  f_mod.shape, f_mod.coords)
 
     A_NB = np.einsum('gf,zfs,zft->gzst', var_inv.sel(band=NBlist), \
            f_mod.sel(band=NBlist), f_mod.sel(band=NBlist))
@@ -223,15 +241,17 @@ def minimize_all_z(config, ref_id, f_mod, flux, var_inv):
 
     return chi2x, norm
 
-def bestfit_all_z(config, modelD, data_df):
+def minimize_all_z(data_df, config, modelD):
     """Combines the chi2 estimate for all models into a single structure."""
 
     flux, _, var_inv = galcat_to_arrays(data_df, config['filters'])
+    ref_id = data_df.index
 
     keys = list(modelD.keys())
     L = []
     for key in keys:
-        L.append(minimize_all_z(config, data_df.index, modelD[key], flux, var_inv))
+        f_mod = modelD[key]
+        L.append(_core_allz(config, ref_id, f_mod, flux, var_inv))
 
     dim = pd.Index([int(x) for x in keys], name='run')
     chi2L, normL = zip(*L)
