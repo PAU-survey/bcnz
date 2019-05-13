@@ -2,13 +2,14 @@
 # encoding: UTF8
 
 import time
+import dask
 import numpy as np
 import pandas as pd
 import xarray as xr
 
-import libpzqual
+from . import libpzqual
 
-def galcat_to_arrays(data_df, filters, scale_input=True):
+def galcat_to_arrays(data_df, bands, scale_input=True):
     """Convert the galcat dataframe to arrays."""
 
     # Seperating this book keeping also makes it simpler to write
@@ -16,9 +17,6 @@ def galcat_to_arrays(data_df, filters, scale_input=True):
 
     hirarchical = True
     if hirarchical:
-        # Bit of a hack..
-        bands = [x.replace('flux_err_','') for x in data_df.columns \
-                 if x.startswith('flux_err_')]
         cols_flux = [f'flux_{x}' for x in bands]
         cols_error = [f'flux_err_{x}' for x in bands]
 
@@ -29,8 +27,8 @@ def galcat_to_arrays(data_df, filters, scale_input=True):
         flux_err = xr.DataArray(data_df[cols_error].values, **D)
     else:
         dims = ('ref_id', 'band')
-        flux = xr.DataArray(data_df['flux'][filters], dims=dims)
-        flux_err = xr.DataArray(data_df['flux_err'][filters], dims=dims)
+        flux = xr.DataArray(data_df['flux'][bands], dims=dims)
+        flux_err = xr.DataArray(data_df['flux_err'][bands], dims=dims)
 
     # Previously I found that using on flux system or another made a
     # difference.
@@ -60,9 +58,6 @@ def _core_allz(config, ref_id, f_mod, flux, var_inv):
 
     NBlist = list(filter(lambda x: x.startswith('NB'), flux.band.values))
     BBlist = list(filter(lambda x: not x.startswith('NB'), flux.band.values))
-
-    #print('var_inv',  var_inv.shape, var_inv.coords)
-    #print('f_mod',  f_mod.shape, f_mod.coords)
 
     A_NB = np.einsum('gf,zfs,zft->gzst', var_inv.sel(band=NBlist), \
            f_mod.sel(band=NBlist), f_mod.sel(band=NBlist))
@@ -137,13 +132,17 @@ def _core_allz(config, ref_id, f_mod, flux, var_inv):
 def minimize_all_z(data_df, config, modelD):
     """Combines the chi2 estimate for all models into a single structure."""
 
-    flux, _, var_inv = galcat_to_arrays(data_df, config['filters'])
+    flux, _, var_inv = galcat_to_arrays(data_df, config['bands'])
     ref_id = data_df.index
 
     keys = list(modelD.keys())
     L = []
     for key in keys:
+        # Supporting both interfaces.
         f_mod = modelD[key]
+        if isinstance(f_mod, dask.distributed.client.Future):
+            f_mod = f_mod.result()
+
         L.append(_core_allz(config, ref_id, f_mod, flux, var_inv))
 
     dim = pd.Index([int(x) for x in keys], name='run')
@@ -162,36 +161,41 @@ def get_model(name, model, norm, pzcat, z):
     tmp_norm = tmp_norm.rename({'points': 'ref_id'})
     best_model = (tmp_model * tmp_norm).sum(dim='model')
     
+    columns = [f'{name}_{x}' for x in best_model.band.values]
+    best_model = pd.DataFrame(best_model, columns=columns)
+    
     return best_model 
 
 def photoz_wrapper(data_df, config, modelD):
     """Estimates the photoz for the models for a given configuration."""
 
-    print('data type', type(data_df))
     chi2, norm = minimize_all_z(data_df, config, modelD)
     pzcat, pz = libpzqual.get_pzcat(chi2, config['odds_lim'], config['width_frac'])
 
-    # Convert the model to an xarray!
+    # Convert the model into a single xarray!
     keys = list(modelD.keys())
-    vals = [modelD[x] for x in keys]
+    vals = []
+    for x in keys:
+        part = modelD[x]
+        if isinstance(part, dask.distributed.client.Future):
+            part = part.result()
+        vals.append(part)
+
     model = xr.concat(vals, dim='run')
     model.coords['run'] = keys
 
     # Model magnitudes at the best fit redshift and z=0.
     best_model = get_model('model', model, norm, pzcat, pzcat.zb.values)
-    z0 = np.zeros_like(pzcat.zb)
-    flux_z0 = get_model('modelz0', model, norm, pzcat, z0)
+    z0 = 0.01*np.ones_like(pzcat.zb) # yes, a hack.
+    model_z0 = get_model('modelz0', model, norm, pzcat, z0)
 
     # Combining into one data structure, since Dask does not support
     # hirarchical data structures.
     def prefix(pre, cat):
         return [f'{pre}_{x}' for x in cat.band.values]
 
-    names = list(pzcat.columns) + prefix('model', best_model) + \
-            prefix('modelz0', model_z0) +\
-            [f'z{x}' for x in range(pz.shape[1])]
-
-    data = np.hstack([pzcat, best_model, model_z0, pz])
-    df_out = pd.DataFrame(data, columns=names, index=pzcat.index)
-
+    pz = pd.DataFrame(pz, columns = [f'z{x}' for x in range(pz.shape[1])])
+    
+    df_out = pd.concat([pzcat, best_model, model_z0, pz], 1)
+    
     return df_out
