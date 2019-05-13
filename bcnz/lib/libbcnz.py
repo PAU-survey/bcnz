@@ -153,24 +153,9 @@ def minimize_all_z(data_df, config, modelD):
 
     return chi2, norm
 
-def get_model(name, model, norm, pzcat, z):
-    """Get the model magnitudes at a given redshift."""
-    
-    tmp_model = model.sel_points(z=z, run=pzcat.best_run.values, dim='ref_id')
-    tmp_norm = norm.sel_points(ref_id=pzcat.index, z=z, run=pzcat.best_run.values)
-    tmp_norm = tmp_norm.rename({'points': 'ref_id'})
-    best_model = (tmp_model * tmp_norm).sum(dim='model')
-    
-    columns = [f'{name}_{x}' for x in best_model.band.values]
-    best_model = pd.DataFrame(best_model, columns=columns)
-    
-    return best_model 
 
-def photoz_wrapper(data_df, config, modelD):
-    """Estimates the photoz for the models for a given configuration."""
-
-    chi2, norm = minimize_all_z(data_df, config, modelD)
-    pzcat, pz = libpzqual.get_pzcat(chi2, config['odds_lim'], config['width_frac'])
+def flatten_models(modelD):
+    """Combines all the models into a flat structure."""
 
     # Convert the model into a single xarray!
     keys = list(modelD.keys())
@@ -184,18 +169,61 @@ def photoz_wrapper(data_df, config, modelD):
     model = xr.concat(vals, dim='run')
     model.coords['run'] = keys
 
+    return model
+
+def get_model(name, model, norm, pzcat, z, scale_input=True):
+    """Get the model magnitudes at a given redshift."""
+    
+    tmp_model = model.sel_points(z=z, run=pzcat.best_run.values, dim='ref_id')
+    tmp_norm = norm.sel_points(ref_id=pzcat.index, z=z, run=pzcat.best_run.values)
+    tmp_norm = tmp_norm.rename({'points': 'ref_id'})
+    best_model = (tmp_model * tmp_norm).sum(dim='model')
+    
+    columns = [f'{name}_{x}' for x in best_model.band.values]
+    best_model = pd.DataFrame(best_model.values, columns=columns, index=pzcat.index)
+   
+    if scale_input:
+        best_model *= 10**(0.4*(26+48.6))
+
+    return best_model 
+
+
+def get_iband_model(model, norm, pzcat, scale_input=True):
+    """The model i-band flux as a function of redshift."""
+    
+    tmp_model = model.sel(band='I').sel_points(run=pzcat.best_run.values)
+    tmp_norm = norm.sel_points(ref_id=pzcat.index, run=pzcat.best_run.values)
+
+    data = (tmp_model * tmp_norm).rename({'points': 'ref_id'}).sum(dim='model')
+    columns = [f'iflux_{x}' for x in range(len(tmp_model.z))]
+
+    df = pd.DataFrame(data.values, columns=columns, index=pzcat.index)
+    
+    if scale_input:
+        df *= 10**(0.4*(26+48.6))
+
+    return df
+
+def photoz_wrapper(data_df, config, modelD):
+    """Estimates the photoz for the models for a given configuration."""
+
+    chi2, norm = minimize_all_z(data_df, config, modelD)
+    pzcat, pz = libpzqual.get_pzcat(chi2, config['odds_lim'], config['width_frac'])
+    model = flatten_models(modelD)
+
     # Model magnitudes at the best fit redshift and z=0.
     best_model = get_model('model', model, norm, pzcat, pzcat.zb.values)
     z0 = 0.01*np.ones_like(pzcat.zb) # yes, a hack.
     model_z0 = get_model('modelz0', model, norm, pzcat, z0)
+    iband_model = get_iband_model(model, norm, pzcat)
 
+    
     # Combining into one data structure, since Dask does not support
     # hirarchical data structures.
-    def prefix(pre, cat):
-        return [f'{pre}_{x}' for x in cat.band.values]
-
-    pz = pd.DataFrame(pz, columns = [f'z{x}' for x in range(pz.shape[1])])
     
-    df_out = pd.concat([pzcat, best_model, model_z0, pz], 1)
+    pz = pd.DataFrame(pz.values, columns = [f'z{x}' for x in range(pz.shape[1])])
+    pz.index = pzcat.index
+
+    df_out = pd.concat([pzcat, best_model, model_z0, iband_model, pz], 1)
     
     return df_out
