@@ -11,35 +11,34 @@ from IPython.core import debugger as ipdb
 
 descr = {'rm_stars': 'If removing stars here.'}
 
-# Basically only the first column is needed...
-cfg = [['NUV', 'DNUV', 'galex2500_nuv'],
-       ['U', 'DU', 'u_cfht'],
-       ['B', 'DB', 'B_Subaru'],
-       ['V', 'DV', 'V_Subaru'],
-       ['R', 'DR', 'r_Subaru'],
-       ['I', 'DI', 'i_Subaru'],
-       ['ZN', 'DZN', 'suprime_FDCCD_z'],
-       ['YHSC', 'DYHSC', 'yHSC'],
-       ['Y', 'DY', 'Y_uv'],
-       ['J', 'DJ', 'J_uv'],
-       ['H', 'DH', 'H_uv'],
-       ['K', 'DK', 'K_uv'],
+cfg = [['NUV', 'DNUV', 'galex_nuv'],
+       ['U', 'DU', 'cfht_u'],
+       ['B', 'DB', 'subaru_b'],
+       ['V', 'DV', 'subaru_v'],
+       ['R', 'DR', 'subaru_r'],
+       ['I', 'DI', 'subaru_i'],
+       ['ZN', 'DZN', 'subaru_z'],
+       ['YHSC', 'DYHSC', 'subaru_y'],
+       ['Y', 'DY', 'vista_y'],
+       ['J', 'DJ', 'vista_j'],
+       ['H', 'DH', 'vista_h'],
+       ['K', 'DK', 'vista_k'],
 #       ['KW', 'DKW', 'wircam_Ks'], # Not available in this catalogue.
 #       ['HW', 'DHW', 'wircam_H'],
-       ['IA427', 'DIA427', 'IA427.SuprimeCam'],
-       ['IA464', 'DIA464', 'IA464.SuprimeCam'],
-       ['IA484', 'DIA484', 'IA484.SuprimeCam'],
-       ['IA505', 'DIA505', 'IA505.SuprimeCam'],
-       ['IA527', 'DIA527', 'IA527.SuprimeCam'],
-       ['IA574', 'DIA574', 'IA574.SuprimeCam'],
-       ['IA624', 'DIA624', 'IA624.SuprimeCam'],
-       ['IA679', 'DIA679', 'IA679.SuprimeCam'],
-       ['IA709', 'DIA709', 'IA709.SuprimeCam'],
-       ['IA738', 'DIA738', 'IA738.SuprimeCam'],
-       ['IA767', 'DIA767', 'IA767.SuprimeCam'],
-       ['IA827', 'DIA827', 'IA827.SuprimeCam'],
-       ['NB711', 'DNB711', 'NB711.SuprimeCam'],
-       ['NB816', 'DNB816', 'NB816.SuprimeCam'],
+       ['IA427', 'DIA427', 'subaru_ia427'],
+       ['IA464', 'DIA464', 'subaru_ia464'],
+       ['IA484', 'DIA484', 'subaru_ia484'],
+       ['IA505', 'DIA505', 'subaru_ia505'],
+       ['IA527', 'DIA527', 'subaru_ia527'],
+       ['IA574', 'DIA574', 'subaru_ia574'],
+       ['IA624', 'DIA624', 'subaru_ia624'],
+       ['IA679', 'DIA679', 'subaru_ia679'],
+       ['IA709', 'DIA709', 'subaru_ia709'],
+       ['IA738', 'DIA738', 'subaru_ia738'],
+       ['IA767', 'DIA767', 'subaru_ia767'],
+       ['IA827', 'DIA827', 'subaru_ia827'],
+       ['NB711', 'DNB711', 'subaru_nb711'],
+       ['NB816', 'DNB816', 'subaru_nb816'],
        ['CH1', 'DCH1', 'irac_ch1'],
        ['CH2', 'DCH2', 'irac_ch2'],
        ['CH3', 'DCH3', 'irac_ch3'],
@@ -49,7 +48,7 @@ cfg = [['NUV', 'DNUV', 'galex2500_nuv'],
 class cosmos_laigle:
     """Interface from reading the COSMOS Laigle catalogue."""
 
-    version = 1.10
+    version = 1.11
     config = {'rm_stars': True}
 
     # Note, this code does *not* apply zero-points, following Alex
@@ -77,11 +76,10 @@ class cosmos_laigle:
 
         # Being a bit lazy, I currently don't convert to the internal
         # format.
-        flux_cols, err_cols, _ = zip(*cfg)
+        flux_cols, err_cols, names = zip(*cfg)
 
-        flux = cat_in[list(flux_cols)]
-        flux_err = cat_in[list(err_cols)]
-        flux_err.columns = flux_cols
+        flux = cat_in[list(flux_cols)].rename(columns=dict(zip(flux_cols, names)))
+        flux_err = cat_in[list(err_cols)].rename(columns=dict(zip(err_cols, names)))
 
         cat = pd.concat({'flux': flux, 'flux_err': flux_err}, axis=1)
 
@@ -97,41 +95,6 @@ class cosmos_laigle:
         cat['id_laigle'] = cat_in.ID
 
         return cat
-
-
-#
-#
-#        bands = ['cfht_u', 'subaru_B', 'subaru_V', 'subaru_r', 'subaru_i', 'subaru_z']
-#        mapD = {'cfht_u': 'U', 'subaru_B': 'B', 'subaru_V': 'V', 'subaru_r': 'R', 'subaru_i': 'I', \
-#                'subaru_z': 'ZN'}
-#        otherD = {'ID': 'id_laigle', 'RA': 'ra', 'DEC': 'dec'}
-#
-#        flux_cols = [mapD[x] for x in bands]
-#        err_cols = ['D'+mapD[x] for x in bands]
-#
-##        # Strictly not needed, but there are many columns.
-#        cols = list(otherD.keys()) + flux_cols + err_cols
-#        cat_in = self.load_cat()[cols]
-#
-#        flux = cat_in[flux_cols]
-#        flux.columns = bands
-#        flux_err = cat_in[err_cols]
-#        flux_err.columns = bands
-#
-#        cat = pd.concat({'flux': flux, 'flux_err': flux_err}, axis=1)
-#
-#        # Yes, different definition and rounding error.
-#        cat[cat < -99] = np.nan
-#
-#        # Scale to PAU fluxes.
-#        ab_factor = 10**(0.4*26)
-#        cosmos_scale = ab_factor * 10**(0.4*48.6)
-#        cat *= cosmos_scale
-#
-#        # Adding this here, since otherwise it gets scaled.
-#        cat['id_laigle'] = cat_in.ID
-#
-#        return cat
 
 
     def other_cols(self, cat):
@@ -175,8 +138,6 @@ class cosmos_laigle:
         cat = self.read_cat()
         self.other_cols(cat)
         cat = self.fixes(cat)
-
-        ipdb.set_trace()
 
         return cat
 
