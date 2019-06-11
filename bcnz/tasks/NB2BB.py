@@ -38,7 +38,7 @@ class NB2BB:
     def calc_coeff(self, filt):
         ll = np.arange(3000,10000,5)
         
-        NB_filt = np.array([[filt.ix['NB%s'%str(x)].lmb.values,filt.ix['NB%s'%str(x)].response.values] for x in np.arange(455,850,10)])
+        NB_filt = np.array([[filt.ix['pau_nb%s'%str(x)].lmb.values,filt.ix['pau_nb%s'%str(x)].response.values] for x in np.arange(455,850,10)])
         WNB = np.array([interp1d(NB_filt[i,0], NB_filt[i,1]/NB_filt[i,0], bounds_error=False, fill_value=(0,0))(ll) for i in range(40)])
         WNB = np.array([x/np.sqrt(x.dot(x)) for x in WNB]) # Normalize
 
@@ -53,7 +53,7 @@ class NB2BB:
         coeff = self.getcoef(WNB,WBB)
 
         coeff = coeff / np.sum(coeff)
-        keys = ['NB'+str(x)for x in np.arange(455,850,10)]
+        keys = ['pau_nb'+str(x)for x in np.arange(455,850,10)]
         coeff = pd.DataFrame(dict(zip(keys,coeff)), index=[0])
        
         # Fix the format to be more similar to what we use elsewhere...
