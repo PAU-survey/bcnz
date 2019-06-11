@@ -13,7 +13,7 @@ descr = {'ind': '',
 
 class rband_adjust:
     version = 1.0
-    config = {'ind': False, 'synband': 'R', 'scale_data': True}
+    config = {'ind': False, 'synband': 'subaru_r', 'scale_data': True}
 
     def fix_missing_data(self, cat_in):
         """Linear interpolation in magnitude space to replace missing data."""

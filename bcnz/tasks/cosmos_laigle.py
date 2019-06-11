@@ -22,7 +22,7 @@ cfg = [['NUV', 'DNUV', 'galex_nuv'],
        ['Y', 'DY', 'vista_y'],
        ['J', 'DJ', 'vista_j'],
        ['H', 'DH', 'vista_h'],
-       ['K', 'DK', 'vista_k'],
+       ['K', 'DK', 'vista_ks'],
 #       ['KW', 'DKW', 'wircam_Ks'], # Not available in this catalogue.
 #       ['HW', 'DHW', 'wircam_H'],
        ['IA427', 'DIA427', 'subaru_ia427'],
@@ -48,7 +48,7 @@ cfg = [['NUV', 'DNUV', 'galex_nuv'],
 class cosmos_laigle:
     """Interface from reading the COSMOS Laigle catalogue."""
 
-    version = 1.11
+    version = 1.12
     config = {'rm_stars': True}
 
     # Note, this code does *not* apply zero-points, following Alex
