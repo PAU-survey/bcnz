@@ -19,7 +19,7 @@ class rband_adjust:
         """Linear interpolation in magnitude space to replace missing data."""
 
         X = 455 + 10*np.arange(40)
-        NB = list(map('NB{}'.format, X))
+        NB = list(map('pau_nb{}'.format, X))
 
         def f_linear(x,a,b):
             return a*x + b
@@ -51,7 +51,7 @@ class rband_adjust:
         bbsyn_coeff = bbsyn_coeff[bbsyn_coeff.bb == self.config['synband']]
  
 #        X = 455 + 10*np.arange(40)
-        NB = list(map('NB{}'.format, 455 + 10*np.arange(40)))
+        NB = list(map('pau_nb{}'.format, 455 + 10*np.arange(40)))
 
         vec = bbsyn_coeff.pivot('bb', 'nb', 'val')[NB].values[0]
         synbb = np.dot(pau_syn, vec)
@@ -65,7 +65,7 @@ class rband_adjust:
         # errors. This might not be the most optimal.
         cat_out = cat_in.copy() 
         for band in cat_in.flux.columns:
-            if not band.startswith('NB'):
+            if not band.startswith('pau_nb'):
                 continue
 
             cat_out['flux', band] *= obs2syn
