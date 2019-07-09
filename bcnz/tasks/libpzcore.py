@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
+from IPython.core import debugger as ipdb
 import time
 import numpy as np
 import pandas as pd
@@ -19,6 +20,8 @@ def model_at_z(zs, modelD, fit_bands):
         # Later the code depends on this order.
         f_mod = dep.result.reset_index().set_index(inds)
         f_mod = f_mod.to_xarray().flux
+
+
         f_mod = f_mod.sel(band=fit_bands)
         f_mod = f_mod.sel(z=zs.values, method='nearest')
 

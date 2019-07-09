@@ -191,7 +191,7 @@ def get_model(name, model, norm, pzcat, z, scale_input=True):
 def get_iband_model(model, norm, pzcat, scale_input=True):
     """The model i-band flux as a function of redshift."""
     
-    tmp_model = model.sel(band='I').sel_points(run=pzcat.best_run.values)
+    tmp_model = model.sel(band='subaru_i').sel_points(run=pzcat.best_run.values)
     tmp_norm = norm.sel_points(ref_id=pzcat.index, run=pzcat.best_run.values)
 
     data = (tmp_model * tmp_norm).rename({'points': 'ref_id'}).sum(dim='model')

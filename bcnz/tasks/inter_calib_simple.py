@@ -124,7 +124,7 @@ class inter_calib_simple:
 
     def _which_filters(self):
         fit_bands = self.config['fit_bands']
-        all_nb = [f'NB{x}' for x in 455+10*np.arange(40)]
+        all_nb = [f'pau_nb{x}' for x in 455+10*np.arange(40)]
 
         NBlist = [x for x in fit_bands if (x in all_nb)]
         BBlist = [x for x in fit_bands if not (x in all_nb)]
@@ -146,7 +146,7 @@ class inter_calib_simple:
             chi2[j,:] = chi2_part.sum(dim='band')
 
             # Weird ref_id, gal index issue..
-            assert (flux_model.ref_id.values == F.gal.values).all()
+            assert (flux_model.ref_id.values == F.ref_id.values).all()
             assert (flux_model.band == F.band).all()
             flux_model.values[j,:] = F.values
             #flux_model[j,:] = F
