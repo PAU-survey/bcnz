@@ -56,8 +56,8 @@ def galcat_to_arrays(data_df, bands, scale_input=True):
 def _core_allz(config, ref_id, f_mod, flux, var_inv):
     """Minimize the chi2 expression."""
 
-    NBlist = list(filter(lambda x: x.startswith('NB'), flux.band.values))
-    BBlist = list(filter(lambda x: not x.startswith('NB'), flux.band.values))
+    NBlist = list(filter(lambda x: x.startswith('pau_nb'), flux.band.values))
+    BBlist = list(filter(lambda x: not x.startswith('pau_nb'), flux.band.values))
 
     A_NB = np.einsum('gf,zfs,zft->gzst', var_inv.sel(band=NBlist), \
            f_mod.sel(band=NBlist), f_mod.sel(band=NBlist))
