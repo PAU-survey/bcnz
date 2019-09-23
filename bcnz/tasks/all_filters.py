@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
+import os
 from pathlib import Path
 import pandas as pd
 from glob import glob
@@ -11,7 +12,8 @@ class all_filters:
 
     def entry(self):
 
-        dfilters = '/home/eriksen/data/photoz/all_filters/v2'
+        dfilters = '~/data/photoz/all_filters/v2'
+        dfilters = os.path.expanduser(dfilters)
 
         L = []
         for path in glob(str(Path(dfilters) / '*')):
@@ -20,6 +22,7 @@ class all_filters:
             
             L.append(part)
 
+        assert len(L), 'Filters not found.'
         df = pd.concat(L, ignore_index=True)
         df = df.set_index('band')
 
