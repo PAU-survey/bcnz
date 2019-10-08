@@ -188,10 +188,11 @@ def get_model(name, model, norm, pzcat, z, scale_input=True):
     return best_model 
 
 
-def get_iband_model(model, norm, pzcat, scale_input=True):
+def get_iband_model(model, norm, pzcat, scale_input=True, i_band=None):
     """The model i-band flux as a function of redshift."""
-    
-    tmp_model = model.sel(band='subaru_i').sel_points(run=pzcat.best_run.values)
+   
+    assert i_band 
+    tmp_model = model.sel(band=i_band).sel_points(run=pzcat.best_run.values)
     tmp_norm = norm.sel_points(ref_id=pzcat.index, run=pzcat.best_run.values)
 
     data = (tmp_model * tmp_norm).rename({'points': 'ref_id'}).sum(dim='model')
@@ -215,7 +216,7 @@ def photoz_wrapper(data_df, config, modelD):
     best_model = get_model('model', model, norm, pzcat, pzcat.zb.values)
     z0 = 0.01*np.ones_like(pzcat.zb) # yes, a hack.
     model_z0 = get_model('modelz0', model, norm, pzcat, z0)
-    iband_model = get_iband_model(model, norm, pzcat)
+    iband_model = get_iband_model(model, norm, pzcat, i_band=config['i_band'])
 
     
     # Combining into one data structure, since Dask does not support
