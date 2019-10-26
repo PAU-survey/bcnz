@@ -212,6 +212,14 @@ def photoz_wrapper(data_df, config, modelD):
     pzcat, pz = libpzqual.get_pzcat(chi2, config['odds_lim'], config['width_frac'])
     model = flatten_models(modelD)
 
+    # Set the number of bands. This should be moved further into the core ...
+    bands = config['bands']
+    cols_flux = [f'flux_{x}' for x in bands]
+    cols_nbflux = [f'flux_{x}' for x in bands if x.startswith('pau_nb')]
+    pzcat['n_band'] = (~np.isnan(data_df[cols_flux])).sum(1)
+    pzcat['n_narrow'] = (~np.isnan(data_df[cols_nbflux])).sum(1)
+
+
     # Model magnitudes at the best fit redshift and z=0.
     best_model = get_model('model', model, norm, pzcat, pzcat.zb.values)
     z0 = 0.01*np.ones_like(pzcat.zb) # yes, a hack.
