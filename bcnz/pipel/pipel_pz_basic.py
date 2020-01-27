@@ -63,8 +63,12 @@ def get_galcat():
     cat1 = xd.Job('bcnz_fix_noise')
     cat1.depend['input'] = xd.Common('galcat')
 
+    # Added later...
+    cat1x = xd.Job('fix_extinction')
+    cat1x.depend['input'] = cat1
+
     cat2 = xd.Job('nbpzsubset')
-    cat2.depend['input'] = cat1
+    cat2.depend['input'] = cat1x
     cat2.depend['ref_cat'] = xd.Common('ref_cat')
 
     # Here we make the r-band adjustment after selecting
