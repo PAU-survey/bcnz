@@ -19,17 +19,17 @@ def galcat_to_arrays(data_df, bands, scale_input=True):
     hirarchical = True
     if hirarchical:
         cols_flux = [f'flux_{x}' for x in bands]
-        cols_error = [f'flux_err_{x}' for x in bands]
+        cols_error = [f'flux_error_{x}' for x in bands]
 
         D = {'dims': ('ref_id', 'band'), 'coords': 
              {'band': bands, 'ref_id': data_df.index}}
 
         flux = xr.DataArray(data_df[cols_flux].values, **D)
-        flux_err = xr.DataArray(data_df[cols_error].values, **D)
+        flux_error = xr.DataArray(data_df[cols_error].values, **D)
     else:
         dims = ('ref_id', 'band')
         flux = xr.DataArray(data_df['flux'][bands], dims=dims)
-        flux_err = xr.DataArray(data_df['flux_err'][bands], dims=dims)
+        flux_error = xr.DataArray(data_df['flux_error'][bands], dims=dims)
 
     # Previously I found that using on flux system or another made a
     # difference.
@@ -38,20 +38,20 @@ def galcat_to_arrays(data_df, bands, scale_input=True):
         cosmos_scale = ab_factor * 10**(0.4*48.6)
 
         flux /= cosmos_scale
-        flux_err /= cosmos_scale
+        flux_error /= cosmos_scale
 
     # Not exacly the best, but Numpy had problems with the fancy
     # indexing.
-    to_use = ~np.isnan(flux_err)
+    to_use = ~np.isnan(flux_error)
 
     # This gave problems in cases where all measurements was removed..
     flux.values = np.where(to_use, flux.values, 1e-100) #0.) 
 
-    var_inv = 1./(flux_err + 1e-100)**2
+    var_inv = 1./(flux_error + 1e-100)**2
     var_inv.values = np.where(to_use, var_inv, 1e-100)
-    flux_err.values = np.where(to_use, flux_err, 1e-100)
+    flux_error.values = np.where(to_use, flux_error, 1e-100)
 
-    return flux, flux_err, var_inv
+    return flux, flux_error, var_inv
 
 
 def _core_allz(config, ref_id, f_mod, flux, var_inv):
