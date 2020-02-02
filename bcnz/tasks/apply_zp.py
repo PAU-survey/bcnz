@@ -33,7 +33,7 @@ class apply_zp:
         # Applying this inline is simpler.
         for band, zp_val in zp.items():
             galcat[('flux', band)] *= zp_val
-            galcat[('flux_err', band)] *= zp_val
+            galcat[('flux_error', band)] *= zp_val
 
         return galcat
 
