@@ -49,23 +49,23 @@ class inter_calib_simple:
 
         # Here we store all observations.
         flux = galcat['flux'].stack().to_xarray()
-        flux_err = galcat['flux_err'].stack().to_xarray()
+        flux_error = galcat['flux_error'].stack().to_xarray()
 
-        SN = flux / flux_err
+        SN = flux / flux_error
         flux = flux.where(self.config['SN_min'] < SN)
-        flux_err = flux_err.where(self.config['SN_min'] < SN)
+        flux_error = flux_error.where(self.config['SN_min'] < SN)
 
         # this should have been changed in the input..        
         if 'level_1' in flux.dims:
             flux = flux.rename({'level_1': 'band'})
-            flux_err = flux_err.rename({'level_1': 'band'})
+            flux_error = flux_error.rename({'level_1': 'band'})
 
         # ... just to have completely the same.
         if self.config['cosmos_scale']:
             ab_factor = 10**(0.4*26)
             cosmos_scale = ab_factor * 10**(0.4*48.6)
             flux /= cosmos_scale
-            flux_err /= cosmos_scale
+            flux_error /= cosmos_scale
 
         # Empty structure for storint the best flux model.
         dims = ('part', 'ref_id', 'band')
@@ -86,7 +86,7 @@ class inter_calib_simple:
         zp_tot = xr.DataArray(np.ones(len(flux.band)), dims=('band'), \
                  coords={'band': flux.band})
 
-        return flux, flux_err, chi2, zp_tot, flux_model
+        return flux, flux_error, chi2, zp_tot, flux_model
 
 
     def _zp_min_cost(self, cost, best_flux, flux, err_inv):
@@ -106,10 +106,10 @@ class inter_calib_simple:
 
         return zp
 
-    def calc_zp(self, best_flux, flux, flux_err):
+    def calc_zp(self, best_flux, flux, flux_error):
         """Estimate the zero-point."""
 
-        err_inv = 1. / flux_err
+        err_inv = 1. / flux_error
         X = (best_flux, flux, err_inv)
 
         zp_min = self.config['zp_min'] 
@@ -131,7 +131,7 @@ class inter_calib_simple:
 
         return NBlist, BBlist
 
-    def find_best_model(self, modelD, flux_model, flux, flux_err, chi2):
+    def find_best_model(self, modelD, flux_model, flux, flux_error, chi2):
         """Find the best flux model."""
 
         # Just get a normal list of the models.
@@ -139,9 +139,7 @@ class inter_calib_simple:
 
         NBlist, BBlist = self._which_filters()
         for j,key in enumerate(model_parts):
-            print('Part', j)
-
-            K = (modelD[key], flux, flux_err, NBlist, BBlist)
+            K = (modelD[key], flux, flux_error, NBlist, BBlist)
             chi2_part, F = libpzcore.minimize_at_z(*K, **self.config)
             chi2[j,:] = chi2_part.sum(dim='band')
 
@@ -163,18 +161,18 @@ class inter_calib_simple:
         """Estimate the zero-points."""
 
         # Just simple input transformations.
-        flux, flux_err, chi2, zp_tot, flux_model = self._prepare_input(modelD, galcat)
+        flux, flux_error, chi2, zp_tot, flux_model = self._prepare_input(modelD, galcat)
         flux_orig = flux.copy()
 
         zp_details = {}
         for i in tqdm(range(self.config['Nrounds'])):
-            best_flux = self.find_best_model(modelD, flux_model, flux, flux_err, chi2)
+            best_flux = self.find_best_model(modelD, flux_model, flux, flux_error, chi2)
 
-            zp = self.calc_zp(best_flux, flux, flux_err)
+            zp = self.calc_zp(best_flux, flux, flux_error)
             zp = 1 + self.config['learn_rate']*(zp - 1.)
 
             flux = flux*zp
-            flux_err = flux_err*zp
+            flux_error = flux_error*zp
 
             zp_tot *= zp
             zp_details[i] = zp_tot.copy()
@@ -197,13 +195,13 @@ class inter_calib_simple:
         galcat = galcat[~np.isnan(galcat.zs)]
 
         # This cut was needed to avoid negative numbers in the logarithm.
-        #SN = galcat.flux / galcat.flux_err
+        #SN = galcat.flux / galcat.flux_error
         #ipdb.set_trace()
         #galcat = galcat.loc[self.config['SN_min'] < SN.min(axis=1)]
 
         # Removing other bands, since it internally gives a problem.
         fit_bands = self.config['fit_bands']
-        D = {'flux': galcat.flux[fit_bands], 'flux_err': galcat.flux_err[fit_bands]}
+        D = {'flux': galcat.flux[fit_bands], 'flux_error': galcat.flux_error[fit_bands]}
         cat = pd.concat(D, axis=1)
         cat['zs'] = galcat.zs
 

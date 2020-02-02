@@ -18,11 +18,11 @@ class bcnz_fix_noise:
     def limit_SN(self, cat):
         """Limit based on SN."""
 
-        SN = cat['flux'] / cat['flux_err']
+        SN = cat['flux'] / cat['flux_error']
         SN_lim = self.config['SN_lim']
 
         cat['flux'] = cat['flux'][SN_lim < SN]
-        cat['flux_err'] = cat['flux_err'][SN_lim < SN]
+        cat['flux_error'] = cat['flux_error'][SN_lim < SN]
 
         return cat
 
@@ -32,7 +32,7 @@ class bcnz_fix_noise:
         # By now applying 3% minimum error to all the different fluxes.
         for band in cat.flux.columns:
             add_err = cat['flux', band] * self.config['min_err']
-            cat['flux_err', band] = np.sqrt(cat['flux_err', band]**2 + add_err**2)
+            cat['flux_error', band] = np.sqrt(cat['flux_error', band]**2 + add_err**2)
 
     def _mag_minerr(self, cat):
         """Apply minimum error to magnitudes."""
@@ -41,13 +41,13 @@ class bcnz_fix_noise:
         for band in cat.flux.columns:
 
             # Some the absolute values are suspicious...
-            SN = np.abs(cat['flux', band]) / cat['flux_err', band]
+            SN = np.abs(cat['flux', band]) / cat['flux_error', band]
 
             mag_err = 2.5*np.log10(1+1./SN)
             mag_err = np.sqrt(mag_err**2 + self.config['min_err']**2)
-            flux_err = np.abs(cat['flux', band])*(10**(0.4*mag_err) - 1.)
+            flux_error = np.abs(cat['flux', band])*(10**(0.4*mag_err) - 1.)
 
-            cat[('flux_err', band)] = flux_err
+            cat[('flux_error', band)] = flux_error
 
     def add_minerr(self, cat):
         """Add a minimum error in the flux measurements."""
