@@ -19,7 +19,7 @@ class fix_extinction:
         """Correct for the extinction in the narrow and broad bands."""
 
         # The correction factors.
-        ext_fac = pd.read_csv('~/data/calib/ebv_corr_fac.csv')
+        ext_fac = pd.read_csv('~/data/calib/ebv_corr_fac_v2.csv')
         ext_fac = ext_fac.set_index('band')
         rderiv = ext_fac.loc[cat.flux.columns].rderiv
         
