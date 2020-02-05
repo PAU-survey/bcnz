@@ -15,8 +15,15 @@ def pipel(memba, fjc_filters=True, new_bbfilters=False, **kwargs):
 
     # Here we intentionally don't set a default memba
     # production.
-    coadd = xd.Job('paudm_coadd')
-    coadd.config['prod_memba'] = memba
+#    coadd = xd.Job('paudm_coadd')
+#    coadd.config['prod_memba'] = memba
+
+    # HACK: Testing new coadds from a flie...
+    coadd = xd.Job('coadd_new_calib')
+#    coadd.config['path'] = '~/data/calib/coadd_newcal_v1.csv'
+#    coadd.config['path'] = '~/data/calib/coadd_w3_v2.csv'
+    coadd.config['path'] = '~/data/calib/coadd_w3_v3.csv'
+
 
     # Here the galaxy
     D = {'coadd': coadd, 
