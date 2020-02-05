@@ -65,7 +65,7 @@ class bcnz_direct(chi2_comb.chi2_comb):
         cat['qual_par'] = (chi2_min*pz_width).values
 
         odds0p2 = libpzqual.odds(pz, zb, self.config['odds_lim'])
-        cat['Qz'] = (chi2_min*pz_width / odds0p2.values).values
+        cat['qz'] = (chi2_min*pz_width / odds0p2.values).values
 
         # We need the chunk which contribute most to the redshift
         # peak..
@@ -73,9 +73,14 @@ class bcnz_direct(chi2_comb.chi2_comb):
         points = chi2.isel_points(ref_id=range(len(chi2.ref_id)), z=iz)
         cat['best_chunk'] = points.argmin(dim='chunk')
 
+#        if np.isnan(cat.qz).any():
+#            ipdb.set_trace()
+
         return cat
 
     def run(self):
+        print('In BCNZ direct...')
+
         files = self.get_files()
         gen = self.get_chi2(files)
 

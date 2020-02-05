@@ -69,7 +69,7 @@ class rband_adjust:
                 continue
 
             cat_out['flux', band] *= obs2syn
-            cat_out['flux_err', band] *= obs2syn
+            cat_out['flux_error', band] *= obs2syn
 
         return cat_out
 

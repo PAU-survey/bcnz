@@ -8,9 +8,9 @@ def flatten(df):
     """Flattens the input dataframe."""
 
     flux = df.flux.rename(columns=lambda x: f'flux_{x}')
-    flux_err = df.flux_err.rename(columns=lambda x: f'flux_err_{x}')
+    flux_error = df.flux_error.rename(columns=lambda x: f'flux_error_{x}')
 
-    comb = pd.concat([flux, flux_err], 1)
+    comb = pd.concat([flux, flux_error], 1)
     
     return comb
 
