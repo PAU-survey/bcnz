@@ -23,10 +23,12 @@ descr = {
 class emission_lines:
     """The model flux for the emission lines."""
 
-    version = 1.057
+    version = 1.061
 
     config = {'dz': 0.0005, 'ampl': 1e-16, 'EBV': 0.,
               'ext_law': 'SB_calzetti', 'sep_OIII': True,
+              #'zcut_OIII': 0.705,
+              'zcut_OIII': 10.,
               'funky_OIII_norm': True}
 
     def _filter_spls(self, filters):
@@ -35,9 +37,14 @@ class emission_lines:
         splD = {}
         rconstD = {}
         for fname in filters.index.unique():
+            # Drop the PAUS BB, since they have repeated measurements.
+            if fname.startswith('pau_') and not fname.startswith('pau_nb'):
+                continue
+
             sub = filters.ix[fname]
             splD[fname] = splrep(sub.lmb, sub.response)
             rconstD[fname] = simps(sub.response/sub.lmb, sub.lmb)
+
 
         return splD, rconstD
 
@@ -49,7 +56,7 @@ class emission_lines:
 
         return ext_spl
 
-    def _find_flux(self, z, f_spl, ratios, rconst, ext_spl):
+    def _find_flux(self, z, f_spl, ratios, rconst, ext_spl, band):
         """Estimate the flux in the emission lines relative
            to the OII flux.
         """
@@ -75,15 +82,27 @@ class emission_lines:
             if isOIII and self.config['funky_OIII_norm']:
                 ratio /= ratios.loc['OIII_2'].ratio
 
-            fluxD[dest] += ampl*(ratio*y_f*y_ext) / rconst
+            flux_line = ampl*(ratio*y_f*y_ext) / rconst
+
+            # Testing not having a free OIII above a certain redshift... 
+            if isOIII:
+                zcutOIII = self.config['zcut_OIII']
+                flux_line[zcutOIII < z] = 0.
+
+
+            fluxD[dest] += flux_line
 
         if not self.config['sep_OIII']:
             del fluxD['OIII']
+
+        if band == 'pau_g':
+            ipdb.set_trace() # Should not happen.
 
         return fluxD
 
     def _to_df(self, oldD, z, band):
         """Dictionary suitable for concatination."""
+
 
         # I have tried finding better ways, but none wored very well..
         F = pd.DataFrame(oldD)
@@ -96,6 +115,11 @@ class emission_lines:
         F = F.reset_index()
         F = F.rename(columns={0: 'flux'})
         F['band'] = band
+
+
+        if band == 'pau_g':
+            ipdb.set_trace()
+
 
         return F
 
@@ -110,7 +134,7 @@ class emission_lines:
         df = pd.DataFrame()
         for band, f_spl in filtersD.items():
             rconst = rconstD[band]
-            part = self._find_flux(z, f_spl, ratios, rconst, ext_spl)
+            part = self._find_flux(z, f_spl, ratios, rconst, ext_spl, band)
             part = self._to_df(part, z, band)
 
             df = df.append(part, ignore_index=True)
