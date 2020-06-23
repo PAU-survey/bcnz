@@ -38,14 +38,15 @@ class NB2BB:
     def calc_coeff(self, filt):
         ll = np.arange(3000,10000,5)
        
-        print(filt.index)
- 
-        NB_filt = np.array([[filt.ix['pau_nb%s'%str(x)].lmb.values,filt.ix['pau_nb%s'%str(x)].response.values] for x in np.arange(455,850,10)])
+        #ipdb.set_trace() 
+        #NB_filt = np.array([[filt.ix['pau_nb%s'%str(x)].lmb.values,filt.ix['pau_nb%s'%str(x)].response.values] for x in np.arange(455,850,10)])
+        NB_filt = np.array([[filt.loc['pau_nb%s'%str(x)].lmb.values,filt.loc['pau_nb%s'%str(x)].response.values] for x in np.arange(455,850,10)])
         WNB = np.array([interp1d(NB_filt[i,0], NB_filt[i,1]/NB_filt[i,0], bounds_error=False, fill_value=(0,0))(ll) for i in range(40)])
         WNB = np.array([x/np.sqrt(x.dot(x)) for x in WNB]) # Normalize
 
         BB_name = self.config['broad_band']
-        BB_filt = filt.ix[BB_name].values.T
+        #BB_filt = filt.ix[BB_name].values.T
+        BB_filt = filt.loc[BB_name].values.T
         WBB = interp1d(BB_filt[0],BB_filt[1]/BB_filt[0],  bounds_error=False, fill_value=(0,0))(ll)
         WBB = WBB/np.sqrt(WBB.dot(WBB)) # Normalize
 
@@ -66,6 +67,8 @@ class NB2BB:
 
     def run(self):
         filt = self.input.filters.result
+        ipdb.set_trace()
+
         coeff = self.calc_coeff(filt)
 
         self.output.result = coeff
