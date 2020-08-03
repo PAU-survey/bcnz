@@ -47,7 +47,7 @@ class ab_cont:
         r_const = pd.Series()
         fL = filters.index.unique()
         for fname in fL:
-            sub = filters.ix[fname]
+            sub = filters.loc[fname]
             r_const[fname] = 1./simps(sub.response / sub.lmb, sub.lmb) / clight_AHz
 
         return r_const
@@ -57,7 +57,7 @@ class ab_cont:
 
         sedD = {}
         for sed in seds.index.unique():
-            sub_sed = seds.ix[sed]
+            sub_sed = seds.loc[sed]
             spl_sed = splrep(sub_sed.lmb, sub_sed.response)
 
             sedD[sed] = spl_sed
@@ -91,7 +91,7 @@ class ab_cont:
         for i,band in enumerate(filters.index.unique()):
             print('# band', i, 'band', band)
 
-            sub_f = filters.ix[band]
+            sub_f = filters.loc[band]
 
             # Define a higher resolution grid.
             _tmp = sub_f.lmb

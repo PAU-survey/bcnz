@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
+from IPython.core import debugger as ipdb
 import pandas as pd
 from tqdm import tqdm
 
@@ -21,6 +22,10 @@ def load_models(job, bands):
     for key,dep in tqdm(job.depend.items()):
         part = dep.model.result.to_xarray().flux.squeeze()
         part = part.sel(band=bands).transpose('z', 'band', 'sed')
+
+#        # Testing setting the OIII emission lines to zero above some redshift.
+#        part.loc[0.7 < part.z, :, 'OIII'] = 1e-3 #0.
+
         part = part.rename(sed='model')
         nr = int(key.replace('pzcat_', ''))
         

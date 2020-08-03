@@ -41,10 +41,12 @@ class emission_lines:
             if fname.startswith('pau_') and not fname.startswith('pau_nb'):
                 continue
 
-            sub = filters.ix[fname]
-            splD[fname] = splrep(sub.lmb, sub.response)
-            rconstD[fname] = simps(sub.response/sub.lmb, sub.lmb)
-
+            try:
+                sub = filters.loc[fname]
+                splD[fname] = splrep(sub.lmb, sub.response)
+                rconstD[fname] = simps(sub.response/sub.lmb, sub.lmb)
+            except ValueError:
+                ipdb.set_trace()
 
         return splD, rconstD
 
