@@ -48,7 +48,7 @@ cfg = [['NUV', 'DNUV', 'galex_nuv'],
 class cosmos_laigle:
     """Interface from reading the COSMOS Laigle catalogue."""
 
-    version = 1.12
+    version = 1.13
     config = {'rm_stars': True}
 
     # Note, this code does *not* apply zero-points, following Alex
@@ -79,9 +79,9 @@ class cosmos_laigle:
         flux_cols, err_cols, names = zip(*cfg)
 
         flux = cat_in[list(flux_cols)].rename(columns=dict(zip(flux_cols, names)))
-        flux_err = cat_in[list(err_cols)].rename(columns=dict(zip(err_cols, names)))
+        flux_error = cat_in[list(err_cols)].rename(columns=dict(zip(err_cols, names)))
 
-        cat = pd.concat({'flux': flux, 'flux_err': flux_err}, axis=1)
+        cat = pd.concat({'flux': flux, 'flux_error': flux_error}, axis=1)
 
         # Yes, different definition and rounding error.
         cat[cat < -99] = np.nan
