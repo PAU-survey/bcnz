@@ -6,6 +6,7 @@ import os
 import glob
 import numpy as np
 import pandas as pd
+from IPython.core import debugger as ipdb
 
 def extinction_laigle():
     d = '~/data/photoz/ext_laws'
@@ -13,8 +14,8 @@ def extinction_laigle():
        
     df = pd.DataFrame() 
     for path in glob.glob(g):
-        part = pd.read_csv(path, names=['lmb', 'k'], sep='\s+')
-        part['ext_law'] = os.path.basename(path).replace('.dat','')
+        part = pd.read_csv(path, names=['lmb', 'k'], comment='#') #, sep='\s+')
+        part['ext_law'] = os.path.basename(path).replace('.csv','')
 
         df = df.append(part, ignore_index=True)
 
