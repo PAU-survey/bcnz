@@ -8,4 +8,5 @@ load_models = lib.utils.load_models
 
 # Newer
 from . import config
+from . import data
 from . import model

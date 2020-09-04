@@ -1,3 +1,5 @@
+# Creating the model later used for the photo-z fitting.
+
 # Input data
 from .all_filters import all_filters
 from .extinction_laigle import extinction_laigle
@@ -12,6 +14,8 @@ from .model_lines import model_lines
 from .fmod_adjust import fmod_adjust
 from .rebin import rebin
 
+from .cache import load_cache
+
 def model_single(seds, ext_law, EBV, sep_OIII, sed_dir, use_lines):
     """Create a single model."""
 
@@ -22,7 +26,7 @@ def model_single(seds, ext_law, EBV, sep_OIII, sed_dir, use_lines):
     extinction = extinction_laigle()
 
     # Continuum and lines.
-    model_cont_df = modelcont(filters, seds_cont, extinction, sed_vals=seds, EBV=EBV, ext_law=ext_law)
+    model_cont_df = model_cont(filters, seds_cont, extinction, sed_vals=seds, EBV=EBV, ext_law=ext_law)
     model_lines_df = model_lines(ratios, filters, extinction, EBV=EBV, ext_law=ext_law, sed_vals=seds)
 
     model_orig = fmod_adjust(model_cont_df, model_lines_df)

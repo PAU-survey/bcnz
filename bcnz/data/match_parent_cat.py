@@ -22,7 +22,7 @@ def match_parent_cat(parent_cat, match_to, max_dist=0.9, drop_duplicates=True):
     mapping = mapping.set_index(index_name)
 
     # Max separation in degrees.
-    max_dist = self.config['max_dist'] / 3600.
+    max_dist = max_dist / 3600.
     mapping = mapping[mapping.dist < max_dist]
 
     # A bit convoluted, but needed since the merge is giving problems
@@ -32,7 +32,7 @@ def match_parent_cat(parent_cat, match_to, max_dist=0.9, drop_duplicates=True):
     match_to = match_to.set_index('ref_id')
 
     # Double matches (found one..). Drop both.
-    if self.config['drop_duplicates']:
+    if drop_duplicates:
         match_to = match_to.loc[match_to.index.drop_duplicates(False)]
 
     return match_to
