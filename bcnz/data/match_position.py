@@ -7,7 +7,7 @@ import pandas as pd
 
 from sklearn.neighbors import KDTree
 
-def match_parent_cat(parent_cat, match_to, max_dist=0.9, drop_duplicates=True):
+def match_position(parent_cat, match_to, max_dist=0.9, drop_duplicates=True):
     """Code for creating the match. Returns a new catalog with the
        matched entries and a new index.
     """
