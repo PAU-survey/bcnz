@@ -15,6 +15,7 @@ from .fmod_adjust import fmod_adjust
 from .rebin import rebin
 
 from .cache import load_cache
+from .nb2bb import nb2bb
 
 def model_single(seds, ext_law, EBV, sep_OIII, sed_dir, use_lines):
     """Create a single model."""
