@@ -37,6 +37,16 @@ def query_cfht(engine, prod_memba, ilim, run):
 
     return cat
 
+def to_dense(cat_in):
+    """Convert the input to a dense catalogue."""
+
+    # Makes more sense for how we use the catalogue later
+    flux = cat_in.pivot('ref_id', 'band', 'flux')
+    flux_error = cat_in.pivot('ref_id', 'band', 'flux_error')
+    cat = pd.concat({'flux': flux, 'flux_error': flux_error}, axis=1)
+
+    return cat
+
 
 def paudm_coadd(engine, prod_memba, field, ilim=25, run=1):
     """Query the coadd with a possible selection."""
@@ -49,5 +59,7 @@ def paudm_coadd(engine, prod_memba, field, ilim=25, run=1):
 
     # Since we later combine with Subary, which also has narrow bands.
     cat['band'] = cat.band.apply(lambda x: 'pau_{}'.format(x.lower())) 
+
+    cat = to_dense(cat)
 
     return cat

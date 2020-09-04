@@ -5,4 +5,6 @@ from .paudm_cosmos import paudm_cosmos
 from .connect_db import connect_db
 
 from .match_position import match_position
-from .to_sparse import to_sparse
+from .fix_noise import fix_noise
+
+from .gal_subset import gal_subset
