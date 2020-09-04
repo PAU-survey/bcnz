@@ -29,8 +29,8 @@ def eriksen2019():
     mix = ['Sc_A_0', 'Sd_A_0', 'Sdm_A_0', 'SB0_A_0', 'SB1_A_0', 'SB2_A_0', 'SB3_A_0', 'SB4_A_0']
     with_ext = [(True, 'SB_calzetti', sb),
                 (True, 'SB_calzetti_bump1', sb),
-                (True, 'SB_calzetti_bump2', sb),
-                (True, 'SMC_prevot', mix)]
+                (True, 'SB_calzetti_bump2', sb)]
+#                (True, 'SMC_prevot', mix)]
 
     df = pd.DataFrame()
     # Here the no-extinction runs use the Calzetti law with EBV=0.

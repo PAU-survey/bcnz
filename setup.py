@@ -14,7 +14,7 @@ data_files = [
 
 setup(
     name = 'bcnz',
-    version = '1',
+    version = '2',
     packages = find_packages(),
 
     install_requires = [

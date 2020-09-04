@@ -7,7 +7,7 @@ import sys
 import numpy as np
 import pandas as pd
 
-def seds(input_dir):
+def load_seds(input_dir):
     """Load seds from files."""
 
     input_dir = os.path.expanduser(input_dir) #self.config['input_dir'])

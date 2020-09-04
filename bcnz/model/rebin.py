@@ -13,48 +13,40 @@ descr = {
   'dz': 'Grid width in redshift'
 }
 
-class model_rebin:
-    """Rebing the redshift grid of the model."""
+def_config = {'zmin': 0.01, 'zmax': 1.2, 'dz': 0.001}
 
-    version = 1.02
-    config = {'zmin': 0.01, 'zmax': 1.2, 'dz': 0.001}
-  
-    # This rebinning is probably not needed. Instead on can estimate
-    # the model in the correct binning in the first place. I need this
-    # by now to compare the pipelines. 
+def rebin(model, **myconf):
+    """Rebinning the redshift grid of the model."""
 
-    def entry(self, model):
-        C = self.config
-        zgrid = np.arange(C['zmin'], C['zmax']+C['dz'], C['dz'])
+    config = def_config.copy()
+    config.update(myconf)
 
-        inds = ['band', 'sed', 'ext_law', 'EBV']
-        model = model.reset_index().set_index(inds)
+    C = config
+    zgrid = np.arange(C['zmin'], C['zmax']+C['dz'], C['dz'])
 
-        print('starting to rebin')
-        t1 = time.time()
-        rebinned = pd.DataFrame()
-        for key in model.index.unique():
-            sub = model.loc[key]
-            spl = splrep(sub.z, sub.flux)
+    inds = ['band', 'sed', 'ext_law', 'EBV']
+    model = model.reset_index().set_index(inds)
 
-            # Just since it failed once..
-            try:
-                part = pd.DataFrame({'z': zgrid, 'flux': splev(zgrid, spl, ext=2)})
-            except ValueError:
-                ipdb.set_trace()
+    print('starting to rebin')
+    t1 = time.time()
+    rebinned = pd.DataFrame()
+    for key in model.index.unique():
+        sub = model.loc[key]
+        spl = splrep(sub.z, sub.flux)
 
-            # I needed to set these manually...
-            for k1, v1 in zip(model.index.names, key):
-                part[k1] = v1
+        # Just since it failed once..
+        try:
+            part = pd.DataFrame({'z': zgrid, 'flux': splev(zgrid, spl, ext=2)})
+        except ValueError:
+            ipdb.set_trace()
 
-            rebinned = rebinned.append(part)
+        # I needed to set these manually...
+        for k1, v1 in zip(model.index.names, key):
+            part[k1] = v1
 
-        print('time', time.time() - t1)
-        rebinned = rebinned.reset_index().set_index(inds+['z'])
+        rebinned = rebinned.append(part)
 
-        return rebinned
+    print('time', time.time() - t1)
+    rebinned = rebinned.reset_index().set_index(inds+['z'])
 
-    def run(self):
-        model = self.input.model.result
-        self.output.result = self.entry(model)
-
+    return rebinned

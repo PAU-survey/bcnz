@@ -132,7 +132,7 @@ def calc_ab(filters, seds, ext, r_const, config):
 
     return df
 
-def ab_cont(filters, seds, ext, **myconf):
+def model_cont(filters, seds, ext, **myconf):
     """The model fluxes for the continuum."""
 
     config = def_config.copy()

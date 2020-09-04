@@ -122,8 +122,11 @@ def _to_df(oldD, z, band):
 
     return F
 
-def line_model(config, ratios, filters, extinction):
-    """Find the emission line model."""
+def model_lines(ratios, filters, extinction, **myconf):
+    """The model flux for the emission lines."""
+
+    config = def_config.copy()
+    config.update(myconf)
 
     filtersD, rconstD = _filter_spls(filters)
     ext_spl = create_ext_spl(config, extinction)
@@ -143,12 +146,3 @@ def line_model(config, ratios, filters, extinction):
 
     return df
 
-
-def emission_lines(ratios, filters, extinction, **myconf):
-    """The model flux for the emission lines."""
-
-    config = def_config.copy()
-    config.update(myconf)
-    model = line_model(config, ratios, filters, extinction)
-
-    return model
