@@ -39,7 +39,11 @@ class bcnz_fix_noise:
 
         # By now applying 3% minimum error to all the different fluxes.
         for band in cat.flux.columns:
-            print(band)
+#            # For example the Galex band does not have errors.
+#            if not band in cat.flux_error.columns:
+#                print('Missing errors', band)
+#                continue
+#            print(band)
 
             # Some the absolute values are suspicious...
             SN = np.abs(cat['flux', band]) / cat['flux_error', band]

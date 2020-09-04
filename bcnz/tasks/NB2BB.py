@@ -67,7 +67,6 @@ class NB2BB:
 
     def run(self):
         filt = self.input.filters.result
-        ipdb.set_trace()
 
         coeff = self.calc_coeff(filt)
 
