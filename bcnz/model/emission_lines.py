@@ -22,7 +22,7 @@ descr = {
   'funky_OIII_norm': 'Separate normalization for the OIII lines.'}
 
 
-config = {'dz': 0.0005, 'ampl': 1e-16, 'EBV': 0.,
+def_config = {'dz': 0.0005, 'ampl': 1e-16, 'EBV': 0.,
           'ext_law': 'SB_calzetti', 'sep_OIII': True,
           #'zcut_OIII': 0.705,
           'zcut_OIII': 10.,
@@ -47,7 +47,7 @@ def _filter_spls(filters):
 
     return splD, rconstD
 
-def create_ext_spl(ext):
+def create_ext_spl(config, ext):
     """Spline for the extinction."""
 
     sub = ext[ext.ext_law == config['ext_law']]
@@ -55,7 +55,7 @@ def create_ext_spl(ext):
 
     return ext_spl
 
-def _find_flux(z, f_spl, ratios, rconst, ext_spl, band):
+def _find_flux(config, z, f_spl, ratios, rconst, ext_spl, band):
     """Estimate the flux in the emission lines relative
        to the OII flux.
     """
@@ -122,18 +122,18 @@ def _to_df(oldD, z, band):
 
     return F
 
-def line_model(ratios, filters, extinction):
+def line_model(config, ratios, filters, extinction):
     """Find the emission line model."""
 
     filtersD, rconstD = _filter_spls(filters)
-    ext_spl = create_ext_spl(extinction)
+    ext_spl = create_ext_spl(config, extinction)
 
     z = np.arange(0., 2., config['dz'])
 
     df = pd.DataFrame()
     for band, f_spl in filtersD.items():
         rconst = rconstD[band]
-        part = _find_flux(z, f_spl, ratios, rconst, ext_spl, band)
+        part = _find_flux(config, z, f_spl, ratios, rconst, ext_spl, band)
         part = _to_df(part, z, band)
 
         df = df.append(part, ignore_index=True)
@@ -144,8 +144,11 @@ def line_model(ratios, filters, extinction):
     return df
 
 
-def emission_lines(ratios, filters, extinction):
+def emission_lines(ratios, filters, extinction, **myconf):
     """The model flux for the emission lines."""
-    model = line_model(ratios, filters, extinction) #filtersD, rconstD, ext_spl)
+
+    config = def_config.copy()
+    config.update(myconf)
+    model = line_model(config, ratios, filters, extinction)
 
     return model
