@@ -49,4 +49,7 @@ def rebin(model, **myconf):
     print('time', time.time() - t1)
     rebinned = rebinned.reset_index().set_index(inds+['z'])
 
+    # Converting this once and storing as xarray is much more efficient.
+    rebinned = rebinned.to_xarray()
+
     return rebinned
