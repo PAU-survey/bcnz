@@ -1,6 +1,10 @@
 # encoding: UTF8
 
-def paus(engine, memba_prod, field, d_cosmos = '~/data/cosmos'):
+import functools
+from IPython.core import debugger as ipdb
+
+def paus(engine, memba_prod, field, d_cosmos = '~/data/cosmos', min_nb=35,
+         only_specz=False, secure_spec=False, has_bb=False, sel_gal=True):
     """Load the PAUS data from PAUdm and perform the required
        transformation.
 
@@ -9,6 +13,11 @@ def paus(engine, memba_prod, field, d_cosmos = '~/data/cosmos'):
            memba_prod (int): The MEMBA production.
            field (str): Field to download.
            d_cosmos (str): Directory with downloaded COSMOS files.
+           min_nb (int): Minimum number of narrow bands.
+           only_specz (bool): Only selecting galaxy with spectroscopic redshifts.
+           secure_spec (bool): Selecting secure spectroscopic redshifts.
+           has_bb (bool): Select galaxies with broad bands data.
+           sel_gal (bool): Select galaxies.
     """
 
     import bcnz
@@ -21,7 +30,11 @@ def paus(engine, memba_prod, field, d_cosmos = '~/data/cosmos'):
     data_in = paudm_coadd.join(match_cosmos, how='inner')
     data_noisy = bcnz.data.fix_noise(data_in)
 
-    nbsubset = bcnz.data.gal_subset(data_noisy, paudm_cosmos)
+    conf = {'min_nb': min_nb, 'only_specz': only_specz, 'secure_spec': secure_spec,
+            'has_bb': has_bb, 'sel_gal': sel_gal}
+
+    ipdb.set_trace()
+    nbsubset = bcnz.data.gal_subset(data_noisy, paudm_cosmos, **conf)
 
     # Synthetic narrow band coefficients.
     filters = bcnz.model.all_filters()
@@ -30,3 +43,10 @@ def paus(engine, memba_prod, field, d_cosmos = '~/data/cosmos'):
     data_scaled = bcnz.data.synband_scale(nbsubset, coeff, scale_data=True)
 
     return data_scaled
+
+
+paus_calib_sample = functools.partial(paus, min_nb=39, only_specz=True, secure_spec=True)
+
+
+#def paus_calib_sample(engine, meba_prod, di**kwrdargs):
+#    data = paus(
