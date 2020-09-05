@@ -10,4 +10,7 @@ load_models = lib.utils.load_models
 from . import calib
 from . import config
 from . import data
+from . import fit
 from . import model
+
+from .connect_db import connect_db

@@ -27,7 +27,15 @@ def cache_model(cache_dir, runs=None):
        
         # The line of creating a new array is very important. Without
         # this the calibration algorithm became 4.5 times slower.
-        data = xr.open_dataset(path).flux
-        D[i] = xr.DataArray(data)
+        f_mod = xr.open_dataset(path).flux
+        f_mod = xr.DataArray(f_mod)
+
+        # Store with these entries, but suppress them since
+        # they affect calculations.
+        f_mod = f_mod.squeeze('EBV')
+        f_mod = f_mod.squeeze('ext_law')
+        f_mod = f_mod.transpose('z', 'band', 'sed')
+
+        D[i] = f_mod
 
     return D

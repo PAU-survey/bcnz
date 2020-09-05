@@ -98,9 +98,6 @@ def minimize_at_z(f_mod, flux, flux_err, NBlist, BBlist, **config):
             b = b_BB + k[:,None]*b_NB
             A = A_BB + k[:,None,None]**2*A_NB
 
-    print('time', time.time() - t1)
-
-    ipdb.set_trace()
 
     # I was comparing with the standard algorithm above...
     v_scaled = v
