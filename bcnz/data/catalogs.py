@@ -33,7 +33,6 @@ def paus(engine, memba_prod, field, d_cosmos = '~/data/cosmos', min_nb=35,
     conf = {'min_nb': min_nb, 'only_specz': only_specz, 'secure_spec': secure_spec,
             'has_bb': has_bb, 'sel_gal': sel_gal}
 
-    ipdb.set_trace()
     nbsubset = bcnz.data.gal_subset(data_noisy, paudm_cosmos, **conf)
 
     # Synthetic narrow band coefficients.

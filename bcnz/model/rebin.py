@@ -50,6 +50,7 @@ def rebin(model, **myconf):
     rebinned = rebinned.reset_index().set_index(inds+['z'])
 
     # Converting this once and storing as xarray is much more efficient.
-    rebinned = rebinned.to_xarray()
+    rebinned = rebinned.flux.to_xarray()
+
 
     return rebinned

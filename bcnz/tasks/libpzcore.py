@@ -21,7 +21,6 @@ def model_at_z(zs, modelD, fit_bands):
         f_mod = dep.result.reset_index().set_index(inds)
         f_mod = f_mod.to_xarray().flux
 
-
         f_mod = f_mod.sel(band=fit_bands)
         f_mod = f_mod.sel(z=zs.values, method='nearest')
 
@@ -98,6 +97,10 @@ def minimize_at_z(f_mod, flux, flux_err, NBlist, BBlist, **config):
 
             b = b_BB + k[:,None]*b_NB
             A = A_BB + k[:,None,None]**2*A_NB
+
+    print('time', time.time() - t1)
+
+    ipdb.set_trace()
 
     # I was comparing with the standard algorithm above...
     v_scaled = v
