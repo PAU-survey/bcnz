@@ -1,7 +1,7 @@
 from pathlib import Path
 import xarray as xr
 
-def load_cache(cache_dir, runs=None):
+def cache_model(cache_dir, runs=None):
     """Load models if already run, otherwise run one."""
 
     import bcnz
@@ -18,13 +18,16 @@ def load_cache(cache_dir, runs=None):
 
         print(f'Running for model: {i}')
         model = bcnz.model.model_single(**row)
-        model.to_hdf(path, 'default')
+        model.to_netcdf(path)
 
     print('starting to load....')
     D = {}
     for i,row in runs.iterrows():
         path = cache_dir / f'model_{i}.nc'
-        
-        D[i] = xr.open_dataset(path).flux
+       
+        # The line of creating a new array is very important. Without
+        # this the calibration algorithm became 4.5 times slower.
+        data = xr.open_dataset(path).flux
+        D[i] = xr.DataArray(data)
 
     return D
