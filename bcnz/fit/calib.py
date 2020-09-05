@@ -12,28 +12,29 @@ from scipy.optimize import minimize
 
 from matplotlib import pyplot as plt
 
-descr = {
-  'Nskip': 'Number of steps to skip',
-  'fit_bands': 'Bands used in the fit',
-  'Nrounds': 'How many rounds in the zero-point calibration',
-  'Niter': 'Number of iterations in minimization',
-  'zp_min': 'How to estimate the zero-points',
-  'learn_rate': 'Learning rate',
-  'SN_min': 'Minimum median SN',
-  'min_ri_ratio': 'Minimum ri flux ratio'
-}
+#descr = {
+#  'Nskip': 'Number of steps to skip',
+#  'fit_bands': 'Bands used in the fit',
+#  'Nrounds': 'How many rounds in the zero-point calibration',
+#  'Niter': 'Number of iterations in minimization',
+#  'zp_min': 'How to estimate the zero-points',
+#  'learn_rate': 'Learning rate',
+#  'SN_min': 'Minimum median SN',
+#  'min_ri_ratio': 'Minimum ri flux ratio'
+#}
+#
+#config = {'free_ampl': True, #False,
+#          'Nskip': 10,
+#          'fit_bands': [],
+#          'Nrounds': 19,
+#          'Niter': 1000,
+#          'zp_min': 'flux',
+#          'learn_rate': 1.0, # Temporarily disabled
+#          'SN_min': 1.,
+#          'min_ri_ratio': 0.5, # Temporarily disabled
+#          'cosmos_scale': False}
 
-config = {'free_ampl': True, #False,
-          'Nskip': 10,
-          'fit_bands': [],
-          'Nrounds': 19,
-          'Niter': 1000,
-          'zp_min': 'flux',
-          'learn_rate': 1.0, # Temporarily disabled
-          'SN_min': 1.,
-          'min_ri_ratio': 0.5, # Temporarily disabled
-          'cosmos_scale': False}
-
+from . import libcalib
 
 def _prepare_input(modelD, galcat, SNR_min, cosmos_scale, fit_bands):
     """Change the format on some of the input values."""
@@ -96,13 +97,11 @@ def _zp_min_cost(cost, best_flux, flux, err_inv):
 
     return zp
 
-def calc_zp(best_flux, flux, flux_error):
+def _calc_zp(best_flux, flux, flux_error):
     """Estimate the zero-point."""
 
     err_inv = 1. / flux_error
     X = (best_flux, flux, err_inv)
-
-    #zp_min = self.config['zp_min'] 
 
     def cost_flux(R, model, flux, err_inv):
         return float(np.abs((err_inv*(flux*R[0] - model)).median()))
@@ -120,16 +119,17 @@ def _which_filters(fit_bands):
 
     return NBlist, BBlist
 
-def find_best_model(modelD, flux_model, flux, flux_error, chi2):
+def _find_best_model(modelD, flux_model, flux, flux_error, chi2, fit_bands, \
+                    Niter, Nskip):
     """Find the best flux model."""
 
     # Just get a normal list of the models.
-    model_parts = [str(x.values) for x in flux_model.part]
+    model_parts = [int(x.values) for x in flux_model.part]
 
-    NBlist, BBlist = self._which_filters(fit_bands)
-    for j,key in enumerate(model_parts):
-        K = (modelD[key], flux, flux_error, NBlist, BBlist)
-        chi2_part, F = libpzcore.minimize_at_z(*K, **self.config)
+    NBlist, BBlist = _which_filters(fit_bands)
+    for j,key in tqdm(enumerate(model_parts)):
+        K = (modelD[key], flux, flux_error, NBlist, BBlist, Niter, Nskip)
+        chi2_part, F = libcalib.minimize_at_z(*K)
         chi2[j,:] = chi2_part.sum(dim='band')
 
         # Weird ref_id, gal index issue..
@@ -146,21 +146,21 @@ def find_best_model(modelD, flux_model, flux, flux_error, chi2):
 
     return best_flux
 
-def zero_points(self, modelD, galcat, fit_bands, SNR_min, cosmos_scale, Nrounds, learn_rate): 
+def _zero_points(modelD, galcat, fit_bands, SNR_min, cosmos_scale, Nrounds, Niter, learn_rate, Nskip): 
     """Estimate the zero-points."""
 
     # Just simple input transformations.
-    flux, flux_error, chi2, zp_tot, flux_model = self._prepare_input(modelD, galcat, \
+    flux, flux_error, chi2, zp_tot, flux_model = _prepare_input(modelD, galcat, \
         SNR_min, cosmos_scale, fit_bands)
 
     flux_orig = flux.copy()
 
     zp_details = {}
-    for i in tqdm(range(self.config['Nrounds'])):
-        best_flux = self.find_best_model(modelD, flux_model, flux, flux_error, chi2)
+    for i in tqdm(range(Nrounds)):
+        best_flux = _find_best_model(modelD, flux_model, flux, flux_error, chi2, fit_bands, Niter, Nskip)
 
-        zp = self.calc_zp(best_flux, flux, flux_error)
-        zp = 1 + self.config['learn_rate']*(zp - 1.)
+        zp = _calc_zp(best_flux, flux, flux_error)
+        zp = 1 + learn_rate*(zp - 1.)
 
         flux = flux*zp
         flux_error = flux_error*zp
@@ -169,7 +169,7 @@ def zero_points(self, modelD, galcat, fit_bands, SNR_min, cosmos_scale, Nrounds,
         zp_details[i] = zp_tot.copy()
 
         # We mostly need this for debug and the paper.
-        if i == self.config['Nrounds'] - 1:
+        if i == Nrounds - 1:
             ratio_all = best_flux / flux_orig
 
     zp_tot = zp_tot.to_series()
@@ -177,7 +177,7 @@ def zero_points(self, modelD, galcat, fit_bands, SNR_min, cosmos_scale, Nrounds,
 
     return zp_tot, zp_details, ratio_all
 
-def sel_subset(self, galcat):
+def sel_subset(galcat, fit_bands):
     """Select which subset to use for finding the zero-points."""
 
     # Note: I should add the cuts here after making sure that the
@@ -191,60 +191,37 @@ def sel_subset(self, galcat):
     #galcat = galcat.loc[self.config['SN_min'] < SN.min(axis=1)]
 
     # Removing other bands, since it internally gives a problem.
-    fit_bands = self.config['fit_bands']
     D = {'flux': galcat.flux[fit_bands], 'flux_error': galcat.flux_error[fit_bands]}
     cat = pd.concat(D, axis=1)
     cat['zs'] = galcat.zs
 
     return cat
 
-def model_at_z(zs, modelD, fit_bands):
-    """Load the models at specific redshifts."""
-
-    t1 = time.time()
-    f_modD = {}
-    inds = ['band', 'sed', 'ext_law', 'EBV', 'z']
-    for key, f_mod in modelD:
-        if not key.startswith('model'):
-            continue
-
-#        # Later the code depends on this order.
-#        f_mod = dep.result.reset_index().set_index(inds)
-#        f_mod = f_mod.to_xarray().flux
-
-
-        f_mod = f_mod.sel(band=fit_bands)
-        f_mod = f_mod.sel(z=zs.values, method='nearest')
-
-        if 'EBV' in f_mod.dims:
-            f_mod = f_mod.squeeze('EBV')
-
-        if 'ext_law' in f_mod.dims:
-            f_mod = f_mod.squeeze('ext_law')
-
-        f_modD[key] = f_mod.transpose('z', 'band', 'sed')
-
-    print('Time loading model:', time.time() - t1)
-
-    return f_modD
-
-def entry(galcat, modelD, fit_bands, SNR_min=-5, Nrounds=20, cosmos_scale=True, \
-          learn_rate=1.0):
+def calib(galcat, modelD, fit_bands, SNR_min=-5, Nrounds=20, Niter=1000, cosmos_scale=True, \
+          learn_rate=1.0, Nskip=10):
     """Calibrate zero-points by comparing the result at the spectroscopic redshift.
        Args:
            fit_bands (list): Bands to fit in the comparison.
            SNR_min (float): Cut on minimum SNR value.
            cosmos_scale (bool): Converting fluxes to units used in COSMOS.
-           Nrounds (int): How many calibration iterations to run.
+           Nrounds(int): How many calibration iterations to run.
+           Niter(int): Number of minimization steps.
            learn_rate (float): How fast to update the zero-points.
+           Nskip(int): Skipping updating the nb versus bb each iteration.
     """
 
-    # Loads model exactly at the spectroscopic redshift for each galaxy.
-    galcat = self.sel_subset(galcat)
-#    D = self.input.depend.items()
-    f_modD = libpzcore.model_at_z(galcat.zs, modelD, fit_bands)
+    config = {'fit_bands': fit_bands, 'SNR_min': SNR_min, 'Nrounds': Nrounds, \
+              'cosmos_scale': cosmos_scale, 'Nrounds': Nrounds, 'Niter': Niter, \
+              'learn_rate': learn_rate, 'Nskip': Nskip}
 
-    zp, zp_details, ratio_all = self.zero_points(f_modD, galcat)
+    # Loads model exactly at the spectroscopic redshift for each galaxy.
+    galcat = sel_subset(galcat, fit_bands)
+#    D = self.input.depend.items()
+    f_modD = libcalib.model_at_z(galcat.zs, modelD, fit_bands)
+
+    zp, zp_details, ratio_all = _zero_points(f_modD, galcat, **config) #fit_bands, SNR_min, \
+#       cosmos_scale, Nrounds, Niter, learn_rate, Nskip)
+
     ratio_all = ratio_all.to_dataframe('ratio')
 
     return zp
