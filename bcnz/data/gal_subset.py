@@ -45,7 +45,7 @@ def limit_nb(df, min_nb):
     filters = [x for x in df.columns.get_level_values(1).unique() \
                if isnb(x)]
 
-
+    df = df.copy()
     df['nrobs'] = (~np.isnan(df['flux'][filters])).sum(axis=1)
     df = df[min_nb <= df.nrobs]
 
