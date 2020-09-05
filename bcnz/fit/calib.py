@@ -1,0 +1,262 @@
+#!/usr/bin/env python
+# encoding: UTF8
+
+from IPython.core import debugger as ipdb
+import sys
+import time
+import numpy as np
+import pandas as pd
+import xarray as xr
+from tqdm import tqdm
+from scipy.optimize import minimize
+
+from matplotlib import pyplot as plt
+
+descr = {
+  'Nskip': 'Number of steps to skip',
+  'fit_bands': 'Bands used in the fit',
+  'Nrounds': 'How many rounds in the zero-point calibration',
+  'Niter': 'Number of iterations in minimization',
+  'zp_min': 'How to estimate the zero-points',
+  'learn_rate': 'Learning rate',
+  'SN_min': 'Minimum median SN',
+  'min_ri_ratio': 'Minimum ri flux ratio'
+}
+
+config = {'free_ampl': True, #False,
+          'Nskip': 10,
+          'fit_bands': [],
+          'Nrounds': 19,
+          'Niter': 1000,
+          'zp_min': 'flux',
+          'learn_rate': 1.0, # Temporarily disabled
+          'SN_min': 1.,
+          'min_ri_ratio': 0.5, # Temporarily disabled
+          'cosmos_scale': False}
+
+
+def _prepare_input(modelD, galcat, SNR_min, cosmos_scale, fit_bands):
+    """Change the format on some of the input values."""
+
+    # Here we store all observations.
+    flux = galcat['flux'].stack().to_xarray()
+    flux_error = galcat['flux_error'].stack().to_xarray()
+
+    SN = flux / flux_error
+    flux = flux.where(SNR_min < SN)
+    flux_error = flux_error.where(SNR_min < SN)
+
+    # this should have been changed in the input..        
+    if 'level_1' in flux.dims:
+        flux = flux.rename({'level_1': 'band'})
+        flux_error = flux_error.rename({'level_1': 'band'})
+
+    # ... just to have completely the same.
+    if cosmos_scale:
+        ab_factor = 10**(0.4*26)
+        cosmos_scale = ab_factor * 10**(0.4*48.6)
+        flux /= cosmos_scale
+        flux_error /= cosmos_scale
+
+    # Empty structure for storint the best flux model.
+    dims = ('part', 'ref_id', 'band')
+    _model_parts = list(modelD.keys())
+    _model_parts.sort()
+
+    coords_flux = {'ref_id': flux.ref_id, 'part': _model_parts, 'band': list(fit_bands)}
+    flux_model = np.zeros((len(modelD), len(flux), len(fit_bands)))
+
+    flux_model = xr.DataArray(flux_model, dims=dims, coords=coords_flux)
+
+    # Datastructure for storing the results...
+    coords_chi2 = {'ref_id': flux.ref_id, 'part': _model_parts}
+    chi2 = np.zeros((len(modelD), len(flux)))
+    chi2 = xr.DataArray(chi2, dims=('part', 'ref_id'), coords=coords_chi2)
+
+    zp_tot = xr.DataArray(np.ones(len(flux.band)), dims=('band'), \
+             coords={'band': flux.band})
+
+    return flux, flux_error, chi2, zp_tot, flux_model
+
+
+def _zp_min_cost(cost, best_flux, flux, err_inv):
+    """Estimate the zero-point through minimizing a cost function."""
+
+    t1 = time.time()
+    # And another test for getting the median...
+    zp = np.ones(len(flux.band))
+    for i,band in enumerate(flux.band):
+        A = (best_flux.sel(band=band), flux.sel(band=band), \
+             err_inv.sel(band=band))
+
+        X = minimize(cost, 1., args=A)
+        #assert not isinstance(X.x, np.nan), 'Internal error: found nan'
+
+        zp[i] = X.x
+
+    return zp
+
+def calc_zp(best_flux, flux, flux_error):
+    """Estimate the zero-point."""
+
+    err_inv = 1. / flux_error
+    X = (best_flux, flux, err_inv)
+
+    #zp_min = self.config['zp_min'] 
+
+    def cost_flux(R, model, flux, err_inv):
+        return float(np.abs((err_inv*(flux*R[0] - model)).median()))
+
+    zp = _zp_min_cost(cost_flux, *X)
+    zp = xr.DataArray(zp, dims=('band',), coords={'band': flux.band})
+
+    return zp
+
+def _which_filters(fit_bands):
+    all_nb = [f'pau_nb{x}' for x in 455+10*np.arange(40)]
+
+    NBlist = [x for x in fit_bands if (x in all_nb)]
+    BBlist = [x for x in fit_bands if not (x in all_nb)]
+
+    return NBlist, BBlist
+
+def find_best_model(modelD, flux_model, flux, flux_error, chi2):
+    """Find the best flux model."""
+
+    # Just get a normal list of the models.
+    model_parts = [str(x.values) for x in flux_model.part]
+
+    NBlist, BBlist = self._which_filters(fit_bands)
+    for j,key in enumerate(model_parts):
+        K = (modelD[key], flux, flux_error, NBlist, BBlist)
+        chi2_part, F = libpzcore.minimize_at_z(*K, **self.config)
+        chi2[j,:] = chi2_part.sum(dim='band')
+
+        # Weird ref_id, gal index issue..
+        assert (flux_model.ref_id.values == F.ref_id.values).all()
+        assert (flux_model.band == F.band).all()
+        flux_model.values[j,:] = F.values
+        #flux_model[j,:] = F
+
+    # Ok, this is not the only possible assumption!
+    best_part = chi2.argmin(dim='part')
+    best_flux = flux_model.isel_points(ref_id=range(len(flux)), part=best_part)
+    best_flux = xr.DataArray(best_flux, dims=('ref_id', 'band'), \
+                coords={'ref_id': flux.ref_id, 'band': flux.band})
+
+    return best_flux
+
+def zero_points(self, modelD, galcat, fit_bands, SNR_min, cosmos_scale, Nrounds, learn_rate): 
+    """Estimate the zero-points."""
+
+    # Just simple input transformations.
+    flux, flux_error, chi2, zp_tot, flux_model = self._prepare_input(modelD, galcat, \
+        SNR_min, cosmos_scale, fit_bands)
+
+    flux_orig = flux.copy()
+
+    zp_details = {}
+    for i in tqdm(range(self.config['Nrounds'])):
+        best_flux = self.find_best_model(modelD, flux_model, flux, flux_error, chi2)
+
+        zp = self.calc_zp(best_flux, flux, flux_error)
+        zp = 1 + self.config['learn_rate']*(zp - 1.)
+
+        flux = flux*zp
+        flux_error = flux_error*zp
+
+        zp_tot *= zp
+        zp_details[i] = zp_tot.copy()
+
+        # We mostly need this for debug and the paper.
+        if i == self.config['Nrounds'] - 1:
+            ratio_all = best_flux / flux_orig
+
+    zp_tot = zp_tot.to_series()
+    zp_details = pd.DataFrame(zp_details, index=flux.band)
+
+    return zp_tot, zp_details, ratio_all
+
+def sel_subset(self, galcat):
+    """Select which subset to use for finding the zero-points."""
+
+    # Note: I should add the cuts here after making sure that the
+    # two pipelines give the same results.
+
+    galcat = galcat[~np.isnan(galcat.zs)]
+
+    # This cut was needed to avoid negative numbers in the logarithm.
+    #SN = galcat.flux / galcat.flux_error
+    #ipdb.set_trace()
+    #galcat = galcat.loc[self.config['SN_min'] < SN.min(axis=1)]
+
+    # Removing other bands, since it internally gives a problem.
+    fit_bands = self.config['fit_bands']
+    D = {'flux': galcat.flux[fit_bands], 'flux_error': galcat.flux_error[fit_bands]}
+    cat = pd.concat(D, axis=1)
+    cat['zs'] = galcat.zs
+
+    return cat
+
+def model_at_z(zs, modelD, fit_bands):
+    """Load the models at specific redshifts."""
+
+    t1 = time.time()
+    f_modD = {}
+    inds = ['band', 'sed', 'ext_law', 'EBV', 'z']
+    for key, f_mod in modelD:
+        if not key.startswith('model'):
+            continue
+
+#        # Later the code depends on this order.
+#        f_mod = dep.result.reset_index().set_index(inds)
+#        f_mod = f_mod.to_xarray().flux
+
+
+        f_mod = f_mod.sel(band=fit_bands)
+        f_mod = f_mod.sel(z=zs.values, method='nearest')
+
+        if 'EBV' in f_mod.dims:
+            f_mod = f_mod.squeeze('EBV')
+
+        if 'ext_law' in f_mod.dims:
+            f_mod = f_mod.squeeze('ext_law')
+
+        f_modD[key] = f_mod.transpose('z', 'band', 'sed')
+
+    print('Time loading model:', time.time() - t1)
+
+    return f_modD
+
+def entry(galcat, modelD, fit_bands, SNR_min=-5, Nrounds=20, cosmos_scale=True, \
+          learn_rate=1.0):
+    """Calibrate zero-points by comparing the result at the spectroscopic redshift.
+       Args:
+           fit_bands (list): Bands to fit in the comparison.
+           SNR_min (float): Cut on minimum SNR value.
+           cosmos_scale (bool): Converting fluxes to units used in COSMOS.
+           Nrounds (int): How many calibration iterations to run.
+           learn_rate (float): How fast to update the zero-points.
+    """
+
+    # Loads model exactly at the spectroscopic redshift for each galaxy.
+    galcat = self.sel_subset(galcat)
+#    D = self.input.depend.items()
+    f_modD = libpzcore.model_at_z(galcat.zs, modelD, fit_bands)
+
+    zp, zp_details, ratio_all = self.zero_points(f_modD, galcat)
+    ratio_all = ratio_all.to_dataframe('ratio')
+
+    return zp
+
+#config = {'free_ampl': True, #False,
+#          'Nskip': 10,
+#          'fit_bands': [],
+#          'Nrounds': 19,
+#          'Niter': 1000,
+#          'zp_min': 'flux',
+#          'learn_rate': 1.0, # Temporarily disabled
+#          'SN_min': 1.,
+#          'min_ri_ratio': 0.5, # Temporarily disabled
+#          'cosmos_scale': False}
+

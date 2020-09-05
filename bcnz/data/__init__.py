@@ -9,3 +9,5 @@ from .fix_noise import fix_noise
 
 from .gal_subset import gal_subset
 from .synband_scale import synband_scale
+
+from .catalogs import paus
