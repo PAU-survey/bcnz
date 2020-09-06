@@ -149,12 +149,12 @@ def gal_subset(galcat, ref_cat, min_nb=39, only_specz=True, ngal=0, has_bb=False
 
     # Ok, here I first cut based on one format...
     if not isinstance(galcat.columns, pd.MultiIndex):
-        cat = change_format(galcat)
+        galcat = change_format(galcat)
 
-    set_other_fields(cat, ref_cat)
+    set_other_fields(galcat, ref_cat)
 
-    print('Total', len(cat))
-    sub = limit_isgal(cat, sel_gal)
+    print('Total', len(galcat))
+    sub = limit_isgal(galcat, sel_gal)
     print('Limit galaxies', len(sub))
 
     sub = limit_nb(sub, min_nb)
