@@ -20,6 +20,8 @@ def get_bands(field, fit_bands):
     NB = [f'pau_nb{x}' for x in 455+10*np.arange(40)]
     if field.lower() == 'cosmos':
         BB = ['cfht_u','subaru_b','subaru_v','subaru_r','subaru_i','subaru_z']
+    else:
+        BB = ['cfht_u', 'cfht_g', 'cfht_r', 'cfht_i', 'cfht_z']
 
     fit_bands = NB + BB
 
@@ -35,7 +37,7 @@ def get_input(output_dir, model_dir, memba_prod, field, fit_bands):
     modelD = bcnz.model.cache_model(model_dir, runs)
 
     if not path_galcat.exists():
-
+        engine = bcnz.connect_db()
         galcat_specz = bcnz.data.paus_calib_sample(engine, memba_prod, field)
         zp = bcnz.calib.cache_zp(output_dir, galcat_specz, modelD, fit_bands)
 

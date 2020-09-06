@@ -207,7 +207,7 @@ def get_iband_model(model, norm, pzcat, scale_input=True, i_band=None):
 
     return df
 
-def photoz(galcat, modelD, evbD, fit_bands, Niter=1000, Nskip=10, odds_lim=0.01,
+def photoz(galcat, modelD, ebvD, fit_bands, Niter=1000, Nskip=10, odds_lim=0.01,
            width_frac=0.01, i_band='subaru_i', only_pz=True):
     """Estimates the photoz for the models for a given configuration.
        Args:
@@ -236,6 +236,8 @@ def photoz(galcat, modelD, evbD, fit_bands, Niter=1000, Nskip=10, odds_lim=0.01,
     pzcat['n_band'] = (~np.isnan(galcat[cols_flux])).sum(1)
     pzcat['n_narrow'] = (~np.isnan(galcat[cols_nbflux])).sum(1)
 
+    pzcat['ebv'] = pzcat.best_run.replace(ebvD)
+
     # Model magnitudes at the best fit redshift and z=0.
     best_model = get_model('model', model, norm, pzcat, pzcat.zb.values)
     z0 = 0.01*np.ones_like(pzcat.zb) # yes, a hack.
@@ -247,7 +249,7 @@ def photoz(galcat, modelD, evbD, fit_bands, Niter=1000, Nskip=10, odds_lim=0.01,
     else:
         return pzcat, best_model, model_z0, iband_model, pz
 
-# Some simple interface files. These should perhaps be elsewhere...
+# Interface useful for parallel computation. This could perhaps be elsewhere.
 #
 def _flatten_input(df):
     """Flattens the input dataframe."""

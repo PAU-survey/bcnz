@@ -16,7 +16,7 @@ def deep2(engine):
              FROM deep2
              WHERE 0 < z"""
 
-    cat = pd.read_sql_query(sql, conn)
+    cat = pd.read_sql_query(sql, engine)
     cat = cat[cat.obj_type == 'GALAXY']
 
     return cat

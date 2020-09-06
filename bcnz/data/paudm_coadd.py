@@ -14,7 +14,7 @@ desc = {
   'run': 'Something Santi introduced. I have no idea what it is...',
   'ilim': 'Iband magnitude limit'}
 
-def query_cosmos(engine, prod_memba, ilim, run):
+def query_cosmos(engine, prod_memba, ilim=25, run=1):
     """Query for a catalogue in the COSMOS field."""
 
     sql = 'SELECT fac.* FROM forced_aperture_coadd AS fac JOIN cosmos AS cm ON cm.paudm_id=fac.ref_id \
@@ -26,7 +26,7 @@ def query_cosmos(engine, prod_memba, ilim, run):
 
     return cat
 
-def query_cfht(engine, prod_memba, ilim, run):
+def query_cfht(engine, prod_memba, ilim=24., run=1):
     """Query for a catalogue in a CFHT field."""
 
     sql = 'SELECT fac.* FROM forced_aperture_coadd AS fac JOIN cfhtlens AS refcat ON refcat.paudm_id=fac.ref_id \
@@ -48,14 +48,20 @@ def to_dense(cat_in):
     return cat
 
 
-def paudm_coadd(engine, prod_memba, field, ilim=25, run=1):
-    """Query the coadd with a possible selection."""
+def paudm_coadd(engine, prod_memba, field, run=1):
+    """Query the coadd with a possible selection.
+       Args:
+           engine (obj): Connection to PAUdb.
+           prod_memba (int): MEMBA production number.
+           field (str): Observed field.
+           run (int): Run parameter in the photometry.
+    """
 
-    args = prod_memba, ilim, run
+    config = {'prod_memba': prod_memba, 'run': run}
     if field.lower() == 'cosmos':
-        cat = query_cosmos(engine, *args)
+        cat = query_cosmos(engine, **config)
     else:
-        cat = query_cfht(engine, *args)
+        cat = query_cfht(engine, **config)
 
     # Since we later combine with Subary, which also has narrow bands.
     cat['band'] = cat.band.apply(lambda x: 'pau_{}'.format(x.lower())) 

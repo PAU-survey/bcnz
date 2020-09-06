@@ -127,6 +127,8 @@ def limit_zmax(cat, zmax):
 def gal_subset(cat, ref_cat, min_nb=39, only_specz=True, ngal=0, has_bb=False, nexp_min=0, nexp_max=10000, 
                secure_spec=True, sel_gal=True, zmax=0., test_band='subaru_r'):
     """Selects a subset of galaxies, either for calibration or running the photoz."""
+
+
     print('selecting a subset...')
 
     # Ok, here I first cut based on one format...
