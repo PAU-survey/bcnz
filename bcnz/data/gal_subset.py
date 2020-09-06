@@ -124,16 +124,27 @@ def limit_zmax(cat, zmax):
 
 
 
-def gal_subset(cat, ref_cat, min_nb=39, only_specz=True, ngal=0, has_bb=False, nexp_min=0, nexp_max=10000, 
+def gal_subset(galcat, ref_cat, min_nb=39, only_specz=True, ngal=0, has_bb=False, 
                secure_spec=True, sel_gal=True, zmax=0., test_band='subaru_r'):
-    """Selects a subset of galaxies, either for calibration or running the photoz."""
+    """Selects a subset of galaxies, either for calibration or running the photoz.
+       Args:
+           galcat (df): Galaxy catalogue.
+           ref_cat (df): Reference catalogue including specz.
+           min_nb (int): Minimum number of narrow bands.
+           only_specz (bool): If only using galaxies with spectra.
+           ngal (int): Random selection of ngal galaxies.
+           has_bb (bool): Ensure the galaxy has a broad band.
+           secure_spec (bool): Restrict to secure spectra.
+           sel_gal (bool): Select galaxies.
+           zmax (float): Maximum reshift.
+           test_band (str): Band to test if broad bands are available.
+    """
 
-
-    print('selecting a subset...')
+    print('Selecting a subset...')
 
     # Ok, here I first cut based on one format...
-    if not isinstance(cat.columns, pd.MultiIndex):
-        cat = change_format(cat)
+    if not isinstance(galcat.columns, pd.MultiIndex):
+        cat = change_format(galcat)
 
     set_other_fields(cat, ref_cat)
 
@@ -150,25 +161,10 @@ def gal_subset(cat, ref_cat, min_nb=39, only_specz=True, ngal=0, has_bb=False, n
     sub = limit_has_bb(sub, has_bb, test_band)
     print('Has BB', len(sub))
 
-    sub = limit_ngal(sub, ngal)
-    print('Limit ngal', len(sub))
-
     sub = limit_zmax(sub, zmax)
     print('Limit zmax', len(sub))
 
+    sub = limit_ngal(sub, ngal)
+    print('Limit ngal', len(sub))
+
     return sub
-
-descr = {\
-  'min_nb': 'Minimum number of narrow bands',
-  'only_specz': 'Only include galaxies with a spec-z',
-  'ngal': 'Maximum number of galaxies included',
-  'imax': 'Cutting in iband magnitude',
-  'has_bb': 'Require broad band magnitudes',
-  'nexp_min': 'Minimum number of exposures',
-  'nexp_max': 'Maximum number of exposures',
-  'secure_spec': 'Only use secure spectra',
-  'test_band': 'Which band to test for',
-  'sel_gal': 'Limit the subset to galaxies',
-  'zmax': 'Limit the spectroscopic redshift'}
-
-
