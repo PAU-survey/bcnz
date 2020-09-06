@@ -57,7 +57,7 @@ def scale_model(config, coeff, model):
     return model
 
 def fmod_adjust(model_cont, model_lines, coeff=False, use_lines=True, 
-                norm_band='', scale_synband=True):
+                norm_band='', scale_synband=False):
     """Adjust the model to reflect that the syntetic narrow bands is not
        entirely accurate.
 
@@ -78,12 +78,12 @@ def fmod_adjust(model_cont, model_lines, coeff=False, use_lines=True,
 
     # Special case of not actually doing anything ...
     if not scale_synband:
-        assert config['norm_band'], 'Need to specify the normalization band'
         comb = pd.concat([model_cont, model_lines])
         comb = comb.set_index(['band', 'z', 'sed', 'ext_law', 'EBV'])
 
         return comb
 
+    assert config['norm_band'], 'Need to specify the normalization band'
     out_cont = scale_model(config, coeff, model_cont)
     if use_lines:
         out_lines = scale_model(coeff, model_lines)
