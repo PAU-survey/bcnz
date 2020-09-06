@@ -3,6 +3,11 @@
 import functools
 from IPython.core import debugger as ipdb
 
+def rband(field):
+    """The rband name in different fields."""
+
+    return 'subaru_r' if field.lower() == 'cosmos' else 'cfht_r'
+
 def paus(engine, memba_prod, field, d_cosmos = '~/data/cosmos', min_nb=35,
          only_specz=False, secure_spec=False, has_bb=False, sel_gal=True):
     """Load the PAUS data from PAUdm and perform the required
@@ -21,31 +26,43 @@ def paus(engine, memba_prod, field, d_cosmos = '~/data/cosmos', min_nb=35,
     """
 
     import bcnz
-    paudm_cosmos = bcnz.data.paudm_cosmos(engine)
-    cosmos_laigle = bcnz.data.cosmos_laigle(d_cosmos)
 
-    match_cosmos = bcnz.data.match_position(paudm_cosmos, cosmos_laigle)
+    if field.lower() == 'cosmos':
+        # The parent catalogue require positional matching.
+        paudm_cosmos = bcnz.data.paudm_cosmos(engine)
+        cosmos_laigle = bcnz.data.cosmos_laigle(d_cosmos)
+        parent_cat = bcnz.data.match_position(paudm_cosmos, cosmos_laigle)
+
+        specz = parent_cat
+    else:
+        # Specz catalogue needs positional matching.
+        parent_cat = bcnz.data.paudm_cfhtlens(engine, 'w3')
+        deep2 = bcnz.specz.deep2(engine)
+        specz = bcnz.data.match_position(parent_cat, deep2)
+
     paudm_coadd = bcnz.data.paudm_coadd(engine, memba_prod, field)
+    data_in = paudm_coadd.join(parent_cat, how='inner')
 
-    data_in = paudm_coadd.join(match_cosmos, how='inner')
+    # Add some minimum noise.
     data_noisy = bcnz.data.fix_noise(data_in)
 
+    # Select a subset of the galaxies.
     conf = {'min_nb': min_nb, 'only_specz': only_specz, 'secure_spec': secure_spec,
             'has_bb': has_bb, 'sel_gal': sel_gal}
 
-    nbsubset = bcnz.data.gal_subset(data_noisy, paudm_cosmos, **conf)
+    conf['test_band'] = rband(field)
+    nbsubset = bcnz.data.gal_subset(data_noisy, specz, **conf)
+
 
     # Synthetic narrow band coefficients.
+    synband = rband(field)
     filters = bcnz.model.all_filters()
-    coeff = bcnz.model.nb2bb(filters, 'subaru_r')
+    coeff = bcnz.model.nb2bb(filters, synband)
 
-    data_scaled = bcnz.data.synband_scale(nbsubset, coeff, scale_data=True)
+    data_scaled = bcnz.data.synband_scale(nbsubset, coeff, synband=synband, \
+                  scale_data=True)
 
     return data_scaled
 
 
 paus_calib_sample = functools.partial(paus, min_nb=39, only_specz=True, secure_spec=True)
-
-
-#def paus_calib_sample(engine, meba_prod, di**kwrdargs):
-#    data = paus(
