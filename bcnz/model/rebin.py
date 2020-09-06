@@ -7,14 +7,6 @@ import numpy as np
 import pandas as pd
 from scipy.interpolate import splrep, splev, splint
 
-descr = {
-  'zmin': 'Minimum redshift',
-  'zmax': 'Maximum redshift',
-  'dz': 'Grid width in redshift'
-}
-
-def_config = {'zmin': 0.01, 'zmax': 1.2, 'dz': 0.001}
-
 def rebin(model, zmin=0.01, zmax=1.2, dz=0.001):
     """Rebinning the redshift grid of the model.
 
@@ -25,11 +17,7 @@ def rebin(model, zmin=0.01, zmax=1.2, dz=0.001):
            dz (float): Redshift spacing.
     """
 
-    config = def_config.copy()
-    config.update(myconf)
-
-    C = config
-    zgrid = np.arange(C['zmin'], C['zmax']+C['dz'], C['dz'])
+    zgrid = np.arange(zmin, zmax+dz, dz)
 
     inds = ['band', 'sed', 'ext_law', 'EBV']
     model = model.reset_index().set_index(inds)
