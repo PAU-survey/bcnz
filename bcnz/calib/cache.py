@@ -14,6 +14,9 @@ def cache_zp(output_dir, *args, **kwds):
     output_dir = Path(output_dir)
     path = output_dir / 'zp.h5'
 
+
+    print('Calibrating the fluxes')
+
     import bcnz
     if not path.exists():
         zp = bcnz.calib.calib(*args, **kwds)

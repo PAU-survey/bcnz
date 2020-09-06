@@ -25,7 +25,7 @@ def cache_model(cache_dir, runs=None):
         model = bcnz.model.model_single(**row)
         model.to_netcdf(path)
 
-    print('starting to load....')
+    print('Loading the models.')
     D = {}
     for i, row in runs.iterrows():
         path = cache_dir / f'model_{i}.nc'

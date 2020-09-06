@@ -29,7 +29,6 @@ def get_bands(field, fit_bands):
 
     return fit_bands
 
-
 def get_input(output_dir, model_dir, memba_prod, field, fit_bands):
     """Get the input to run the photo-z code."""
 
@@ -44,9 +43,12 @@ def get_input(output_dir, model_dir, memba_prod, field, fit_bands):
         galcat_specz = bcnz.data.paus_calib_sample(engine, memba_prod, field)
         zp = bcnz.calib.cache_zp(output_dir, galcat_specz, modelD, fit_bands)
 
-        # Applying the zero-points.
+        # This should not be the same. We need to modify this later.
         galcat = galcat_specz
-        galcat_inp = bcnz.calib.apply_zp(galcat, zp)
+
+        # Applying the zero-points.
+        norm_filter = bcnz.data.catalogs.rband
+        galcat_inp = bcnz.calib.apply_zp(galcat, zp, norm_filter=norm_filter)
 
         galcat_inp.to_hdf(str(path_galcat), 'default')
     else:

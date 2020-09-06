@@ -17,7 +17,7 @@ def _normalize_zp(zp, norm_filter):
         zp.loc[band] /= norm_val
 
 
-def apply_zp(galcat, zp, norm_bb=True, norm_filter='subaru_r'):
+def apply_zp(galcat, zp, norm_bb=True, norm_filter=''):
     """Apply zero-points per band.
 
        Args:
@@ -31,6 +31,7 @@ def apply_zp(galcat, zp, norm_bb=True, norm_filter='subaru_r'):
     galcat = galcat.copy()
 
     if norm_bb:
+        assert norm_filter, 'You need to specify norm_filter'
         _normalize_zp(zp, norm_filter)
 
     # Applying this inline is simpler.
