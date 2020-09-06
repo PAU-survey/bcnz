@@ -5,16 +5,6 @@ from IPython.core import debugger as ipdb
 import pandas as pd
 import xarray as xr
 
-descr = {'norm_band': 'Band used for the normalization',
-         'funky_limit': 'If adding limits to match Alex code.',
-         'use_lines': 'If using emission lines',
-         'scale_synband': 'If applying the scaling. Useful shortcut.'}
-
-def_config = {'norm_band': 'subaru_r', 'funky_limit': True,
-              'lines_upper': 0.1226,
-              'use_lines': True, 
-              'scale_synband': False} 
-
 def funky_hack(config, syn2real, sed, model_norm):
     """Exactly mimic the cuts Alex was making."""
 
@@ -26,7 +16,7 @@ def funky_hack(config, syn2real, sed, model_norm):
         ratio.values[flux < 0.001*flux.max()] = 1.
 
         # Yes, this actually happens in an interval.
-        upper = config['lines_upper']
+        upper = 0.1226,
         ratio[(ratio.z>0.1025) & (ratio.z<upper)] = 1.
     else:
         # The continuum ratios are better behaved.
@@ -66,28 +56,36 @@ def scale_model(config, coeff, model):
 
     return model
 
-def fmod_adjust(model_cont, model_lines, coeff=False, **myconf):
+def fmod_adjust(model_cont, model_lines, coeff=False, use_lines=True, 
+                norm_band='', scale_synband=True):
     """Adjust the model to reflect that the syntetic narrow bands is not
        entirely accurate.
+
+       Args:
+           model_conf (df): Continuum model.
+           model_lines (df): Emission line model.
+           coeff (df): Coeffients for scaling the model.
+           use_lines (bool): If including the emission lines.
+           norm_band (str): Normalize on this band.
+           scale_synband (str): If actually scaling with the band.
     """
 
-    config = def_config.copy()
-    config.update(myconf)
+    config = {'use_lines': use_lines, 'norm_band': norm_band}
 
     # Here the different parts will have a different zbinning! For the
     # first round I plan adding another layer doing the rebinning. After
     # doing the comparison, we should not rebin at all.
 
     # Special case of not actually doing anything ...
-    if not config['scale_synband']:
-        config['norm_band'], 'Need to specify the normalization band'
+    if not scale_synband:
+        assert config['norm_band'], 'Need to specify the normalization band'
         comb = pd.concat([model_cont, model_lines])
         comb = comb.set_index(['band', 'z', 'sed', 'ext_law', 'EBV'])
 
         return comb
 
     out_cont = scale_model(coeff, model_cont)
-    if config['use_lines']:
+    if use_lines:
         out_lines = scale_model(coeff, model_lines)
         out = pd.concat([out_cont, out_lines])
     else:

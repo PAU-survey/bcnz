@@ -130,7 +130,11 @@ def fixes(cat, rm_stars=True):
     return cat
 
 def cosmos_laigle(d_cosmos, rm_stars=True):
-    """Interface from reading the COSMOS Laigle catalogue."""
+    """Interface from reading the COSMOS Laigle catalogue.
+       Args:
+           d_cosmos: Directory storing the downloaded COSMOS files.
+           rm_stars: If removing stars.
+    """
 
     cat = read_cat(d_cosmos)
     other_cols(d_cosmos, cat)

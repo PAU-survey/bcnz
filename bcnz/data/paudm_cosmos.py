@@ -24,7 +24,11 @@ def query(engine, table):
     return cat
 
 def paudm_cosmos(engine, table='COSMOS'):
-    """Download the Ilbert catalogue. This is only to have the position."""
+    """Download the Ilbert catalogue. This is only to have the position.
+       Args:
+           engine (obj): Connection to PAUdb.
+           table (str): Table in the data base.
+    """
 
     cat_in = query(engine, table)
     if 'paudm_id' in cat_in.columns:

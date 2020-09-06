@@ -2,7 +2,11 @@ from pathlib import Path
 import xarray as xr
 
 def cache_model(cache_dir, runs=None):
-    """Load models if already run, otherwise run one."""
+    """Load models if already run, otherwise run one.
+       Args:
+           cache_dir (str): Directory storing the models.
+           runs (df): Which runs to use. See the config directory.
+    """
 
     import bcnz
     if runs is None:

@@ -8,13 +8,15 @@ import numpy as np
 import pandas as pd
 
 def load_seds(input_dir):
-    """Load seds from files."""
+    """Load seds from files.
 
-    input_dir = os.path.expanduser(input_dir) #self.config['input_dir'])
+       Args:
+           input_dir: Directory where the SEDs are stored.
+    """
+
+    input_dir = os.path.expanduser(input_dir)
     suf = 'sed'
     min_val = 0
-#        suf = self.config['suf']
-#        min_val = self.config['min_val']
 
     df = pd.DataFrame()
     for fname in os.listdir(input_dir):

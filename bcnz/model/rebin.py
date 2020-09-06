@@ -15,8 +15,15 @@ descr = {
 
 def_config = {'zmin': 0.01, 'zmax': 1.2, 'dz': 0.001}
 
-def rebin(model, **myconf):
-    """Rebinning the redshift grid of the model."""
+def rebin(model, zmin=0.01, zmax=1.2, dz=0.001):
+    """Rebinning the redshift grid of the model.
+
+       Args:
+           model (xarray): Flux model.
+           zmin (float): Minimum redshift.
+           zmax (float): Maximum redshift.
+           dz (float): Redshift spacing.
+    """
 
     config = def_config.copy()
     config.update(myconf)
