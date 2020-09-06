@@ -11,30 +11,7 @@ import pandas as pd
 from scipy.interpolate import splrep, splev
 from scipy.integrate import trapz, simps
 
-descr = {
-  'zmax_ab': 'Maximum redshift in the AB files',
-  'dz_ab': 'Redshift resolution in the AB files',
-  'int_dz': 'Resolution when integrating',
-  'int_method': 'Integration method',
-  'ext_law': 'Extinction law',
-  'EBV': 'Extinction amplitude'
-}
 
-def_config = {\
-  'zmax_ab': 2.05,
-  'dz_ab': 0.001,
-  'int_dz': 1.,
-  'int_method': 'simps',
-  'ext_law': '',
-  'EBV': 0.0,
-  'seds': []
-}
-
-
-def check_config(config):
-    assert len(config['sed_vals']), 'You need to specify the SEDs.'
-    assert config['ext_law'], 'You need to specify the extinction.'
- 
 def calc_r_const(filters):
     """Normalization factor for each filter."""
 
@@ -70,11 +47,11 @@ def calc_ext_spl(ext, config):
 
     return ext_spl
 
-def calc_ab(filters, seds, ext, r_const, config):
+def calc_ab(config, filters, seds, ext, r_const):
     """Estimate the fluxes for all filters and SEDs."""
 
     # Test for missing SEDs.
-    missing_seds = set(config['sed_vals']) - set(seds.index)
+    missing_seds = set(config['seds']) - set(seds.index)
     assert not len(missing_seds), 'Missing seds: {}'.format(missing_seds)
 
     sedD = sed_spls(seds)
@@ -103,7 +80,7 @@ def calc_ab(filters, seds, ext, r_const, config):
         X = np.outer(a, lmb)
 
         # Only looping over the configured SEDs.
-        for sed in config['sed_vals']:
+        for sed in config['seds']:
             t1 = time.time()
 
             y_sed = splev(X, sedD[sed])
@@ -132,14 +109,27 @@ def calc_ab(filters, seds, ext, r_const, config):
 
     return df
 
-def model_cont(filters, seds, ext, **myconf):
-    """The model fluxes for the continuum."""
+def model_cont(filters, seds_df, ext, seds, ext_law, EBV, zmax_ab=2.05,
+               dz_ab=0.001, int_dz=1., int_method='simps'):
+    """The model fluxes for the continuum
+       Args:
+           filters (df): Filter transmission curves.
+           seds_df (df): Galaxy SEDs.
+           ext (df): Extinction curves.
+           seds (list): SEDs to use.
+           ext_law (str): Extinction law.
+           EBV (float): Extinction value.
+           zmax_ab (float): Maximum redshift in the flux model.
+           dz_ab (float): Redshift resolution in the flux model.
+           int_dz (float): Resolution when integration.
+           int_method (str): Integration method:
 
-    config = def_config.copy()
-    config.update(myconf)
+    """
 
-    check_config(config)
+    config = {'seds': seds, 'ext_law': ext_law, 'EBV': EBV, 'zmax_ab': zmax_ab, 
+              'dz_ab': dz_ab, 'int_dz': int_dz, 'int_method': int_method}
+
     r_const = calc_r_const(filters)
-    ab = calc_ab(filters, seds, ext, r_const, config)
+    ab = calc_ab(config, filters, seds_df, ext, r_const)
 
     return ab

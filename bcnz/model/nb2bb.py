@@ -22,6 +22,7 @@ def _getcoef(WNB, WBB):
 
 def nb2bb(filt, broad_band):
     """The coefficients between narrow and broad bands which Alex used.
+
        Args:
            filt (dataframe): Filter response curves.
            broad_band (str): Which broad band to estimate the coefficient for.

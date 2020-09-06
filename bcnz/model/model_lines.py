@@ -8,25 +8,8 @@ import time
 import numpy as np
 import pandas as pd
 
-from matplotlib import pyplot as plt
 from scipy.interpolate import splrep, splev
 from scipy.integrate import simps
-
-# This could be set as a config...
-descr = {
-  'dz': 'Redshift steps',
-  'ampl': 'Added amplitude',
-  'EBV': 'Extinction coefficient',
-  'ext_law': 'Extinction law',
-  'sep_OIII': 'If keeping OIII separate', 
-  'funky_OIII_norm': 'Separate normalization for the OIII lines.'}
-
-
-def_config = {'dz': 0.0005, 'ampl': 1e-16, 'EBV': 0.,
-          'ext_law': 'SB_calzetti', 'sep_OIII': True,
-          #'zcut_OIII': 0.705,
-          'zcut_OIII': 10.,
-          'funky_OIII_norm': True}
 
 def _filter_spls(filters):
     """Convert filter curves to splines."""
@@ -83,12 +66,6 @@ def _find_flux(config, z, f_spl, ratios, rconst, ext_spl, band):
 
         flux_line = ampl*(ratio*y_f*y_ext) / rconst
 
-        # Testing not having a free OIII above a certain redshift... 
-        if isOIII:
-            zcutOIII = config['zcut_OIII']
-            flux_line[zcutOIII < z] = 0.
-
-
         fluxD[dest] += flux_line
 
     if not config['sep_OIII']:
@@ -103,7 +80,7 @@ def _to_df(oldD, z, band):
     """Dictionary suitable for concatination."""
 
 
-    # I have tried finding better ways, but none wored very well..
+    # I have tried finding better ways, but none worked very well..
     F = pd.DataFrame(oldD)
     F.index = z
     F.index.name = 'z'
@@ -115,18 +92,30 @@ def _to_df(oldD, z, band):
     F = F.rename(columns={0: 'flux'})
     F['band'] = band
 
-
     if band == 'pau_g':
         ipdb.set_trace()
 
 
     return F
 
-def model_lines(ratios, filters, extinction, **myconf):
-    """The model flux for the emission lines."""
+def model_lines(ratios, filters, extinction, ext_law, EBV, dz=0.0005, ampl=1e-16, 
+                sep_OIII=True, funky_OIII_norm=True):
+    """The model flux for the emission lines.
 
-    config = def_config.copy()
-    config.update(myconf)
+       Args:
+           ratios (df): Emission line ratios.
+           filters (df): Filter response curves.
+           extinction (df): Extinction law relations.
+           ext_law (str): Extinction law.
+           EBV (float): Extinction strength.
+           dz (float): Redshift steps.
+           ampl (float): Arbitrary scaling of the flux amplitude.
+           sep_OIII (bool): If keeping the OIII line model separately.
+           funky_OIII_norm (bool): Normalization to match Alexes code.
+    """
+
+    config = {'ext_law': ext_law, 'EBV': EBV, 'dz': dz, 'ampl': ampl, 
+              'sep_OIII': sep_OIII, 'funky_OIII_norm': funky_OIII_norm}
 
     filtersD, rconstD = _filter_spls(filters)
     ext_spl = create_ext_spl(config, extinction)
@@ -145,4 +134,3 @@ def model_lines(ratios, filters, extinction, **myconf):
     df['EBV'] = config['EBV']
 
     return df
-

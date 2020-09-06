@@ -27,8 +27,8 @@ def model_single(seds, ext_law, EBV, sep_OIII, sed_dir, use_lines):
     extinction = extinction_laigle()
 
     # Continuum and lines.
-    model_cont_df = model_cont(filters, seds_cont, extinction, sed_vals=seds, EBV=EBV, ext_law=ext_law)
-    model_lines_df = model_lines(ratios, filters, extinction, EBV=EBV, ext_law=ext_law, sed_vals=seds)
+    model_cont_df = model_cont(filters, seds_cont, extinction, seds=seds, EBV=EBV, ext_law=ext_law)
+    model_lines_df = model_lines(ratios, filters, extinction, EBV=EBV, ext_law=ext_law)
 
     model_orig = fmod_adjust(model_cont_df, model_lines_df)
     model_binned = rebin(model_orig)
