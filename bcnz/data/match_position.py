@@ -7,6 +7,7 @@ import pandas as pd
 
 from sklearn.neighbors import KDTree
 
+
 def match_position(parent_cat, to_match, max_dist=0.9, drop_duplicates=True):
     """Code for creating the match. Returns a new catalog with the
        matched entries and a new index.
@@ -22,8 +23,8 @@ def match_position(parent_cat, to_match, max_dist=0.9, drop_duplicates=True):
     dist, ind = inst.query(to_match[['ra', 'dec']])
 
     index_name = parent_cat.index.name
-    mapping = pd.DataFrame({'dist': dist[:,0], \
-                            index_name: parent_cat.index[ind[:,0]], \
+    mapping = pd.DataFrame({'dist': dist[:, 0],
+                            index_name: parent_cat.index[ind[:, 0]],
                             'match_id': to_match.index})
     mapping = mapping.set_index(index_name)
 

@@ -10,9 +10,10 @@ import pandas as pd
 import psycopg2
 
 desc = {
-  'prod_memba': 'Production number',
-  'run': 'Something Santi introduced. I have no idea what it is...',
-  'ilim': 'Iband magnitude limit'}
+    'prod_memba': 'Production number',
+    'run': 'Something Santi introduced. I have no idea what it is...',
+    'ilim': 'Iband magnitude limit'}
+
 
 def query_cosmos(engine, prod_memba, ilim=25, run=1):
     """Query for a catalogue in the COSMOS field."""
@@ -26,6 +27,7 @@ def query_cosmos(engine, prod_memba, ilim=25, run=1):
 
     return cat
 
+
 def query_cfht(engine, prod_memba, ilim=24., run=1):
     """Query for a catalogue in a CFHT field."""
 
@@ -36,6 +38,7 @@ def query_cfht(engine, prod_memba, ilim=24., run=1):
     cat = pd.read_sql_query(sql, engine)
 
     return cat
+
 
 def to_dense(cat_in):
     """Convert the input to a dense catalogue."""
@@ -64,7 +67,7 @@ def paudm_coadd(engine, prod_memba, field, run=1):
         cat = query_cfht(engine, **config)
 
     # Since we later combine with Subary, which also has narrow bands.
-    cat['band'] = cat.band.apply(lambda x: 'pau_{}'.format(x.lower())) 
+    cat['band'] = cat.band.apply(lambda x: 'pau_{}'.format(x.lower()))
 
     cat = to_dense(cat)
 

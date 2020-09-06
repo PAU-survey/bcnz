@@ -4,6 +4,7 @@ from IPython.core import debugger as ipdb
 import numpy as np
 import pandas as pd
 
+
 def limit_SN(cat, SNR_lim):
     """Limit based on SN."""
 
@@ -14,13 +15,16 @@ def limit_SN(cat, SNR_lim):
 
     return cat
 
+
 def _flux_minerr(cat):
     """Apply minimum error to fluxes."""
 
     # By now applying 3% minimum error to all the different fluxes.
     for band in cat.flux.columns:
         add_err = cat['flux', band] * self.config['min_err']
-        cat['flux_error', band] = np.sqrt(cat['flux_error', band]**2 + add_err**2)
+        cat['flux_error', band] = np.sqrt(
+            cat['flux_error', band]**2 + add_err**2)
+
 
 def _mag_minerr(cat, min_err):
     """Apply minimum error to magnitudes."""
@@ -36,6 +40,7 @@ def _mag_minerr(cat, min_err):
 
         cat[('flux_error', band)] = flux_error
 
+
 def _add_minerr(cat, min_err, apply_mag):
     """Add a minimum error in the flux measurements."""
 
@@ -44,7 +49,7 @@ def _add_minerr(cat, min_err, apply_mag):
         _mag_minerr(cat, min_err)
     else:
         _flux_minerr(cat, min_err)
-    
+
 
 def fix_noise(cat, SNR_lim=-2, min_err=0.03, apply_mag=True):
     """Cut on SNR and add a minmum error.

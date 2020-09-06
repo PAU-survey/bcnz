@@ -23,8 +23,8 @@ cfg = [['NUV', 'DNUV', 'galex_nuv'],
        ['J', 'DJ', 'vista_j'],
        ['H', 'DH', 'vista_h'],
        ['K', 'DK', 'vista_ks'],
-#       ['KW', 'DKW', 'wircam_Ks'], # Not available in this catalogue.
-#       ['HW', 'DHW', 'wircam_H'],
+       #       ['KW', 'DKW', 'wircam_Ks'], # Not available in this catalogue.
+       #       ['HW', 'DHW', 'wircam_H'],
        ['IA427', 'DIA427', 'subaru_ia427'],
        ['IA464', 'DIA464', 'subaru_ia464'],
        ['IA484', 'DIA484', 'subaru_ia484'],
@@ -50,6 +50,7 @@ cfg = [['NUV', 'DNUV', 'galex_nuv'],
 # The input data can be downloaded from:
 # ftp://ftp.iap.fr/pub/from_users/hjmcc/COSMOS2015/
 
+
 def load_cat(d_cosmos):
     """Load the main FITS file."""
 
@@ -60,6 +61,7 @@ def load_cat(d_cosmos):
     df = dat.to_pandas()
 
     return df
+
 
 def read_cat(d_cosmos):
     """Reads in the COSMOS catalog and convert to the internal
@@ -73,7 +75,8 @@ def read_cat(d_cosmos):
     flux_cols, err_cols, names = zip(*cfg)
 
     flux = cat_in[list(flux_cols)].rename(columns=dict(zip(flux_cols, names)))
-    flux_error = cat_in[list(err_cols)].rename(columns=dict(zip(err_cols, names)))
+    flux_error = cat_in[list(err_cols)].rename(
+        columns=dict(zip(err_cols, names)))
 
     cat = pd.concat({'flux': flux, 'flux_error': flux_error}, axis=1)
 
@@ -104,10 +107,10 @@ def other_cols(d_cosmos, cat):
 
     # Since I don't know a general way to change the endianness.
     fields = [
-    ('NUMBER', 'id_laigle', '<i8'),
-    ('TYPE', 'type', '<i2'), 
-    ('ALPHA_J2000', 'ra', '<f8'), 
-    ('DELTA_J2000', 'dec', '<f8')]
+        ('NUMBER', 'id_laigle', '<i8'),
+        ('TYPE', 'type', '<i2'),
+        ('ALPHA_J2000', 'ra', '<f8'),
+        ('DELTA_J2000', 'dec', '<f8')]
 
     D = {}
     for key, to_field, dtype in fields:
@@ -117,17 +120,19 @@ def other_cols(d_cosmos, cat):
 
     # Otherwise the hirarchical columns gives problems.
     assert (cat.id_laigle == other.id_laigle).all()
-    for key,val in other.items():
+    for key, val in other.items():
         cat[key] = val
+
 
 def fixes(cat, rm_stars=True):
     if rm_stars:
         cat = cat[cat.type == 0]
 
-    # This is probably not needed... 
+    # This is probably not needed...
     del cat['type']
 
     return cat
+
 
 def cosmos_laigle(d_cosmos, rm_stars=True):
     """Interface from reading the COSMOS Laigle catalogue.

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
+from tqdm import tqdm
 from IPython.core import debugger as ipdb
 import time
 import numpy as np
@@ -10,7 +11,6 @@ import xarray as xr
 import numpy as np
 np.seterr(divide='ignore', invalid='ignore')
 
-from tqdm import tqdm
 
 def model_at_z(zs, modelD, fit_bands):
     """Load the models at specific redshifts."""
@@ -50,19 +50,19 @@ def minimize_at_z(f_mod, flux, flux_err, NBlist, BBlist, Niter, Nskip):
 
     var_inv = 1. / flux_err**2
 
-    # Problematic entries.        
+    # Problematic entries.
     mask = np.isnan(flux)
     var_inv.values[mask] = 0.
     flux = flux.fillna(0.)
 
-    A_NB = np.einsum('gf,gfs,gft->gst', var_inv.sel(band=NBlist), \
-           f_mod.sel(band=NBlist), f_mod.sel(band=NBlist))
-    b_NB = np.einsum('gf,gf,gfs->gs', var_inv.sel(band=NBlist), flux.sel(band=NBlist), \
-           f_mod.sel(band=NBlist))
-    A_BB = np.einsum('gf,gfs,gft->gst', var_inv.sel(band=BBlist), \
-           f_mod.sel(band=BBlist), f_mod.sel(band=BBlist))
-    b_BB = np.einsum('gf,gf,gfs->gs', var_inv.sel(band=BBlist), flux.sel(band=BBlist), \
-           f_mod.sel(band=BBlist))
+    A_NB = np.einsum('gf,gfs,gft->gst', var_inv.sel(band=NBlist),
+                     f_mod.sel(band=NBlist), f_mod.sel(band=NBlist))
+    b_NB = np.einsum('gf,gf,gfs->gs', var_inv.sel(band=NBlist), flux.sel(band=NBlist),
+                     f_mod.sel(band=NBlist))
+    A_BB = np.einsum('gf,gfs,gft->gst', var_inv.sel(band=BBlist),
+                     f_mod.sel(band=BBlist), f_mod.sel(band=BBlist))
+    b_BB = np.einsum('gf,gf,gfs->gs', var_inv.sel(band=BBlist), flux.sel(band=BBlist),
+                     f_mod.sel(band=BBlist))
 
     # Testing to scale to the narrow bands. In that case the code above is not needed.
     scale_to = NBlist
@@ -73,8 +73,8 @@ def minimize_at_z(f_mod, flux, flux_err, NBlist, BBlist, Niter, Nskip):
 
     # Since we need these entries in the beginning...
     k = np.ones(len(flux))
-    b = b_BB + k[:,np.newaxis]*b_NB
-    A = A_BB + k[:,np.newaxis,np.newaxis]**2*A_NB
+    b = b_BB + k[:, np.newaxis]*b_NB
+    A = A_BB + k[:, np.newaxis, np.newaxis]**2*A_NB
 
     v = 100*np.ones_like(b)
 
@@ -102,15 +102,16 @@ def minimize_at_z(f_mod, flux, flux_err, NBlist, BBlist, Niter, Nskip):
             # Just to avoid crazy values ...
             k = np.clip(k, 0.1, 10)
 
-            b = b_BB + k[:,None]*b_NB
-            A = A_BB + k[:,None,None]**2*A_NB
+            b = b_BB + k[:, None]*b_NB
+            A = A_BB + k[:, None, None]**2*A_NB
 
     # I was comparing with the standard algorithm above...
     v_scaled = v
     k_scaled = k
 
     L = []
-    L.append(np.einsum('g,gfs,gs->gf', k_scaled, f_mod.sel(band=NBlist), v_scaled))
+    L.append(np.einsum('g,gfs,gs->gf', k_scaled,
+                       f_mod.sel(band=NBlist), v_scaled))
     L.append(np.einsum('gfs,gs->gf', f_mod.sel(band=BBlist), v_scaled))
 
     Fx = np.hstack(L)

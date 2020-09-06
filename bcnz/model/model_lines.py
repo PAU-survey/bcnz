@@ -11,6 +11,7 @@ import pandas as pd
 from scipy.interpolate import splrep, splev
 from scipy.integrate import simps
 
+
 def _filter_spls(filters):
     """Convert filter curves to splines."""
 
@@ -30,6 +31,7 @@ def _filter_spls(filters):
 
     return splD, rconstD
 
+
 def create_ext_spl(config, ext):
     """Spline for the extinction."""
 
@@ -37,6 +39,7 @@ def create_ext_spl(config, ext):
     ext_spl = splrep(sub.lmb, sub.k)
 
     return ext_spl
+
 
 def _find_flux(config, z, f_spl, ratios, rconst, ext_spl, band):
     """Estimate the flux in the emission lines relative
@@ -50,9 +53,9 @@ def _find_flux(config, z, f_spl, ratios, rconst, ext_spl, band):
     fluxD = {'lines': 0., 'OIII': 0.}
     for line_name, line in ratios.iterrows():
         lmb = line.lmb*(1+z)
-        y_f = splev(lmb, f_spl, ext=1) 
+        y_f = splev(lmb, f_spl, ext=1)
 
-        k_ext = splev(lmb, ext_spl, ext=1) 
+        k_ext = splev(lmb, ext_spl, ext=1)
         y_ext = 10**(-0.4*EBV*k_ext)
 
         isOIII = line_name.startswith('OIII')
@@ -72,13 +75,13 @@ def _find_flux(config, z, f_spl, ratios, rconst, ext_spl, band):
         del fluxD['OIII']
 
     if band == 'pau_g':
-        ipdb.set_trace() # Should not happen.
+        ipdb.set_trace()  # Should not happen.
 
     return fluxD
 
+
 def _to_df(oldD, z, band):
     """Dictionary suitable for concatination."""
-
 
     # I have tried finding better ways, but none worked very well..
     F = pd.DataFrame(oldD)
@@ -95,10 +98,10 @@ def _to_df(oldD, z, band):
     if band == 'pau_g':
         ipdb.set_trace()
 
-
     return F
 
-def model_lines(ratios, filters, extinction, ext_law, EBV, dz=0.0005, ampl=1e-16, 
+
+def model_lines(ratios, filters, extinction, ext_law, EBV, dz=0.0005, ampl=1e-16,
                 sep_OIII=True, funky_OIII_norm=True):
     """The model flux for the emission lines.
 
@@ -114,7 +117,7 @@ def model_lines(ratios, filters, extinction, ext_law, EBV, dz=0.0005, ampl=1e-16
            funky_OIII_norm (bool): Normalization to match Alexes code.
     """
 
-    config = {'ext_law': ext_law, 'EBV': EBV, 'dz': dz, 'ampl': ampl, 
+    config = {'ext_law': ext_law, 'EBV': EBV, 'dz': dz, 'ampl': ampl,
               'sep_OIII': sep_OIII, 'funky_OIII_norm': funky_OIII_norm}
 
     filtersD, rconstD = _filter_spls(filters)

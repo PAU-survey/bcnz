@@ -7,6 +7,7 @@ import pdb
 import numpy as np
 import pandas as pd
 
+
 def query(engine, table):
     """The query against the PAUdm postgresql database."""
 
@@ -22,6 +23,7 @@ def query(engine, table):
     cat = pd.read_sql_query(sql, engine)
 
     return cat
+
 
 def paudm_cosmos(engine, table='COSMOS'):
     """Download the Ilbert catalogue. This is only to have the position.

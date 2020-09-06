@@ -1,6 +1,7 @@
 from pathlib import Path
 import xarray as xr
 
+
 def cache_model(cache_dir, runs=None):
     """Load models if already run, otherwise run one.
        Args:
@@ -14,7 +15,7 @@ def cache_model(cache_dir, runs=None):
 
     # Ensure all models are run.
     cache_dir = Path(cache_dir)
-    for i,row in runs.iterrows():
+    for i, row in runs.iterrows():
         path = cache_dir / f'model_{i}.nc'
 
         if path.exists():
@@ -26,9 +27,9 @@ def cache_model(cache_dir, runs=None):
 
     print('starting to load....')
     D = {}
-    for i,row in runs.iterrows():
+    for i, row in runs.iterrows():
         path = cache_dir / f'model_{i}.nc'
-       
+
         # The line of creating a new array is very important. Without
         # this the calibration algorithm became 4.5 times slower.
         f_mod = xr.open_dataset(path).flux

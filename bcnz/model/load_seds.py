@@ -7,6 +7,7 @@ import sys
 import numpy as np
 import pandas as pd
 
+
 def load_seds(input_dir):
     """Load seds from files.
 
@@ -24,8 +25,8 @@ def load_seds(input_dir):
             continue
 
         path = os.path.join(input_dir, fname)
-        lmb,response = np.loadtxt(path).T
-        name = fname.replace('.'+suf,'')
+        lmb, response = np.loadtxt(path).T
+        name = fname.replace('.'+suf, '')
 
         # This is to avoid numerical aritifacts which can
         # be important if the spectrum is steep.
@@ -46,4 +47,3 @@ def load_seds(input_dir):
     df = df.set_index('sed')
 
     return df
-

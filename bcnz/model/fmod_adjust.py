@@ -5,24 +5,26 @@ from IPython.core import debugger as ipdb
 import pandas as pd
 import xarray as xr
 
+
 def funky_hack(config, syn2real, sed, model_norm):
     """Exactly mimic the cuts Alex was making."""
 
     ratio = syn2real.sel(sed=sed).copy()
     if sed == 'OIII':
         ratio[(ratio.z < 0.1) | (0.45 < ratio.z)] = 1.
-    elif sed == 'lines': 
+    elif sed == 'lines':
         flux = model_norm.sel(sed=sed)
         ratio.values[flux < 0.001*flux.max()] = 1.
 
         # Yes, this actually happens in an interval.
         upper = 0.1226,
-        ratio[(ratio.z>0.1025) & (ratio.z<upper)] = 1.
+        ratio[(ratio.z > 0.1025) & (ratio.z < upper)] = 1.
     else:
         # The continuum ratios are better behaved.
         pass
 
     return ratio
+
 
 def scale_model(config, coeff, model):
     """Directly scale the model as with the data."""
@@ -35,28 +37,30 @@ def scale_model(config, coeff, model):
     inds = ['band', 'z', 'sed', 'ext_law', 'EBV']
     model = model.set_index(inds)
     model = model.to_xarray().flux
-    model_norm = model.sel(band=norm_band).copy() # A copy is needed for funky_hack..
+    # A copy is needed for funky_hack..
+    model_norm = model.sel(band=norm_band).copy()
     model_NB = model.sel(band=coeff.nb.values)
 
     # Scaling the fluxes..
     synbb = (model_NB.rename({'band': 'nb'})*coeff).sum(dim='nb')
     syn2real = model_norm / synbb
 
-    for j,xsed in enumerate(model.sed):
-        sed = str(xsed.values) 
+    for j, xsed in enumerate(model.sed):
+        sed = str(xsed.values)
         syn2real_mod = funky_hack(config, syn2real, sed, model_norm)
 
-        for i,xband in enumerate(model.band):
+        for i, xband in enumerate(model.band):
             # Here we scale the narrow bands into the broad band system.
             if str(xband.values).startswith('NB'):
-                model[i,:,j,:,:] *= syn2real_mod
+                model[i, :, j, :, :] *= syn2real_mod
 
     # Since we can not directly store xarray.
     model = model.to_dataframe()
 
     return model
 
-def fmod_adjust(model_cont, model_lines, coeff=False, use_lines=True, 
+
+def fmod_adjust(model_cont, model_lines, coeff=False, use_lines=True,
                 norm_band='', scale_synband=False):
     """Adjust the model to reflect that the syntetic narrow bands is not
        entirely accurate.

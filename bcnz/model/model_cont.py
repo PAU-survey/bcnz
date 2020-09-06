@@ -27,6 +27,7 @@ def calc_r_const(filters):
 
     return r_const
 
+
 def sed_spls(seds):
     """Create a spline of all the SEDs."""
 
@@ -39,6 +40,7 @@ def sed_spls(seds):
 
     return sedD
 
+
 def calc_ext_spl(ext, config):
     """Spline for the extinction."""
 
@@ -46,6 +48,7 @@ def calc_ext_spl(ext, config):
     ext_spl = splrep(sub.lmb, sub.k)
 
     return ext_spl
+
 
 def calc_ab(config, filters, seds, ext, r_const):
     """Estimate the fluxes for all filters and SEDs."""
@@ -63,7 +66,7 @@ def calc_ab(config, filters, seds, ext, r_const):
 
     int_method = config['int_method']
     a = 1./(1+z)
-    for i,band in enumerate(filters.index.unique()):
+    for i, band in enumerate(filters.index.unique()):
         print('# band', i, 'band', band)
 
         sub_f = filters.loc[band]
@@ -98,7 +101,7 @@ def calc_ab(config, filters, seds, ext, r_const):
             # This might be overkill in terms of storage, but information in
             # the columns is a pain..
             part = pd.DataFrame({'z': z, 'flux': ans})
-            part['band'] = band 
+            part['band'] = band
             part['sed'] = sed
             part['ext_law'] = config['ext_law']
             part['EBV'] = EBV
@@ -108,6 +111,7 @@ def calc_ab(config, filters, seds, ext, r_const):
             t2 = time.time()
 
     return df
+
 
 def model_cont(filters, seds_df, ext, seds, ext_law, EBV, zmax_ab=2.05,
                dz_ab=0.001, int_dz=1., int_method='simps'):
@@ -126,7 +130,7 @@ def model_cont(filters, seds_df, ext, seds, ext_law, EBV, zmax_ab=2.05,
 
     """
 
-    config = {'seds': seds, 'ext_law': ext_law, 'EBV': EBV, 'zmax_ab': zmax_ab, 
+    config = {'seds': seds, 'ext_law': ext_law, 'EBV': EBV, 'zmax_ab': zmax_ab,
               'dz_ab': dz_ab, 'int_dz': int_dz, 'int_method': int_method}
 
     r_const = calc_r_const(filters)

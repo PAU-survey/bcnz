@@ -3,12 +3,14 @@
 import functools
 from IPython.core import debugger as ipdb
 
+
 def rband(field):
     """The rband name in different fields."""
 
     return 'subaru_r' if field.lower() == 'cosmos' else 'cfht_r'
 
-def paus(engine, memba_prod, field, d_cosmos = '~/data/cosmos', min_nb=35,
+
+def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos', min_nb=35,
          only_specz=False, secure_spec=False, has_bb=False, sel_gal=True):
     """Load the PAUS data from PAUdm and perform the required
        transformation.
@@ -53,16 +55,16 @@ def paus(engine, memba_prod, field, d_cosmos = '~/data/cosmos', min_nb=35,
     conf['test_band'] = rband(field)
     nbsubset = bcnz.data.gal_subset(data_noisy, specz, **conf)
 
-
     # Synthetic narrow band coefficients.
     synband = rband(field)
     filters = bcnz.model.all_filters()
     coeff = bcnz.model.nb2bb(filters, synband)
 
-    data_scaled = bcnz.data.synband_scale(nbsubset, coeff, synband=synband, \
-                  scale_data=True)
+    data_scaled = bcnz.data.synband_scale(nbsubset, coeff, synband=synband,
+                                          scale_data=True)
 
     return data_scaled
 
 
-paus_calib_sample = functools.partial(paus, min_nb=39, only_specz=True, secure_spec=True)
+paus_calib_sample = functools.partial(
+    paus, min_nb=39, only_specz=True, secure_spec=True)

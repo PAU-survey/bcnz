@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from scipy.interpolate import splrep, splev, splint
 
+
 def rebin(model, zmin=0.01, zmax=1.2, dz=0.001):
     """Rebinning the redshift grid of the model.
 
@@ -46,6 +47,5 @@ def rebin(model, zmin=0.01, zmax=1.2, dz=0.001):
 
     # Converting this once and storing as xarray is much more efficient.
     rebinned = rebinned.flux.to_xarray()
-
 
     return rebinned

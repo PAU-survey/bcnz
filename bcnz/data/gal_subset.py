@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
-# The galaxy selection. This code works with COSMOS and CFHTlens. 
+# The galaxy selection. This code works with COSMOS and CFHTlens.
 from IPython.core import debugger as ipdb
 import numpy as np
 import pandas as pd
+
 
 def set_other_fields(cat, other):
     """Setting the spectroscopic redshift as coming from another catalogue."""
@@ -14,7 +15,7 @@ def set_other_fields(cat, other):
     # A bit of gluing together...
     cosmos_fields = ['type', 'conf', 'I_auto']
     cfht_fields = ['zquality', 'obj_type', 'imag', 'zspec']
-    vipers_fields = ['zflg'] 
+    vipers_fields = ['zflg']
     for field in cosmos_fields + cfht_fields + vipers_fields:
         if not field in other.columns:
             continue
@@ -42,7 +43,7 @@ def limit_nb(df, min_nb):
 
     # So we are only including the narrow band filters when
     # counting.
-    filters = [x for x in df.columns.get_level_values(1).unique() \
+    filters = [x for x in df.columns.get_level_values(1).unique()
                if isnb(x)]
 
     df = df.copy()
@@ -50,6 +51,7 @@ def limit_nb(df, min_nb):
     df = df[min_nb <= df.nrobs]
 
     return df
+
 
 def limit_spec(cat, only_specz, secure_spec):
     """Only return the galaxies with a spectroscopic redshift."""
@@ -65,7 +67,7 @@ def limit_spec(cat, only_specz, secure_spec):
             cat = cat[(3. <= cat.conf) & (cat.conf <= 5.)]
         elif 'zflg' in cat.columns:
             # Highly (99%) secure Vipers spectra.
-            cat = cat[(3. <= cat.zflg) & (cat.zflg< 5.)]
+            cat = cat[(3. <= cat.zflg) & (cat.zflg < 5.)]
         elif 'zquality' in cat.columns:
             # Deep2 spectra.
             cat = cat[(3. <= cat.zquality) & (cat.zquality <= 4)]
@@ -74,6 +76,7 @@ def limit_spec(cat, only_specz, secure_spec):
 
     return cat
 
+
 def limit_isgal(sub, sel_gal):
     """If limiting ourself to only the galaxies."""
 
@@ -81,7 +84,7 @@ def limit_isgal(sub, sel_gal):
         return sub
 
     if 'obj_type' in sub.columns:
-        sub = sub[sub.obj_type == 'GALAXY'] 
+        sub = sub[sub.obj_type == 'GALAXY']
     elif 'type' in sub.columns:
         sub = sub[sub.type == 0]
     else:
@@ -89,6 +92,7 @@ def limit_isgal(sub, sel_gal):
         sub = sub[sub.zspec != 0]
 
     return sub
+
 
 def limit_has_bb(sub, has_bb, test_band):
     """Test is a specific broad band is present in the
@@ -99,6 +103,7 @@ def limit_has_bb(sub, has_bb, test_band):
         sub = sub[~np.isnan(sub.flux[test_band])]
 
     return sub
+
 
 def limit_ngal(cat, ngal):
     """Limit based on the number of galaxies."""
@@ -112,6 +117,7 @@ def limit_ngal(cat, ngal):
 
     return sub
 
+
 def limit_zmax(cat, zmax):
     """Limit based on redshift."""
 
@@ -123,8 +129,7 @@ def limit_zmax(cat, zmax):
     return cat
 
 
-
-def gal_subset(galcat, ref_cat, min_nb=39, only_specz=True, ngal=0, has_bb=False, 
+def gal_subset(galcat, ref_cat, min_nb=39, only_specz=True, ngal=0, has_bb=False,
                secure_spec=True, sel_gal=True, zmax=0., test_band='subaru_r'):
     """Selects a subset of galaxies, either for calibration or running the photoz.
        Args:

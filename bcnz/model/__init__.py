@@ -17,6 +17,7 @@ from .rebin import rebin
 from .cache import cache_model
 from .nb2bb import nb2bb
 
+
 def model_single(seds, ext_law, EBV, sep_OIII, sed_dir, use_lines):
     """Create a single model."""
 
@@ -27,8 +28,10 @@ def model_single(seds, ext_law, EBV, sep_OIII, sed_dir, use_lines):
     extinction = extinction_laigle()
 
     # Continuum and lines.
-    model_cont_df = model_cont(filters, seds_cont, extinction, seds=seds, EBV=EBV, ext_law=ext_law)
-    model_lines_df = model_lines(ratios, filters, extinction, EBV=EBV, ext_law=ext_law)
+    model_cont_df = model_cont(
+        filters, seds_cont, extinction, seds=seds, EBV=EBV, ext_law=ext_law)
+    model_lines_df = model_lines(
+        ratios, filters, extinction, EBV=EBV, ext_law=ext_law)
 
     model_orig = fmod_adjust(model_cont_df, model_lines_df)
     model_binned = rebin(model_orig)

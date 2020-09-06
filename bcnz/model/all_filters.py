@@ -6,6 +6,7 @@ from pathlib import Path
 import pandas as pd
 from glob import glob
 
+
 def all_filters():
     """Create a dataframe joining all filters."""
 
@@ -16,7 +17,7 @@ def all_filters():
     L = []
     for x in glob(str(Path(dfilters) / '*')):
         path = Path(x)
-            
+
         sep = ',' if path.suffix == '.csv' else ' '
         part = pd.read_csv(x, names=['lmb', 'response'], comment='#', sep=sep)
         part['band'] = path.with_suffix('').name

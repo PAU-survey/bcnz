@@ -5,6 +5,7 @@ from IPython.core import debugger as ipdb
 import numpy as np
 import pandas as pd
 
+
 def query(engine, field):
     """The query against the PAUdm postgresql database."""
 
@@ -13,7 +14,6 @@ def query(engine, field):
         coords = {'ra_min': 200, 'ra_max': 230, 'dec_min': 50, 'dec_max': 60}
     elif field == 'w1':
         coords = {'ra_min': 20, 'ra_max': 50, 'dec_min': -7, 'dec_max': 3}
-
 
     # Here we directly select W3 to save time!
     sql = """SELECT paudm_id as ref_id, alpha_j2000 as ra, delta_j2000 as dec, \
@@ -25,15 +25,15 @@ def query(engine, field):
              AND   mag_i < 23
           """.format(**coords)
 
-
     cat = pd.read_sql_query(sql, engine)
 
     return cat
 
+
 def change_format(cat_in):
     """Change format to be compatible with the rest of the pipeline."""
-    
-    fnameL = ['u','g','r','i','z','y']
+
+    fnameL = ['u', 'g', 'r', 'i', 'z', 'y']
     new_names = ['cfht_'+x for x in fnameL]
 
     # Convert the fluxes.
@@ -60,17 +60,21 @@ def change_format(cat_in):
 
     return cat
 
+
 def select_i(cat_in):
     """Select which of the columns to use."""
 
     use_y = np.isnan(cat_in.flux.cfht_i)
-    cat_in[('flux', 'cfht_i')] = np.where(use_y, cat_in.flux.cfht_y, cat_in.flux.cfht_i)
-    cat_in[('flux_error', 'cfht_i')] = np.where(use_y, cat_in.flux_error.cfht_y, cat_in.flux_error.cfht_i)
+    cat_in[('flux', 'cfht_i')] = np.where(
+        use_y, cat_in.flux.cfht_y, cat_in.flux.cfht_i)
+    cat_in[('flux_error', 'cfht_i')] = np.where(
+        use_y, cat_in.flux_error.cfht_y, cat_in.flux_error.cfht_i)
 
     del cat_in[('flux', 'cfht_y')]
     del cat_in[('flux_error', 'cfht_y')]
 
     return cat_in
+
 
 def paudm_cfhtlens(engine, field):
     """Getting the parent catalogue from CFHT lens.

@@ -7,13 +7,14 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import curve_fit
 
+
 def fix_missing_data(cat_in, ind):
     """Linear interpolation in magnitude space to replace missing data."""
 
     X = 455 + 10*np.arange(40)
     NB = list(map('pau_nb{}'.format, X))
 
-    def f_linear(x,a,b):
+    def f_linear(x, a, b):
         return a*x + b
 
     pau_syn = cat_in.flux[NB].values
@@ -28,16 +29,16 @@ def fix_missing_data(cat_in, ind):
         touse = ~np.isnan(pau_syn[i])
 
         yfit = np.log10(pau_syn[miss_rows[i]][touse]) if ind \
-               else np.log10(pau_syn[miss_rows[0]][touse])
-        
-        try:       
-            popt,pcov = curve_fit(f_linear, X[touse], yfit)
-            pau_syn[i,~touse] = 10**f_linear(X[~touse], *popt)
+            else np.log10(pau_syn[miss_rows[0]][touse])
+
+        try:
+            popt, pcov = curve_fit(f_linear, X[touse], yfit)
+            pau_syn[i, ~touse] = 10**f_linear(X[~touse], *popt)
         except ValueError:
             ipdb.set_trace()
 
-
     return pau_syn
+
 
 def find_synbb(pau_syn, bbsyn_coeff, synband):
     """Just because of the different naming..."""
@@ -50,12 +51,13 @@ def find_synbb(pau_syn, bbsyn_coeff, synband):
 
     return synbb
 
+
 def scale_fluxes(cat_in, obs2syn):
     """Scale the fluxes between the systems."""
 
     # Here we scale the narrow bands without adding additional
     # errors. This might not be the most optimal.
-    cat_out = cat_in.copy() 
+    cat_out = cat_in.copy()
     for band in cat_in.flux.columns:
         if not band.startswith('pau_nb'):
             continue
@@ -65,7 +67,8 @@ def scale_fluxes(cat_in, obs2syn):
 
     return cat_out
 
-def synband_scale(cat_in, bbsyn_coeff, ind=False, synband='subaru_r', 
+
+def synband_scale(cat_in, bbsyn_coeff, ind=False, synband='subaru_r',
                   scale_data=False):
     """Adjust the data based on a synthetic band.
        Args:
