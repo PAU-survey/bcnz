@@ -5,12 +5,9 @@ import glob
 import pdb
 from setuptools import setup, find_packages
 
+# Same author and maintainer.
 name = 'Martin B. Eriksen'
-email = 'martin.b.eriksen@gmail.com'
-
-data_files = [
-    ('bcnz/config', glob.glob('bcnz/config/*.yaml')),
-    ('bcnz/descr', glob.glob('bcnz/descr/*.yaml'))]
+email = 'eriksen@pic.es'
 
 setup(
     name = 'bcnz',
@@ -18,16 +15,22 @@ setup(
     packages = find_packages(),
 
     install_requires = [
-        'Numpy >= 1.6',
-        'Scipy',
-        'Tables',
+        'numpy',
+        'pandas',
+        'tables',
+        'xarray',
+        'scipy',
+        'sklearn',
+        'psycopg2',
+        'fire',
+        'dask',
+        'tables',
         'argparse'
     ],
     author = name,
     author_email = email,
-    data_files = data_files,
-    license = 'Read LICENSE.txt',
+    license = 'GPLv3',
     maintainer = name,
     maintainer_email = email,
-    #scripts = ['bcnz/bin/bcnz.py'],
+    scripts = ['bcnz/bin/bcnz.py'],
 )
