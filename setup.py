@@ -33,4 +33,9 @@ setup(
     maintainer = name,
     maintainer_email = email,
     scripts = ['bcnz/bin/bcnz.py'],
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Topic :: Astronomy",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
+    ],
 )
