@@ -160,13 +160,7 @@ def sel_subset(galcat, fit_bands):
 
     # Note: I should add the cuts here after making sure that the
     # two pipelines give the same results.
-
     galcat = galcat[~np.isnan(galcat.zs)]
-
-    # This cut was needed to avoid negative numbers in the logarithm.
-    #SN = galcat.flux / galcat.flux_error
-    #ipdb.set_trace()
-    #galcat = galcat.loc[self.config['SN_min'] < SN.min(axis=1)]
 
     # Removing other bands, since it internally gives a problem.
     D = {'flux': galcat.flux[fit_bands], 'flux_error': galcat.flux_error[fit_bands]}
@@ -178,6 +172,7 @@ def sel_subset(galcat, fit_bands):
 def calib(galcat, modelD, fit_bands, SNR_min=-5, Nrounds=20, Niter=1001, cosmos_scale=True, \
           learn_rate=1.0, Nskip=10):
     """Calibrate zero-points by comparing the result at the spectroscopic redshift.
+
        Args:
            fit_bands (list): Bands to fit in the comparison.
            SNR_min (float): Cut on minimum SNR value.
@@ -194,7 +189,6 @@ def calib(galcat, modelD, fit_bands, SNR_min=-5, Nrounds=20, Niter=1001, cosmos_
 
     # Loads model exactly at the spectroscopic redshift for each galaxy.
     galcat = sel_subset(galcat, fit_bands)
-#    D = self.input.depend.items()
     f_modD = libcalib.model_at_z(galcat.zs, modelD, fit_bands)
 
     zp, zp_details, ratio_all = _zero_points(f_modD, galcat, **config)

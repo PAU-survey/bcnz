@@ -210,6 +210,7 @@ def get_iband_model(model, norm, pzcat, scale_input=True, i_band=None):
 def photoz(galcat, modelD, ebvD, fit_bands, Niter=1000, Nskip=10, odds_lim=0.01,
            width_frac=0.01, i_band='subaru_i', only_pz=True):
     """Estimates the photoz for the models for a given configuration.
+
        Args:
            galcat (df): Subset of galaxy catalogue to estimate photo-z.
            modelD (dict): Dictionary containing all the flux models.
@@ -261,12 +262,15 @@ def _flatten_input(df):
 
     return comb
 
-def photoz_flatten(df, *args, **kwds):
+def photoz_flatten(galcat, *args, **kwds):
     """When working with parallel processing frameworks which works simpler
        having a flat hirarchy both in the input and output.
+       
+       Args:
+           galcat (df): Galaxy catalogue in a hirarchical format.
     """
 
-    galcat = _flatten_input(df)
+    galcat = _flatten_input(galcat)
     pzcat, best_model, model_z0, iband_model, pz = photoz(galcat, *args, only_pz=False, **kwds)
 
     # Combine into a flat data structure. For example Dask does not support a

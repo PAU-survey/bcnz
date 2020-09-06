@@ -132,7 +132,12 @@ def get_arrays(data_df, filters):
     return flux, flux_err, var_inv
 
 def get_pzcat(chi2, odds_lim, width_frac):
-    """Get photo-z catalogue from the p(z)."""
+    """Get photo-z catalogue from the p(z).
+       Args:
+           chi2 (xarray): Chi2 for a batch of galaxies.
+           odds_lim (float): Parameter in the ODDS calculation.
+           width_frac (float): Parameter in the pz_width calculation.
+    """
 
     pz = np.exp(-0.5*chi2)
     pz_norm = pz.sum(dim=['run', 'z'])

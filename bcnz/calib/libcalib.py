@@ -37,6 +37,7 @@ def model_at_z(zs, modelD, fit_bands):
 
 def minimize_at_z(f_mod, flux, flux_err, NBlist, BBlist, Niter, Nskip):
     """Minimize at a known redshift.
+
        Args: 
            f_mod (DataArray): Flux model from templates.
            flux (DataArray): The fluxes.

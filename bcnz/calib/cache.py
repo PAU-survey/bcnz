@@ -4,11 +4,14 @@
 from pathlib import Path
 import pandas as pd
 
-def cache_zp(run_dir, *args, **kwds):
-    """Functionality for caching the zero-points."""
+def cache_zp(output_dir, *args, **kwds):
+    """Functionality for caching the zero-points.
+       Args:
+           run_dir: Directory to store the results.
+    """
 
-    run_dir = Path(run_dir)
-    path = run_dir / 'zp.h5'
+    output_dir = Path(output_dir)
+    path = output_dir / 'zp.h5'
 
     import bcnz
     if not path.exists():

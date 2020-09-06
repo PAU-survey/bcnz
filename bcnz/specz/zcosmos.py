@@ -7,8 +7,12 @@ import pdb
 import numpy as np
 import pandas as pd
 
-def zcosmos(engine, table='COSMOS'):
-    """Download the Ilbert catalogue. This is only to have the position."""
+def zcosmos(engine):
+    """Download the Ilbert catalogue. This is only to have the position.
+
+       Args:
+           engine (obj): Connection to PAUdb.
+    """
 
     # Similar to the COSMOS query, but here restricted to only get the
     # columns relevant for validation.
