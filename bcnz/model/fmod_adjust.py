@@ -84,7 +84,7 @@ def fmod_adjust(model_cont, model_lines, coeff=False, use_lines=True,
 
         return comb
 
-    out_cont = scale_model(coeff, model_cont)
+    out_cont = scale_model(config, coeff, model_cont)
     if use_lines:
         out_lines = scale_model(coeff, model_lines)
         out = pd.concat([out_cont, out_lines])
