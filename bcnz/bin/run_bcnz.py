@@ -30,7 +30,7 @@ def get_bands(field, fit_bands):
     return fit_bands
 
 def get_input(output_dir, model_dir, memba_prod, field, fit_bands,
-              only_spez):
+              only_specz):
     """Get the input to run the photo-z code."""
 
     path_galcat = output_dir / 'galcat_in.pq'
@@ -60,8 +60,7 @@ def get_input(output_dir, model_dir, memba_prod, field, fit_bands,
     norm_filter = bcnz.data.catalogs.rband(field)
     galcat_inp = bcnz.calib.apply_zp(galcat, zp, norm_filter=norm_filter)
 
-    galcat_inp.to_hdf(str(path_galcat), 'default')
-    galcat_inp = pd.read_hdf(str(path_galcat), 'default')
+    galcat_inp.to_parquet(str(path_galcat))
 
     return runs, modelD, galcat_inp
 
@@ -88,8 +87,8 @@ def run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask):
 
     xnew_modelD = client.scatter(fix_model(modelD, fit_bands))
 
-    galcat = dd.from_pandas(galcat, chunksize=10)
-    galcat = galcat.persist()
+    galcat = dd.read_parquet(str(output_dir / 'galcat_in.pq'))
+    galcat = galcat.repartition(chunksize=10)
 
     ebvD = dict(runs.EBV)
     pzcat = galcat.map_partitions(
