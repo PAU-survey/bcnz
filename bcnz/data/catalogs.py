@@ -65,6 +65,9 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos', min_nb=35,
 
     return data_scaled
 
-
 paus_calib_sample = functools.partial(
-    paus, min_nb=39, only_specz=True, secure_spec=True)
+    paus, min_nb=39, only_specz=True, has_bb=True, secure_spec=True)
+
+# The entries for which we run the photo-z.
+paus_main_sample = functools.partial(
+    paus, min_nb=35, only_specz=False, has_bb=True, sel_gal=False, secure_spec=False)

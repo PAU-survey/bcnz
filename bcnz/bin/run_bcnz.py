@@ -29,7 +29,8 @@ def get_bands(field, fit_bands):
 
     return fit_bands
 
-def get_input(output_dir, model_dir, memba_prod, field, fit_bands):
+def get_input(output_dir, model_dir, memba_prod, field, fit_bands,
+              only_spez):
     """Get the input to run the photo-z code."""
 
     path_galcat = output_dir / 'galcat_in.pq'
@@ -38,21 +39,29 @@ def get_input(output_dir, model_dir, memba_prod, field, fit_bands):
     runs = bcnz.config.eriksen2019()
     modelD = bcnz.model.cache_model(model_dir, runs)
 
-    if not path_galcat.exists():
-        engine = bcnz.connect_db()
-        galcat_specz = bcnz.data.paus_calib_sample(engine, memba_prod, field)
-        zp = bcnz.calib.cache_zp(output_dir, galcat_specz, modelD, fit_bands)
-
-        # This should not be the same. We need to modify this later.
-        galcat = galcat_specz
-
-        # Applying the zero-points.
-        norm_filter = bcnz.data.catalogs.rband(field)
-        galcat_inp = bcnz.calib.apply_zp(galcat, zp, norm_filter=norm_filter)
-
-        galcat_inp.to_hdf(str(path_galcat), 'default')
-    else:
+    # In case it's already estimated.
+    if path_galcat.exists():
         galcat_inp = pd.read_hdf(str(path_galcat), 'default')
+
+        return runs, modelD, galcat_inp
+
+    # And then estimate the catalogue.
+    engine = bcnz.connect_db()
+    galcat_specz = bcnz.data.paus_calib_sample(engine, memba_prod, field)
+    zp = bcnz.calib.cache_zp(output_dir, galcat_specz, modelD, fit_bands)
+
+    # This should not be the same. We need to modify this later.
+    if only_specz:
+        galcat = galcat_specz
+    else:
+        galcat = bcnz.data.paus_main_sample(engine, memba_prod, field)
+
+    # Applying the zero-points.
+    norm_filter = bcnz.data.catalogs.rband(field)
+    galcat_inp = bcnz.calib.apply_zp(galcat, zp, norm_filter=norm_filter)
+
+    galcat_inp.to_hdf(str(path_galcat), 'default')
+    galcat_inp = pd.read_hdf(str(path_galcat), 'default')
 
     return runs, modelD, galcat_inp
 
@@ -120,7 +129,8 @@ def validate(output_dir, field):
     print('sig68 (50%)', fsig68(sub))
 
 
-def run_photoz(output_dir, model_dir, memba_prod, field, fit_bands=None, ip_dask=None):
+def run_photoz(output_dir, model_dir, memba_prod, field, fit_bands=None, only_specz=False, 
+               ip_dask=None):
     """Run the photo-z over a catalogue in the PAUdm database.
 
        Args:
@@ -129,6 +139,7 @@ def run_photoz(output_dir, model_dir, memba_prod, field, fit_bands=None, ip_dask
            memba_prod (int): MEMBA production to use.
            field (str): The observed field.
            fit_bands (list): Which bands to fit.
+           only_specz (bool): Only run photo-z for galaxies with spec-z.
            ip_dask (str): IP for Dask scheduler.
     """
 
@@ -136,7 +147,7 @@ def run_photoz(output_dir, model_dir, memba_prod, field, fit_bands=None, ip_dask
 
     fit_bands = get_bands(field, fit_bands)
     runs, modelD, galcat = get_input(
-        output_dir, model_dir, memba_prod, field, fit_bands)
+        output_dir, model_dir, memba_prod, field, fit_bands, only_specz)
 
     run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask)
 
