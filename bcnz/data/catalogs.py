@@ -35,12 +35,12 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos', min_nb=35,
         cosmos_laigle = bcnz.data.cosmos_laigle(d_cosmos)
         parent_cat = bcnz.data.match_position(paudm_cosmos, cosmos_laigle)
 
-        specz = parent_cat
-    else:
-        # Specz catalogue needs positional matching.
+        specz = parent_cat # Contains zCOSMOS DR 3
+    elif field.lower() == 'w3':
         parent_cat = bcnz.data.paudm_cfhtlens(engine, 'w3')
-        deep2 = bcnz.specz.deep2(engine)
-        specz = bcnz.data.match_position(parent_cat, deep2)
+        specz = bcnz.specz.deep2()
+    else:
+        raise ValueError(f'No spectroscopy defined for: {field}')
 
     paudm_coadd = bcnz.data.paudm_coadd(engine, memba_prod, field)
     data_in = paudm_coadd.join(parent_cat, how='inner')

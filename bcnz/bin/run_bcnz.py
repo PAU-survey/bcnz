@@ -89,7 +89,7 @@ def run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask):
     pzcat.to_parquet(str(path_out))
 
 
-def validate(output_dir):
+def validate(output_dir, field):
     """Some very simple validation."""
 
     # The idea is not to perform all validation here, just some simple tests.
@@ -97,15 +97,23 @@ def validate(output_dir):
     pzcat = dd.read_parquet(path_pzcat)[['zb', 'qz']].compute()
 
     engine = bcnz.connect_db()
-    specz = bcnz.specz.zcosmos(engine)
+    if field.lower() == 'cosmos':
+        specz = bcnz.specz.zcosmos(engine)
+        comb = pzcat.join(specz)
+        comb = comb[(comb.I_auto < 22.5) & (comb.r50 > 0)
+                    & (3 <= comb.conf) & (comb.conf <= 5)]
 
-    comb = pzcat.join(specz)
+    elif field.lower() == 'w3':
+        specz = bcnz.specz.deep2(engine)
+
+        comb = pzcat.join(specz)
+        comb = comb[comb.magi < 22.5]
+
     comb['dx'] = (comb.zb - comb.zspec) / (1 + comb.zspec)
-    comb = comb[(comb.I_auto < 22.5) & (comb.r50 > 0)
-                & (3 <= comb.conf) & (comb.conf <= 5)]
 
     # Simple sigma68 statistics.
     def fsig68(X): return 0.5*(X.dx.quantile(0.84) - X.dx.quantile(0.16))
+
     sub = comb[comb.qz < comb.qz.median()]
     print()
     print('sig68 (all)', fsig68(comb))
@@ -132,7 +140,7 @@ def run_photoz(output_dir, model_dir, memba_prod, field, fit_bands=None, ip_dask
 
     run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask)
 
-    validate(output_dir)
+    validate(output_dir, field)
 
 
 if __name__ == '__main__':

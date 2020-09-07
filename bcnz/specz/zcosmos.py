@@ -21,7 +21,6 @@ def zcosmos(engine):
              WHERE zspec > 0
           """
 
-    print('Starting to query..', table)
     cat = pd.read_sql_query(sql, engine)
     cat = cat.set_index('ref_id')
 
