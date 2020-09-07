@@ -7,6 +7,7 @@ import dask.distributed
 import numpy as np
 import pandas as pd
 import xarray as xr
+from IPython.core import debugger as ipdb
 
 from . import libpzqual
 
@@ -207,8 +208,20 @@ def get_iband_model(model, norm, pzcat, scale_input=True, i_band=None):
 
     return df
 
+def _find_iband(fit_bands):
+    """Find the i-band"""
+
+    # This would prevent anyone from running the code without a i-band. If
+    # you really want this, please modify the code. For creating randoms
+    # we require the modelling in the i-band.
+    for iband in ['subaru_i', 'cfht_i']:
+        if iband in fit_bands:
+            return iband
+    
+    raise ValueError('No i-band is included in the parameters.')
+
 def photoz(galcat, modelD, ebvD, fit_bands, Niter=1000, Nskip=10, odds_lim=0.01,
-           width_frac=0.01, i_band='subaru_i', only_pz=True):
+           width_frac=0.01, i_band='', only_pz=True):
     """Estimates the photoz for the models for a given configuration.
 
        Args:
@@ -226,6 +239,10 @@ def photoz(galcat, modelD, ebvD, fit_bands, Niter=1000, Nskip=10, odds_lim=0.01,
     """
 
     config = {'fit_bands': fit_bands, 'Niter': Niter, 'Nskip': Nskip}
+
+    # Propagating this value is a bit tedious when one can infer it
+    # from the provided bands..
+    i_band = i_band if i_band else _find_iband(fit_bands)
 
     chi2, norm = minimize_all_z(galcat, modelD, **config)
     pzcat, pz = libpzqual.get_pzcat(chi2, odds_lim, width_frac)

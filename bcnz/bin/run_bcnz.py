@@ -47,7 +47,7 @@ def get_input(output_dir, model_dir, memba_prod, field, fit_bands):
         galcat = galcat_specz
 
         # Applying the zero-points.
-        norm_filter = bcnz.data.catalogs.rband
+        norm_filter = bcnz.data.catalogs.rband(field)
         galcat_inp = bcnz.calib.apply_zp(galcat, zp, norm_filter=norm_filter)
 
         galcat_inp.to_hdf(str(path_galcat), 'default')
@@ -66,7 +66,7 @@ def fix_model(modelD, fit_bands):
     return new_modelD
 
 
-def run_photoz_dask(output_dir, runs, modelD, galcat):
+def run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask):
     """Run the photo-z on a Dask cluster."""
 
     path_out = Path(output_dir) / 'pzcat.pq'
@@ -130,7 +130,7 @@ def run_photoz(output_dir, model_dir, memba_prod, field, fit_bands=None, ip_dask
     runs, modelD, galcat = get_input(
         output_dir, model_dir, memba_prod, field, fit_bands)
 
-    run_photoz_dask(output_dir, runs, modelD, galcat)
+    run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask)
 
     validate(output_dir)
 
