@@ -10,6 +10,7 @@ import functools
 
 import bcnz
 
+import dask
 from dask.distributed import Client
 import dask.dataframe as dd
 
@@ -41,7 +42,8 @@ def get_input(output_dir, model_dir, memba_prod, field, fit_bands,
 
     # In case it's already estimated.
     if path_galcat.exists():
-        galcat_inp = pd.read_hdf(str(path_galcat), 'default')
+        # Not actually being used...
+        galcat_inp = pd.read_parquet(str(path_galcat))
 
         return runs, modelD, galcat_inp
 
@@ -60,6 +62,8 @@ def get_input(output_dir, model_dir, memba_prod, field, fit_bands,
     norm_filter = bcnz.data.catalogs.rband(field)
     galcat_inp = bcnz.calib.apply_zp(galcat, zp, norm_filter=norm_filter)
 
+    # Temporary hack.... 
+    galcat_inp = bcnz.fit.flatten_input(galcat_inp)
     galcat_inp.to_parquet(str(path_galcat))
 
     return runs, modelD, galcat_inp
@@ -88,12 +92,18 @@ def run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask):
     xnew_modelD = client.scatter(fix_model(modelD, fit_bands))
 
     galcat = dd.read_parquet(str(output_dir / 'galcat_in.pq'))
-    galcat = galcat.repartition(chunksize=10)
+
+    npartitions = int(302138 / 10) + 1
+    galcat = galcat.repartition(npartitions=npartitions)
 
     ebvD = dict(runs.EBV)
     pzcat = galcat.map_partitions(
         bcnz.fit.photoz_flatten, xnew_modelD, ebvD, fit_bands)
+
+
     pzcat = pzcat.repartition(npartitions=100)
+    pzcat = dask.optimize(pzcat)[0]
+
     pzcat.to_parquet(str(path_out))
 
 

@@ -269,7 +269,7 @@ def photoz(galcat, modelD, ebvD, fit_bands, Niter=1000, Nskip=10, odds_lim=0.01,
 
 # Interface useful for parallel computation. This could perhaps be elsewhere.
 #
-def _flatten_input(df):
+def flatten_input(df):
     """Flattens the input dataframe."""
 
     flux = df.flux.rename(columns=lambda x: f'flux_{x}')
@@ -287,7 +287,7 @@ def photoz_flatten(galcat, *args, **kwds):
            galcat (df): Galaxy catalogue in a hirarchical format.
     """
 
-    galcat = _flatten_input(galcat)
+    #galcat = _flatten_input(galcat)
     pzcat, best_model, model_z0, iband_model, pz = photoz(galcat, *args, only_pz=False, **kwds)
 
     # Combine into a flat data structure. For example Dask does not support a

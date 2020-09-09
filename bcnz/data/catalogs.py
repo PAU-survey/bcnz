@@ -38,7 +38,7 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos', min_nb=35,
         specz = parent_cat # Contains zCOSMOS DR 3
     elif field.lower() == 'w3':
         parent_cat = bcnz.data.paudm_cfhtlens(engine, 'w3')
-        specz = bcnz.specz.deep2()
+        specz = bcnz.specz.deep2(engine)
     else:
         raise ValueError(f'No spectroscopy defined for: {field}')
 
@@ -70,4 +70,4 @@ paus_calib_sample = functools.partial(
 
 # The entries for which we run the photo-z.
 paus_main_sample = functools.partial(
-    paus, min_nb=35, only_specz=False, has_bb=True, sel_gal=False, secure_spec=False)
+    paus, min_nb=39, only_specz=False, has_bb=True, sel_gal=False, secure_spec=False)

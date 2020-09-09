@@ -10,4 +10,4 @@ from .gal_subset import gal_subset
 from .synband_scale import synband_scale
 
 from . import catalogs
-from .catalogs import paus, paus_calib_sample
+from .catalogs import paus, paus_calib_sample, paus_main_sample
