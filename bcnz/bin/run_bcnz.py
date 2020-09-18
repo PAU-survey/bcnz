@@ -31,7 +31,7 @@ def get_bands(field, fit_bands):
     return fit_bands
 
 def get_input(output_dir, model_dir, memba_prod, field, fit_bands,
-              only_specz):
+              only_specz, coadd_file):
     """Get the input to run the photo-z code."""
 
     path_galcat = output_dir / 'galcat_in.pq'
@@ -49,14 +49,14 @@ def get_input(output_dir, model_dir, memba_prod, field, fit_bands,
 
     # And then estimate the catalogue.
     engine = bcnz.connect_db()
-    galcat_specz = bcnz.data.paus_calib_sample(engine, memba_prod, field)
+    galcat_specz = bcnz.data.paus_calib_sample(engine, memba_prod, field, coadd_file)
     zp = bcnz.calib.cache_zp(output_dir, galcat_specz, modelD, fit_bands)
 
     # This should not be the same. We need to modify this later.
     if only_specz:
         galcat = galcat_specz
     else:
-        galcat = bcnz.data.paus_main_sample(engine, memba_prod, field)
+        galcat = bcnz.data.paus_main_sample(engine, memba_prod, field, coadd_file)
 
     # Applying the zero-points.
     norm_filter = bcnz.data.catalogs.rband(field)
@@ -139,7 +139,7 @@ def validate(output_dir, field):
 
 
 def run_photoz(output_dir, model_dir, memba_prod, field, fit_bands=None, only_specz=False, 
-               ip_dask=None):
+               ip_dask=None, coadd_file=None):
     """Run the photo-z over a catalogue in the PAUdm database.
 
        Args:
@@ -150,13 +150,14 @@ def run_photoz(output_dir, model_dir, memba_prod, field, fit_bands=None, only_sp
            fit_bands (list): Which bands to fit.
            only_specz (bool): Only run photo-z for galaxies with spec-z.
            ip_dask (str): IP for Dask scheduler.
+           coadd_file (str): Path to file containing the coadds.
     """
 
     output_dir = Path(output_dir)
 
     fit_bands = get_bands(field, fit_bands)
     runs, modelD, galcat = get_input(
-        output_dir, model_dir, memba_prod, field, fit_bands, only_specz)
+        output_dir, model_dir, memba_prod, field, fit_bands, only_specz, coadd_file)
 
     run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask)
 
