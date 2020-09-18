@@ -37,7 +37,8 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos', min_nb=35,
         cosmos_laigle = bcnz.data.cosmos_laigle(d_cosmos)
         parent_cat = bcnz.data.match_position(paudm_cosmos, cosmos_laigle)
 
-        specz = parent_cat # Contains zCOSMOS DR 3
+        # In the parent catalogue, but needed if using other coadds.
+        specz = bcnz.specz.zcosmos(engine)
     elif field.lower() == 'w3':
         parent_cat = bcnz.data.paudm_cfhtlens(engine, 'w3')
         specz = bcnz.specz.deep2(engine)
@@ -59,6 +60,7 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos', min_nb=35,
             'has_bb': has_bb, 'sel_gal': sel_gal}
 
     conf['test_band'] = rband(field)
+
     nbsubset = bcnz.data.gal_subset(data_noisy, specz, **conf)
 
     # Synthetic narrow band coefficients.
