@@ -49,14 +49,14 @@ def get_input(output_dir, model_dir, memba_prod, field, fit_bands,
 
     # And then estimate the catalogue.
     engine = bcnz.connect_db()
-    galcat_specz = bcnz.data.paus_calib_sample(engine, memba_prod, field, coadd_file)
+    galcat_specz = bcnz.data.paus_calib_sample(engine, memba_prod, field, coadd_file=coadd_file)
     zp = bcnz.calib.cache_zp(output_dir, galcat_specz, modelD, fit_bands)
 
     # This should not be the same. We need to modify this later.
     if only_specz:
         galcat = galcat_specz
     else:
-        galcat = bcnz.data.paus_main_sample(engine, memba_prod, field, coadd_file)
+        galcat = bcnz.data.paus_main_sample(engine, memba_prod, field, coadd_file=coadd_file)
 
     # Applying the zero-points.
     norm_filter = bcnz.data.catalogs.rband(field)
