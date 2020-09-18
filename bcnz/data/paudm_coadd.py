@@ -50,7 +50,13 @@ def to_dense(cat_in):
 
     return cat
 
+def _rename_paus_bands(cat):
+    """Rename the PAUS bands."""
 
+    # Since we later combine with Subary, which also has narrow bands.
+    cat['band'] = cat.band.apply(lambda x: 'pau_{}'.format(x.lower()))
+
+    
 def paudm_coadd(engine, prod_memba, field, run=1):
     """Query the coadd with a possible selection.
        Args:
@@ -66,9 +72,27 @@ def paudm_coadd(engine, prod_memba, field, run=1):
     else:
         cat = query_cfht(engine, **config)
 
-    # Since we later combine with Subary, which also has narrow bands.
-    cat['band'] = cat.band.apply(lambda x: 'pau_{}'.format(x.lower()))
-
+    _rename_paus_bands(cat)
     cat = to_dense(cat)
 
     return cat
+
+def load_coadd_file(coadd_file):
+    """Load the coadds from a file.
+       Args:
+           coadd_file (str): Path to coadds.
+    """
+
+    # This functionality is useful for testing coadds produced outside of the
+    # official pipeline.
+    print('Using coadds from:', coadd_file)
+    names = ['funky', 'ref_id', 'band', 'flux', 'flux_error']
+    coadd = pd.read_csv(coadd_file, names=names)
+    coadd['ref_id'] = coadd.ref_id.astype(np.int)
+
+    del coadd['funky']
+
+    _rename_paus_bands(cat)
+    cat = to_dense(cat)
+
+    return
