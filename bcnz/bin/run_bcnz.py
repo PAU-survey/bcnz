@@ -40,6 +40,9 @@ def get_input(output_dir, model_dir, memba_prod, field, fit_bands,
     runs = bcnz.config.eriksen2019()
     modelD = bcnz.model.cache_model(model_dir, runs)
 
+    if not output_dir.exists():
+        output_dir.mkdir()
+
     # In case it's already estimated.
     if path_galcat.exists():
         # Not actually being used...
@@ -88,13 +91,14 @@ def run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask):
 
     # If not specified, we start up a local cluster.
     client = Client(ip_dask) if not ip_dask is None else Client()
-
     xnew_modelD = client.scatter(fix_model(modelD, fit_bands))
+    #xnew_modelD = fix_model(modelD, fit_bands)
 
     galcat = dd.read_parquet(str(output_dir / 'galcat_in.pq'))
 
-    npartitions = int(302138 / 10) + 1
-    galcat = galcat.repartition(npartitions=npartitions)
+    #npartitions = int(302138 / 10) + 1
+    npartitions = int(9900 / 10) + 1
+    galcat = galcat.reset_index().repartition(npartitions=npartitions).set_index('ref_id')
 
     ebvD = dict(runs.EBV)
     pzcat = galcat.map_partitions(
