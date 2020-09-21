@@ -1,5 +1,5 @@
 from .cosmos_laigle import cosmos_laigle
-from .paudm_coadd import paudm_coadd
+from .paudm_coadd import paudm_coadd, load_coadd_file
 from .paudm_cosmos import paudm_cosmos
 from .paudm_cfhtlens import paudm_cfhtlens
 

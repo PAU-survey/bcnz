@@ -31,7 +31,7 @@ def get_bands(field, fit_bands):
     return fit_bands
 
 def get_input(output_dir, model_dir, memba_prod, field, fit_bands,
-              only_specz):
+              only_specz, coadd_file):
     """Get the input to run the photo-z code."""
 
     path_galcat = output_dir / 'galcat_in.pq'
@@ -39,6 +39,9 @@ def get_input(output_dir, model_dir, memba_prod, field, fit_bands,
     # The model.
     runs = bcnz.config.eriksen2019()
     modelD = bcnz.model.cache_model(model_dir, runs)
+
+    if not output_dir.exists():
+        output_dir.mkdir()
 
     # In case it's already estimated.
     if path_galcat.exists():
@@ -49,14 +52,14 @@ def get_input(output_dir, model_dir, memba_prod, field, fit_bands,
 
     # And then estimate the catalogue.
     engine = bcnz.connect_db()
-    galcat_specz = bcnz.data.paus_calib_sample(engine, memba_prod, field)
+    galcat_specz = bcnz.data.paus_calib_sample(engine, memba_prod, field, coadd_file=coadd_file)
     zp = bcnz.calib.cache_zp(output_dir, galcat_specz, modelD, fit_bands)
 
     # This should not be the same. We need to modify this later.
     if only_specz:
         galcat = galcat_specz
     else:
-        galcat = bcnz.data.paus_main_sample(engine, memba_prod, field)
+        galcat = bcnz.data.paus_main_sample(engine, memba_prod, field, coadd_file=coadd_file)
 
     # Applying the zero-points.
     norm_filter = bcnz.data.catalogs.rband(field)
@@ -88,13 +91,14 @@ def run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask):
 
     # If not specified, we start up a local cluster.
     client = Client(ip_dask) if not ip_dask is None else Client()
-
     xnew_modelD = client.scatter(fix_model(modelD, fit_bands))
+    #xnew_modelD = fix_model(modelD, fit_bands)
 
     galcat = dd.read_parquet(str(output_dir / 'galcat_in.pq'))
 
-    npartitions = int(302138 / 10) + 1
-    galcat = galcat.repartition(npartitions=npartitions)
+    #npartitions = int(302138 / 10) + 1
+    npartitions = int(9900 / 10) + 1
+    galcat = galcat.reset_index().repartition(npartitions=npartitions).set_index('ref_id')
 
     ebvD = dict(runs.EBV)
     pzcat = galcat.map_partitions(
@@ -139,7 +143,7 @@ def validate(output_dir, field):
 
 
 def run_photoz(output_dir, model_dir, memba_prod, field, fit_bands=None, only_specz=False, 
-               ip_dask=None):
+               ip_dask=None, coadd_file=None):
     """Run the photo-z over a catalogue in the PAUdm database.
 
        Args:
@@ -150,13 +154,14 @@ def run_photoz(output_dir, model_dir, memba_prod, field, fit_bands=None, only_sp
            fit_bands (list): Which bands to fit.
            only_specz (bool): Only run photo-z for galaxies with spec-z.
            ip_dask (str): IP for Dask scheduler.
+           coadd_file (str): Path to file containing the coadds.
     """
 
     output_dir = Path(output_dir)
 
     fit_bands = get_bands(field, fit_bands)
     runs, modelD, galcat = get_input(
-        output_dir, model_dir, memba_prod, field, fit_bands, only_specz)
+        output_dir, model_dir, memba_prod, field, fit_bands, only_specz, coadd_file)
 
     run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask)
 

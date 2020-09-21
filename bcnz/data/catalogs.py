@@ -11,7 +11,8 @@ def rband(field):
 
 
 def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos', min_nb=35,
-         only_specz=False, secure_spec=False, has_bb=False, sel_gal=True):
+         only_specz=False, secure_spec=False, has_bb=False, sel_gal=True,
+         coadd_file=None):
     """Load the PAUS data from PAUdm and perform the required
        transformation.
 
@@ -25,6 +26,7 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos', min_nb=35,
            secure_spec (bool): Selecting secure spectroscopic redshifts.
            has_bb (bool): Select galaxies with broad bands data.
            sel_gal (bool): Select galaxies.
+           coadd_file (str): Path to file containing the coadds.'
     """
 
     import bcnz
@@ -35,14 +37,19 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos', min_nb=35,
         cosmos_laigle = bcnz.data.cosmos_laigle(d_cosmos)
         parent_cat = bcnz.data.match_position(paudm_cosmos, cosmos_laigle)
 
-        specz = parent_cat # Contains zCOSMOS DR 3
+        # In the parent catalogue, but needed if using other coadds.
+        specz = bcnz.specz.zcosmos(engine)
     elif field.lower() == 'w3':
         parent_cat = bcnz.data.paudm_cfhtlens(engine, 'w3')
         specz = bcnz.specz.deep2(engine)
     else:
         raise ValueError(f'No spectroscopy defined for: {field}')
 
-    paudm_coadd = bcnz.data.paudm_coadd(engine, memba_prod, field)
+    if coadd_file is None:
+        paudm_coadd = bcnz.data.paudm_coadd(engine, memba_prod, field)
+    else:
+        paudm_coadd = bcnz.data.load_coadd_file(coadd_file)
+        
     data_in = paudm_coadd.join(parent_cat, how='inner')
 
     # Add some minimum noise.
@@ -53,6 +60,7 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos', min_nb=35,
             'has_bb': has_bb, 'sel_gal': sel_gal}
 
     conf['test_band'] = rband(field)
+
     nbsubset = bcnz.data.gal_subset(data_noisy, specz, **conf)
 
     # Synthetic narrow band coefficients.

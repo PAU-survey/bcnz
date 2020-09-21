@@ -10,8 +10,6 @@ import xarray as xr
 from tqdm import tqdm
 from scipy.optimize import minimize
 
-from matplotlib import pyplot as plt
-
 from . import libcalib
 
 

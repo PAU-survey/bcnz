@@ -50,7 +50,13 @@ def to_dense(cat_in):
 
     return cat
 
+def _rename_paus_bands(cat):
+    """Rename the PAUS bands."""
 
+    # Since we later combine with Subary, which also has narrow bands.
+    cat['band'] = cat.band.apply(lambda x: 'pau_{}'.format(x.lower()))
+
+    
 def paudm_coadd(engine, prod_memba, field, run=1):
     """Query the coadd with a possible selection.
        Args:
@@ -62,13 +68,36 @@ def paudm_coadd(engine, prod_memba, field, run=1):
 
     config = {'prod_memba': prod_memba, 'run': run}
     if field.lower() == 'cosmos':
-        cat = query_cosmos(engine, **config)
+        coadd = query_cosmos(engine, **config)
     else:
-        cat = query_cfht(engine, **config)
+        coadd = query_cfht(engine, **config)
 
-    # Since we later combine with Subary, which also has narrow bands.
-    cat['band'] = cat.band.apply(lambda x: 'pau_{}'.format(x.lower()))
 
-    cat = to_dense(cat)
+    _rename_paus_bands(coadd)
+    coadd = to_dense(coadd)
 
-    return cat
+    assert len(coadd), 'No coadds found'
+
+    return coadd
+
+def load_coadd_file(coadd_file):
+    """Load the coadds from a file.
+       Args:
+           coadd_file (str): Path to coadds.
+    """
+
+    # This functionality is useful for testing coadds produced outside of the
+    # official pipeline.
+    print('Using coadds from:', coadd_file)
+    names = ['funky', 'ref_id', 'band', 'flux', 'flux_error']
+    coadd = pd.read_csv(coadd_file, names=names)
+    coadd['ref_id'] = coadd.ref_id.astype(np.int)
+    del coadd['funky']
+
+    # To be removed. The input had duplicates for an unknown reason.
+    coadd = coadd.drop_duplicates()
+
+    _rename_paus_bands(coadd)
+    coadd = to_dense(coadd)
+
+    return coadd

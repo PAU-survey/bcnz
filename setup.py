@@ -25,6 +25,7 @@ setup(
         'fire',
         'dask',
         'tables',
+        'tqdm',
         'argparse'
     ],
     author = name,
