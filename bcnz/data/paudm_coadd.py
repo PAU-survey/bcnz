@@ -72,8 +72,11 @@ def paudm_coadd(engine, prod_memba, field, run=1):
     else:
         coadd = query_cfht(engine, **config)
 
+
     _rename_paus_bands(coadd)
     coadd = to_dense(coadd)
+
+    assert len(coadd), 'No coadds found'
 
     return coadd
 
