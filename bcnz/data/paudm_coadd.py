@@ -80,21 +80,45 @@ def paudm_coadd(engine, prod_memba, field, run=1):
 
     return coadd
 
+#def load_coadd_file(coadd_file):
+#    """Load the coadds from a file.
+#       Args:
+#           coadd_file (str): Path to coadds.
+#    """
+#
+#    # This functionality is useful for testing coadds produced outside of the
+#    # official pipeline.
+#    print('Using coadds from:', coadd_file)
+#    names = ['funky', 'ref_id', 'band', 'flux', 'flux_error']
+#    coadd = pd.read_csv(coadd_file, names=names)
+#    coadd['ref_id'] = coadd.ref_id.astype(np.int)
+#    del coadd['funky']
+#
+#    # Shouldn't be correct, but I want to test if it makes a difference.
+#    coadd['flux'] *= 0.625
+#    coadd['flux_error'] *= 0.625
+#
+#    # To be removed. The input had duplicates for an unknown reason.
+#    coadd = coadd.drop_duplicates()
+#
+#    _rename_paus_bands(coadd)
+#    coadd = to_dense(coadd)
+#
+#    return coadd
+
 def load_coadd_file(coadd_file):
     """Load the coadds from a file.
        Args:
            coadd_file (str): Path to coadds.
     """
 
-    # This functionality is useful for testing coadds produced outside of the
-    # official pipeline.
-    print('Using coadds from:', coadd_file)
-    names = ['funky', 'ref_id', 'band', 'flux', 'flux_error']
-    coadd = pd.read_csv(coadd_file, names=names)
-    coadd['ref_id'] = coadd.ref_id.astype(np.int)
-    del coadd['funky']
+    coadd = pd.read_csv(coadd_file)
 
-    # To be removed. The input had duplicates for an unknown reason.
+    # Shouldn't be correct, but I want to test if it makes a difference.
+    coadd['flux'] *= 0.625
+    coadd['flux_error'] *= 0.625
+
+    # Hopefully no longer needed....
     coadd = coadd.drop_duplicates()
 
     _rename_paus_bands(coadd)
