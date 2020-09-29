@@ -18,8 +18,8 @@ pip install -e .
 after entering into the cloned directory.
 
 ## Example usage
-While intended to be integrated in PAUdm, one can also run the code from the command line. For
-example one can run
+While intended to be integrated in PAUdm, one can also run the code from the command line. As an 
+example, one can run
 
 ./run_bcnz.py /cephfs/pic.es/astro/scratch/eriksen/output/bcnz/v5_941 /cephfs/pic.es/astro/scratch/eriksen/cache/bcnz/2 941 w3 --ip_dask=tcp://193.109.175.131:45560
 
