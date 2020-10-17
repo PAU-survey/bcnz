@@ -16,8 +16,14 @@
 from pathlib import Path
 import xarray as xr
 
+def model_fname(sed, ext_law, EBV):
+    """File name when caching the model."""
+    
+    fname = '{}:{}:{:.3f}.nc'.format(sed, ext_law, EBV)
+    
+    return fname
 
-def cache_model(cache_dir, runs=None):
+def cache_model(model_dir, runs):
     """Load models if already run, otherwise run one.
        Args:
            cache_dir (str): Directory storing the models.
@@ -27,35 +33,44 @@ def cache_model(cache_dir, runs=None):
     import bcnz
     if runs is None:
         runs = bcnz.config.eriksen2019()
-
-    # Ensure all models are run.
-    cache_dir = Path(cache_dir)
-    for i, row in runs.iterrows():
-        path = cache_dir / f'model_{i}.nc'
-
+    # The flattened version used for generating the files.
+    runs_flat = runs.explode('seds')
+    runs_flat['seds'] = runs_flat.seds.map(lambda x: [x])
+    
+     # Ensure all models are run.
+    model_dir = Path(model_dir)
+    for i, row in runs_flat.iterrows():
+        sed = row.seds[0]
+        fname = model_fname(sed, row.ext_law, row.EBV)
+        path = model_dir / fname
+        
         if path.exists():
             continue
 
-        print(f'Running for model: {i}')
         model = bcnz.model.model_single(**row)
         model.to_netcdf(path)
-
-    print('Loading the models.')
+        
+    print('Loading the models.')    
     D = {}
     for i, row in runs.iterrows():
-        path = cache_dir / f'model_{i}.nc'
+        L = []
+        for sed in row.seds:
+            fname = model_fname(sed, row.ext_law, row.EBV)
+            path = model_dir / fname
 
-        # The line of creating a new array is very important. Without
-        # this the calibration algorithm became 4.5 times slower.
-        f_mod = xr.open_dataset(path).flux
-        f_mod = xr.DataArray(f_mod)
+            # The line of creating a new array is very important. Without
+            # this the calibration algorithm became 4.5 times slower.
+            f_mod = xr.open_dataset(path).flux
+            f_mod = xr.DataArray(f_mod)
 
-        # Store with these entries, but suppress them since
-        # they affect calculations.
-        f_mod = f_mod.squeeze('EBV')
-        f_mod = f_mod.squeeze('ext_law')
-        f_mod = f_mod.transpose('z', 'band', 'sed')
-
-        D[i] = f_mod
-
+            # Store with these entries, but suppress them since
+            # they affect calculations.
+            f_mod = f_mod.squeeze('EBV')
+            f_mod = f_mod.squeeze('ext_law')
+            f_mod = f_mod.transpose('z', 'band', 'sed')
+            L.append(f_mod)
+            
+        D[i] = xr.concat(L, dim='sed') 
+        
     return D
+
