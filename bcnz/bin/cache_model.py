@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# encoding: UTF8
+
 # Copyright (C) 2020 Martin B. Eriksen
 # This file is part of BCNz <https://github.com/PAU-survey/bcnz>.
 #
@@ -13,8 +16,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with BCNz.  If not, see <http://www.gnu.org/licenses/>.
-#!/usr/bin/env python
-# encoding: UTF8
 
 # Script for caching a single model. Useful if running
 # the models in parallel.
@@ -24,8 +25,9 @@ from pathlib import Path
 import xarray as xr
 from IPython.core import debugger as ipdb
 
-def cache_model(cache_dir, i):
+def cache_model(model_dir, i):
     """Load models if already run, otherwise run one.
+
        Args:
            cache_dir (str): Path where to store the model.
            i (int): Which of the models to calculate.
@@ -36,19 +38,12 @@ def cache_model(cache_dir, i):
     # Hardcoded to the first photo-z paper by now.
     runs = bcnz.config.eriksen2019()
 
-
     # Ensure all models are run.
-    cache_dir = Path(cache_dir)
-    assert cache_dir.exists()
+    model_dir = Path(model_dir)
+    assert model_dir.exists()
 
-    path = cache_dir / f'model_{i}.nc'
-
-    if path.exists():
-        return
-
-    row = runs.iloc[i]
-    model = bcnz.model.model_single(**row)
-    model.to_netcdf(path)
-
+    sub = runs.iloc[i:i+1]
+    bcnz.model.cache_model(model_dir, sub)
+    
 if __name__ == '__main__':
     fire.Fire(cache_model)
