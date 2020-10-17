@@ -39,7 +39,7 @@ def cache_model(model_dir, runs):
     
      # Ensure all models are run.
     model_dir = Path(model_dir)
-    for i, row in runs_flat.iterrows():
+    for i, (_, row) in enumerate(runs_flat.iterrows()):
         sed = row.seds[0]
         fname = model_fname(sed, row.ext_law, row.EBV)
         path = model_dir / fname
@@ -47,6 +47,7 @@ def cache_model(model_dir, runs):
         if path.exists():
             continue
 
+        print(f'Running model: {i}')
         model = bcnz.model.model_single(**row)
         model.to_netcdf(path)
         
