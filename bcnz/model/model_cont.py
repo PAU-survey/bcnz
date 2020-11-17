@@ -25,6 +25,7 @@ import pandas as pd
 
 from scipy.interpolate import splrep, splev
 from scipy.integrate import trapz, simps
+from .etau_madau import etau_madau
 
 
 def calc_r_const(filters):
@@ -38,7 +39,7 @@ def calc_r_const(filters):
     fL = filters.index.unique()
     for fname in fL:
         sub = filters.loc[fname]
-        r_const[fname] = 1./simps(sub.response / sub.lmb, sub.lmb) / clight_AHz
+        r_const[fname] = 1.0 / simps(sub.response / sub.lmb, sub.lmb) / clight_AHz
 
     return r_const
 
@@ -59,7 +60,7 @@ def sed_spls(seds):
 def calc_ext_spl(ext, config):
     """Spline for the extinction."""
 
-    sub = ext[ext.ext_law == config['ext_law']]
+    sub = ext[ext.ext_law == config["ext_law"]]
     ext_spl = splrep(sub.lmb, sub.k)
 
     return ext_spl
@@ -69,27 +70,29 @@ def calc_ab(config, filters, seds, ext, r_const):
     """Estimate the fluxes for all filters and SEDs."""
 
     # Test for missing SEDs.
-    missing_seds = set(config['seds']) - set(seds.index)
-    assert not len(missing_seds), 'Missing seds: {}'.format(missing_seds)
+    missing_seds = set(config["seds"]) - set(seds.index)
+    assert not len(missing_seds), "Missing seds: {}".format(missing_seds)
 
     sedD = sed_spls(seds)
     ext_spl = calc_ext_spl(ext, config)
-    z = np.arange(0., config['zmax_ab'], config['dz_ab'])
+    z = np.arange(0.0, config["zmax_ab"], config["dz_ab"])
 
     # Test...
     df = pd.DataFrame()
 
-    int_method = config['int_method']
-    a = 1./(1+z)
+    int_method = config["int_method"]
+    a = 1.0 / (1 + z)
     for i, band in enumerate(filters.index.unique()):
-        print('# band', i, 'band', band)
+        print("# band", i, "band", band)
 
         sub_f = filters.loc[band]
 
         # Define a higher resolution grid.
         _tmp = sub_f.lmb
-        int_dz = config['int_dz']
+        int_dz = config["int_dz"]
         lmb = np.arange(_tmp.min(), _tmp.max(), int_dz)
+
+        tau = etau_madau(lmb, z)
 
         # Evaluate the filter on this grid.
         spl_f = splrep(sub_f.lmb, sub_f.response)
@@ -98,28 +101,28 @@ def calc_ab(config, filters, seds, ext, r_const):
         X = np.outer(a, lmb)
 
         # Only looping over the configured SEDs.
-        for sed in config['seds']:
+        for sed in config["seds"]:
             t1 = time.time()
 
             y_sed = splev(X, sedD[sed])
             k_ext = splev(X, ext_spl)
-            EBV = config['EBV']
-            y_ext = 10**(-0.4*EBV*k_ext)
+            EBV = config["EBV"]
+            y_ext = 10 ** (-0.4 * EBV * k_ext)
 
-            Y = y_ext*y_sed*y_f*lmb
+            Y = y_ext * y_sed * y_f * lmb * tau
 
-            if int_method == 'simps':
-                ans = r_const[band]*simps(Y, lmb, axis=1)
-            elif int_method == 'sum':
-                ans = r_const[band]*int_dz*Y.sum(axis=1)
+            if int_method == "simps":
+                ans = r_const[band] * simps(Y, lmb, axis=1)
+            elif int_method == "sum":
+                ans = r_const[band] * int_dz * Y.sum(axis=1)
 
             # This might be overkill in terms of storage, but information in
             # the columns is a pain..
-            part = pd.DataFrame({'z': z, 'flux': ans})
-            part['band'] = band
-            part['sed'] = sed
-            part['ext_law'] = config['ext_law']
-            part['EBV'] = EBV
+            part = pd.DataFrame({"z": z, "flux": ans})
+            part["band"] = band
+            part["sed"] = sed
+            part["ext_law"] = config["ext_law"]
+            part["EBV"] = EBV
 
             df = df.append(part, ignore_index=True)
 
@@ -128,8 +131,18 @@ def calc_ab(config, filters, seds, ext, r_const):
     return df
 
 
-def model_cont(filters, seds_df, ext, seds, ext_law, EBV, zmax_ab=2.05,
-               dz_ab=0.001, int_dz=1., int_method='simps'):
+def model_cont(
+    filters,
+    seds_df,
+    ext,
+    seds,
+    ext_law,
+    EBV,
+    zmax_ab=2.05,
+    dz_ab=0.001,
+    int_dz=1.0,
+    int_method="simps",
+):
     """The model fluxes for the continuum
        Args:
            filters (df): Filter transmission curves.
@@ -145,8 +158,15 @@ def model_cont(filters, seds_df, ext, seds, ext_law, EBV, zmax_ab=2.05,
 
     """
 
-    config = {'seds': seds, 'ext_law': ext_law, 'EBV': EBV, 'zmax_ab': zmax_ab,
-              'dz_ab': dz_ab, 'int_dz': int_dz, 'int_method': int_method}
+    config = {
+        "seds": seds,
+        "ext_law": ext_law,
+        "EBV": EBV,
+        "zmax_ab": zmax_ab,
+        "dz_ab": dz_ab,
+        "int_dz": int_dz,
+        "int_method": int_method,
+    }
 
     r_const = calc_r_const(filters)
     ab = calc_ab(config, filters, seds_df, ext, r_const)
