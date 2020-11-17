@@ -19,8 +19,10 @@
 from .all_filters import all_filters
 from .load_filters import load_filters
 from .extinction_laigle import extinction_laigle
+from .load_extinction import load_extinction
 from .load_seds import load_seds
 from .line_ratios import line_ratios
+from .etau_madau import etau_madau
 
 # Core model estimation.
 from .model_cont import model_cont
