@@ -25,7 +25,7 @@ import pandas as pd
 
 from scipy.interpolate import splrep, splev
 from scipy.integrate import trapz, simps
-from .etau_madau import etau_madau
+from bcnz.model import etau_madau
 
 
 def calc_r_const(filters):
