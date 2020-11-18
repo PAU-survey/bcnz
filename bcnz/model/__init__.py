@@ -27,6 +27,7 @@ from .etau_madau import etau_madau
 # Core model estimation.
 from .model_cont import model_cont
 from .model_lines import model_lines
+from .model_lines_gaussian import model_lines_gaussian
 
 # Adjust and rebin.
 from .fmod_adjust import fmod_adjust
