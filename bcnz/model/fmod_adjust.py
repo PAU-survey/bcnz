@@ -19,6 +19,7 @@
 from IPython.core import debugger as ipdb
 import pandas as pd
 import xarray as xr
+import numpy as np
 
 
 def funky_hack(config, syn2real, sed, model_norm):
@@ -37,6 +38,23 @@ def funky_hack(config, syn2real, sed, model_norm):
     else:
         # The continuum ratios are better behaved.
         pass
+
+    return ratio
+
+
+def funky_hack_v2(config, syn2real, sed, model_norm):
+    """Exactly mimic the new cuts Alex was making."""
+    ratio = syn2real.sel(sed=sed).copy()
+
+    # Remove NaNs when flux is zero.
+    ratio = ratio.fillna(1.0)
+
+    # Clip within factor 2 ratio. Ratios outside this interval only happen
+    # if the model fluxes are very small, in which case the correction
+    # is irrelevant, but it can cause numerical problems.
+    ratio = ratio.clip(min=0.5, max=2.0)
+
+    assert np.isfinite(ratio).all()
 
     return ratio
 
@@ -62,11 +80,12 @@ def scale_model(config, coeff, model):
 
     for j, xsed in enumerate(model.sed):
         sed = str(xsed.values)
-        syn2real_mod = funky_hack(config, syn2real, sed, model_norm)
+        # syn2real_mod = funky_hack(config, syn2real, sed, model_norm)
+        syn2real_mod = funky_hack_v2(config, syn2real, sed, model_norm)
 
         for i, xband in enumerate(model.band):
             # Here we scale the narrow bands into the broad band system.
-            if str(xband.values).startswith("NB"):
+            if str(xband.values).startswith("pau_nb"):
                 model[i, :, j, :, :] *= syn2real_mod
 
     # Since we can not directly store xarray.
