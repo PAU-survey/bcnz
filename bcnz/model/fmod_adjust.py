@@ -116,7 +116,7 @@ def fmod_adjust(
     assert config["norm_band"], "Need to specify the normalization band"
     out_cont = scale_model(config, coeff, model_cont)
     if use_lines:
-        out_lines = scale_model(coeff, model_lines)
+        out_lines = scale_model(config, coeff, model_lines)
         out = pd.concat([out_cont, out_lines])
     else:
         out = out_cont
