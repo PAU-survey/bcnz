@@ -32,6 +32,7 @@ from .model_lines_gaussian import model_lines_gaussian
 # Adjust and rebin.
 from .fmod_adjust import fmod_adjust
 from .rebin import rebin
+from .combine_lines import combine_lines
 
 from .cache import cache_model
 from .nb2bb import nb2bb
