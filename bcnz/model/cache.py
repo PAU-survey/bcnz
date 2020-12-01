@@ -13,6 +13,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with BCNz.  If not, see <http://www.gnu.org/licenses/>.
+
+from IPython.core import debugger as ipdb
 from pathlib import Path
 import xarray as xr
 
@@ -36,6 +38,7 @@ def cache_model(model_dir, runs):
     # The flattened version used for generating the files.
     runs_flat = runs.explode('seds')
     runs_flat['seds'] = runs_flat.seds.map(lambda x: [x])
+
     
      # Ensure all models are run.
     model_dir = Path(model_dir)
@@ -55,7 +58,7 @@ def cache_model(model_dir, runs):
     D = {}
     for i, row in runs.iterrows():
         L = []
-        for sed in row.seds:
+        for j, sed in enumerate(row.seds):
             fname = model_fname(sed, row.ext_law, row.EBV)
             path = model_dir / fname
 
@@ -63,6 +66,9 @@ def cache_model(model_dir, runs):
             # this the calibration algorithm became 4.5 times slower.
             f_mod = xr.open_dataset(path).flux
             f_mod = xr.DataArray(f_mod)
+
+            if j:
+                f_mod = f_mod.sel(sed=[sed])
 
             # Store with these entries, but suppress them since
             # they affect calculations.
@@ -74,4 +80,3 @@ def cache_model(model_dir, runs):
         D[i] = xr.concat(L, dim='sed') 
         
     return D
-
