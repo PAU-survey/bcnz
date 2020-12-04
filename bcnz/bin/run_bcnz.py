@@ -31,7 +31,7 @@ from dask.distributed import Client
 import dask.dataframe as dd
 
 
-def get_bands(field, fit_bands):
+def get_bands(field):
     """Bands used in fit."""
 
     # The bands to fit.
@@ -175,7 +175,7 @@ def run_photoz(output_dir, model_dir, memba_prod, field, fit_bands=None, only_sp
 
     output_dir = Path(output_dir)
 
-    fit_bands = get_bands(field, fit_bands)
+    fit_bands = get_bands(field)
     runs, modelD, galcat = get_input(
         output_dir, model_dir, memba_prod, field, fit_bands, only_specz, coadd_file)
 
