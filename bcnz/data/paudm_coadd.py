@@ -34,7 +34,7 @@ def query_cosmos(engine, prod_memba, ilim=25, run=1):
     """Query for a catalogue in the COSMOS field."""
 
     sql = 'SELECT fac.* FROM forced_aperture_coadd AS fac JOIN cosmos AS cm ON cm.paudm_id=fac.ref_id \
-           WHERE fac.production_id={0} AND cm."{1}"<{2} and fac.run={3}'
+           WHERE fac.production_id={0} AND cm."{1}"<{2} AND fac.run={3} AND fac.flux > 0'
 
     sql = sql.format(prod_memba, 'I_auto', ilim, run)
 
@@ -47,7 +47,7 @@ def query_cfht(engine, prod_memba, ilim=24., run=1):
     """Query for a catalogue in a CFHT field."""
 
     sql = 'SELECT fac.* FROM forced_aperture_coadd AS fac JOIN cfhtlens AS refcat ON refcat.paudm_id=fac.ref_id \
-               WHERE fac.production_id={0} AND refcat."{1}"<{2} and fac.run={3}'
+               WHERE fac.production_id={0} AND refcat."{1}"<{2} AND fac.run={3} AND fac.flux > 0'
     sql = sql.format(prod_memba, 'mag_i', ilim, run)
 
     cat = pd.read_sql_query(sql, engine)
