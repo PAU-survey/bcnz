@@ -25,7 +25,8 @@ def rband(field):
     return 'subaru_r' if field.lower() == 'cosmos' else 'cfht_r'
 
 
-def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos', min_nb=35,
+def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos',
+         d_filters='~/data/photoz/all_filters/v3', min_nb=35,
          only_specz=False, secure_spec=False, has_bb=False, sel_gal=True,
          coadd_file=None):
     """Load the PAUS data from PAUdm and perform the required
@@ -36,6 +37,7 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos', min_nb=35,
            memba_prod (int): The MEMBA production.
            field (str): Field to download.
            d_cosmos (str): Directory with downloaded COSMOS files.
+           d_filters (str): Directory with filter curves.
            min_nb (int): Minimum number of narrow bands.
            only_specz (bool): Only selecting galaxy with spectroscopic redshifts.
            secure_spec (bool): Selecting secure spectroscopic redshifts.
@@ -80,7 +82,7 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos', min_nb=35,
 
     # Synthetic narrow band coefficients.
     synband = rband(field)
-    filters = bcnz.model.all_filters()
+    filters = bcnz.model.all_filters(d_filters=d_filters)
     coeff = bcnz.model.nb2bb(filters, synband)
 
     data_scaled = bcnz.data.synband_scale(nbsubset, coeff, synband=synband,
