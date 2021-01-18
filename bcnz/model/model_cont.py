@@ -75,7 +75,10 @@ def calc_ab(config, filters, seds, ext, r_const):
 
     sedD = sed_spls(seds)
     ext_spl = calc_ext_spl(ext, config)
-    z = np.arange(0.0, config["zmax_ab"], config["dz_ab"])
+    if config["zgrid"] is None:
+        z = np.arange(0.0, config["zmax_ab"], config["dz_ab"])
+    else:
+        z = config["zgrid"].copy()
 
     # Test...
     df = pd.DataFrame()
@@ -142,6 +145,7 @@ def model_cont(
     dz_ab=0.001,
     int_dz=1.0,
     int_method="simps",
+    zgrid=None,
 ):
     """The model fluxes for the continuum
        Args:
@@ -154,7 +158,9 @@ def model_cont(
            zmax_ab (float): Maximum redshift in the flux model.
            dz_ab (float): Redshift resolution in the flux model.
            int_dz (float): Resolution when integration.
-           int_method (str): Integration method:
+           int_method (str): Integration method
+           zgrid (np.array): Redshift grid (when in use, zmax_ab and
+                            dz_ab are ignored)
 
     """
 
@@ -166,6 +172,7 @@ def model_cont(
         "dz_ab": dz_ab,
         "int_dz": int_dz,
         "int_method": int_method,
+        "zgrid": zgrid,
     }
 
     r_const = calc_r_const(filters)
