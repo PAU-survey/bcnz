@@ -5,6 +5,9 @@ def etau_madau(wl, z):
     """
     Madau 1995 extinction for a galaxy spectrum at
     (redshift, wavelenght) defined on a grid (z, wl)
+    Args:
+        wl (np.array): wavelength values of the grid in Angstroms
+        z (np.array): redshift values of the grid
     """
     xe = 1.0 + z
 

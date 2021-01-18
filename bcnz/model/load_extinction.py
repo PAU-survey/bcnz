@@ -26,7 +26,11 @@ from IPython.core import debugger as ipdb
 
 
 def load_extinction(d, suff):
-    """Load extinction curves from path."""
+    """Load extinction curves from path.
+    Args:
+        d (str): Directory where the extinctions are stored.
+        suff (str): filename suffix
+    """
 
     g = os.path.join(os.path.expanduser(d), "*.{}".format(suff))
 
