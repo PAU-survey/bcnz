@@ -17,17 +17,22 @@
 
 # Input data
 from .all_filters import all_filters
+from .load_filters import load_filters
 from .extinction_laigle import extinction_laigle
+from .load_extinction import load_extinction
 from .load_seds import load_seds
 from .line_ratios import line_ratios
+from .etau_madau import etau_madau
 
 # Core model estimation.
 from .model_cont import model_cont
 from .model_lines import model_lines
+from .model_lines_gaussian import model_lines_gaussian
 
 # Adjust and rebin.
 from .fmod_adjust import fmod_adjust
 from .rebin import rebin
+from .combine_lines import combine_lines
 
 from .cache import cache_model
 from .nb2bb import nb2bb

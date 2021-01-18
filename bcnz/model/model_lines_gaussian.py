@@ -25,6 +25,8 @@ import pandas as pd
 
 from scipy.interpolate import splrep, splev
 from scipy.integrate import trapz, simps
+from scipy.stats import norm
+
 from bcnz.model import etau_madau
 
 
@@ -33,13 +35,13 @@ def calc_r_const(filters):
 
     # 2.5*log10(clight_AHz) = 46.19205, which you often see applied to
     # magnitudes.
-    clight_AHz = 2.99792458e18
+    # clight_AHz = 2.99792458e18
 
     r_const = pd.Series()
     fL = filters.index.unique()
     for fname in fL:
         sub = filters.loc[fname]
-        r_const[fname] = 1.0 / simps(sub.response / sub.lmb, sub.lmb) / clight_AHz
+        r_const[fname] = 1.0 / simps(sub.response / sub.lmb, sub.lmb)  # / clight_AHz
 
     return r_const
 
@@ -66,14 +68,11 @@ def calc_ext_spl(ext, config):
     return ext_spl
 
 
-def calc_ab(config, filters, seds, ext, r_const):
+def calc_ab(config, filters, lines, ext, r_const):
     """Estimate the fluxes for all filters and SEDs."""
 
-    # Test for missing SEDs.
-    missing_seds = set(config["seds"]) - set(seds.index)
-    assert not len(missing_seds), "Missing seds: {}".format(missing_seds)
+    abfactor = 10 ** (-0.4 * 48.6)
 
-    sedD = sed_spls(seds)
     ext_spl = calc_ext_spl(ext, config)
     z = np.arange(0.0, config["zmax_ab"], config["dz_ab"])
 
@@ -101,13 +100,13 @@ def calc_ab(config, filters, seds, ext, r_const):
         X = np.outer(a, lmb)
 
         # Only looping over the configured SEDs.
-        for sed in config["seds"]:
+        for line_key, lmb0 in lines.items():
             t1 = time.time()
 
-            y_sed = splev(X, sedD[sed])
             k_ext = splev(X, ext_spl)
             EBV = config["EBV"]
             y_ext = 10 ** (-0.4 * EBV * k_ext)
+            y_sed = norm.pdf(X, lmb0, config["line_width"])
 
             Y = y_ext * y_sed * y_f * lmb * tau
 
@@ -116,41 +115,45 @@ def calc_ab(config, filters, seds, ext, r_const):
             elif int_method == "sum":
                 ans = r_const[band] * int_dz * Y.sum(axis=1)
 
+            ans *= config["line_flux"] * abfactor
             # This might be overkill in terms of storage, but information in
             # the columns is a pain..
             part = pd.DataFrame({"z": z, "flux": ans})
             part["band"] = band
-            part["sed"] = sed
+            part["sed"] = line_key
             part["ext_law"] = config["ext_law"]
             part["EBV"] = EBV
 
             df = df.append(part, ignore_index=True)
 
             t2 = time.time()
+            print(t2 - t1)
 
     return df
 
 
-def model_cont(
+def model_lines_gaussian(
     filters,
-    seds_df,
+    lines,
     ext,
-    seds,
     ext_law,
     EBV,
+    line_width=10,
+    line_flux=1e-17,
     zmax_ab=2.05,
     dz_ab=0.001,
     int_dz=1.0,
     int_method="simps",
 ):
-    """The model fluxes for the continuum
+    """The model fluxes for Gaussian emission lines
        Args:
            filters (df): Filter transmission curves.
-           seds_df (df): Galaxy SEDs.
+           lines (dict): Emission line names and wavelength
            ext (df): Extinction curves.
-           seds (list): SEDs to use.
            ext_law (str): Extinction law.
            EBV (float): Extinction value.
+           line_width (float): Emission line width in Angstroms
+           line_flux (float): Emission line total flux in erg/cm/cm/s
            zmax_ab (float): Maximum redshift in the flux model.
            dz_ab (float): Redshift resolution in the flux model.
            int_dz (float): Resolution when integration.
@@ -159,16 +162,17 @@ def model_cont(
     """
 
     config = {
-        "seds": seds,
         "ext_law": ext_law,
         "EBV": EBV,
         "zmax_ab": zmax_ab,
         "dz_ab": dz_ab,
         "int_dz": int_dz,
         "int_method": int_method,
+        "line_width": line_width,
+        "line_flux": line_flux,
     }
 
     r_const = calc_r_const(filters)
-    ab = calc_ab(config, filters, seds_df, ext, r_const)
+    ab = calc_ab(config, filters, lines, ext, r_const)
 
     return ab
