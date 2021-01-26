@@ -17,25 +17,17 @@
 
 # Input data
 from .all_filters import all_filters
-from .load_filters import load_filters
 from .extinction_laigle import extinction_laigle
-from .load_extinction import load_extinction
 from .load_seds import load_seds
 from .line_ratios import line_ratios
-from .etau_madau import etau_madau
 
 # Core model estimation.
 from .model_cont import model_cont
 from .model_lines import model_lines
-from .model_lines_gaussian import model_lines_gaussian
 
 # Adjust and rebin.
 from .fmod_adjust import fmod_adjust
 from .rebin import rebin
-from .combine_lines import combine_lines
-
-from .cache import cache_model
-from .nb2bb import nb2bb
 
 
 def model_single(seds, ext_law, EBV, sep_OIII, sed_dir, use_lines):
@@ -49,9 +41,9 @@ def model_single(seds, ext_law, EBV, sep_OIII, sed_dir, use_lines):
 
     # Continuum and lines.
     model_cont_df = model_cont(
-        filters, seds_cont, extinction, seds=seds, EBV=EBV, ext_law=ext_law)
-    model_lines_df = model_lines(
-        ratios, filters, extinction, EBV=EBV, ext_law=ext_law)
+        filters, seds_cont, extinction, seds=seds, EBV=EBV, ext_law=ext_law
+    )
+    model_lines_df = model_lines(ratios, filters, extinction, EBV=EBV, ext_law=ext_law)
 
     model_orig = fmod_adjust(model_cont_df, model_lines_df)
     model_binned = rebin(model_orig)
