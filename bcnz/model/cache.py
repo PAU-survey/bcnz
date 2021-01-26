@@ -34,6 +34,7 @@ def cache_model(cache_dir, runs=None):
         path = cache_dir / f'model_{i}.nc'
 
         if path.exists():
+            print('model found')
             continue
 
         print(f'Running for model: {i}')
