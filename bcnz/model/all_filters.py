@@ -25,8 +25,8 @@ from glob import glob
 def all_filters():
     """Create a dataframe joining all filters."""
 
-    # Upgraded directory to include the CFHT filters.
-    dfilters = '~/data/photoz/all_filters/v3'
+    # Upgraded directory to include the CFHT + KiDS filters.
+    dfilters = '~/data/photoz/all_filters/v4'
     dfilters = os.path.expanduser(dfilters)
 
     L = []
