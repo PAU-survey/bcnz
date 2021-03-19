@@ -13,4 +13,4 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with BCNz.  If not, see <http://www.gnu.org/licenses/>.
-from .bayevz_tools import *
+from .bayevz_tools import photoz_batch
