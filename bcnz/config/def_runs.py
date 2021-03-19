@@ -126,6 +126,7 @@ def test_bayevz():
 
     nb2bb = True
     norm_band = "r_Subaru"
+    ref_mag = "i_Subaru"
     zgrid = np.arange(0, 0.3, 0.001)
     lines = {
         "OII": 3726.8,
@@ -182,6 +183,7 @@ def test_bayevz():
         S["zgrid"] = zgrid
         S["nb2bb"] = nb2bb
         S["norm_band"] = norm_band
+        S["ref_mag"] = ref_mag
         df = df.append(S, ignore_index=True)
 
     ext_law = "SB_calzetti_bump2"
@@ -194,6 +196,7 @@ def test_bayevz():
             S["zgrid"] = zgrid
             S["nb2bb"] = nb2bb
             S["norm_band"] = norm_band
+            S["ref_mag"] = ref_mag
             df = df.append(S, ignore_index=True)
     # This applies to all configurations.
 
@@ -201,8 +204,10 @@ def test_bayevz():
     filter_dir = test_data_dir + "filt_70bands_noirach/"
     sed_dir = test_data_dir + "seds/"
     ext_dir = test_data_dir + "ext_laws/"
+    filter_dir_calib = test_data_dir + "calib_filters/"
     df["sed_dir"] = sed_dir
     df["filter_dir"] = filter_dir
+    df["filter_dir_calib"] = filter_dir_calib
     df["ext_dir"] = ext_dir
 
     return df

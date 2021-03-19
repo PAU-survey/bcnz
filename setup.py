@@ -18,40 +18,56 @@
 
 import glob
 import pdb
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Extension
+import numpy as np
+from Cython.Build import cythonize
 
 # Same author and maintainer.
-name = 'Martin B. Eriksen'
-email = 'eriksen@pic.es'
+name = "Martin B. Eriksen"
+email = "eriksen@pic.es"
+
+ext = Extension(
+    "mc_genz_cython",
+    ["bcnz/bayint/mc_genz_cython.pyx"],
+    include_dirs=[np.get_include(), ".", "bcnz/bayint/"],
+)
 
 setup(
-    name = 'bcnz',
-    version = '2',
-    packages = find_packages(),
-
-    install_requires = [
-        'numpy',
-        'pandas',
-        'tables',
-        'xarray',
-        'scipy',
-        'sklearn',
-        'psycopg2',
-        'fire',
-        'dask',
-        'tables',
-        'tqdm',
-        'argparse'
+    name="bcnz",
+    version="2",
+    packages=find_packages(),
+    # packages=find_packages("bcnz"),  # include all packages under src
+    # package_dir={"": "bcnz"},  # tell distutils packages are under src
+    # package_data={"model": ["calib_filters/*.csv"]},
+    # include_package_data=True,
+    install_requires=[
+        "numpy",
+        "pandas",
+        "tables",
+        "xarray",
+        "scipy",
+        "sklearn",
+        "psycopg2",
+        "fire",
+        "dask",
+        "tables",
+        "tqdm",
+        "argparse",
+        "wheel",
+        "Cython",
     ],
-    author = name,
-    author_email = email,
-    license = 'GPLv3',
-    maintainer = name,
-    maintainer_email = email,
-    scripts = ['bcnz/bin/run_bcnz.py'],
+    author=name,
+    author_email=email,
+    license="GPLv3",
+    maintainer=name,
+    maintainer_email=email,
+    scripts=["bcnz/bin/run_bcnz.py"],
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Topic :: Astronomy",
-        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     ],
+    ext_modules=cythonize(ext),
+    include_dirs=[np.get_include(), "."],
+    zip_safe=False,
 )

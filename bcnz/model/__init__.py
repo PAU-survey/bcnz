@@ -36,6 +36,7 @@ from .combine_lines import combine_lines
 
 from .cache import cache_model
 from .cache_bayevz import cache_model_bayevz
+from .cache_bayevz_calib import cache_model_bayevz_calib
 
 from .nb2bb import nb2bb
 
