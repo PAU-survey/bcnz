@@ -37,7 +37,7 @@ def paus_fromfile(coadds_file,parentcat_file,min_nb=35,
     ## loads the nnb photometry 
     paudm_coadd = bcnz.data.load_coadd_file(coadds_file)
     parent_cat =  pd.read_csv(parentcat_file)#.set_index('ref_id')   
-   
+    print(paudm_coadd, parent_cat) 
 
     phot_cols = ['U','B','V','R','I','ZN','DU','DB','DV','DR','DI','DZN']
     cfg = [['U', 'DU', 'cfht_u'],
@@ -57,6 +57,7 @@ def paus_fromfile(coadds_file,parentcat_file,min_nb=35,
    
 
     # Add some minimum noise.
+    #data_noisy = data_in
     data_noisy = bcnz.data.fix_noise(data_in)
 
     # Select a subset of the galaxies.
@@ -110,7 +111,7 @@ def get_input(output_dir, model_dir, fit_bands,coadds_file, parentcat_file):
 
     # And then estimate the catalogue.
     galcat_inp = paus_fromfile(coadds_file=coadds_file,parentcat_file = parentcat_file)
-
+  
     # Temporary hack.... 
     galcat_inp = bcnz.fit.flatten_input(galcat_inp) 
     galcat_inp.to_parquet(str(path_galcat))
@@ -129,11 +130,11 @@ def run_photoz(coadds_file, parentcat_file,output_dir, model_dir, broad_bands= [
            parentcat_file (str): Path to file containing the bb fluxes and the true redshifts
            broad_bands (list): Which broad bands to fit.
     """
- 
+    
     output_dir = Path(output_dir)
 
     fit_bands = get_bands(broad_bands)
-
+   
     runs, modelD, galcat = get_input(
         output_dir, model_dir, fit_bands, coadds_file, parentcat_file)
 
