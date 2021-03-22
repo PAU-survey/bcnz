@@ -186,7 +186,7 @@ def get_data_hack():
     return galcat_inp
 
 
-def run_photoz(model_dir):
+def run_photoz(output_dir, model_dir):
     runs, modelD, model_calib = get_model(model_dir)
 
     galcat = get_data_hack()
@@ -195,10 +195,15 @@ def run_photoz(model_dir):
         modelD[key] = modelD[key].sel(band=galcat.flux.columns.values)
         modelD[key] = modelD[key].transpose("z", "sed", "band")
 
-    result = bcnz.bayint.photoz_batch(runs, galcat, modelD, model_calib)
+    prior_vol = bcnz.bayint.calculate_prior_volume(
+        output_dir, runs, modelD, model_calib, Nsteps=int(1e6)
+    )
+
+    result = bcnz.bayint.photoz_batch(runs, galcat, modelD, model_calib, prior_vol)
     breakpoint()
 
 
 if __name__ == "__main__":
     model_dir = "/Users/alarcon/Documents/tmp_bcnz/tmp_model/test1/"
-    run_photoz(model_dir)
+    output_dir = "/Users/alarcon/Documents/tmp_bcnz/tmp_output/test1/"
+    run_photoz(output_dir, model_dir)

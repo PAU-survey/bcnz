@@ -26,11 +26,18 @@ from Cython.Build import cythonize
 name = "Martin B. Eriksen"
 email = "eriksen@pic.es"
 
-ext = Extension(
-    "mc_genz_cython",
-    ["bcnz/bayint/mc_genz_cython.pyx"],
-    include_dirs=[np.get_include(), ".", "bcnz/bayint/"],
-)
+ext = [
+    Extension(
+        "mc_genz_cython",
+        ["bcnz/bayint/mc_genz_cython.pyx"],
+        include_dirs=[np.get_include(), ".", "bcnz/bayint/"],
+    ),
+    Extension(
+        "prior_volume_integral",
+        ["bcnz/bayint/prior_volume_integral.pyx"],
+        include_dirs=[np.get_include(), ".", "bcnz/bayint/"],
+    ),
+]
 
 setup(
     name="bcnz",

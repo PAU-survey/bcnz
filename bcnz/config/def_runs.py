@@ -128,6 +128,8 @@ def test_bayevz():
     norm_band = "r_Subaru"
     ref_mag = "i_Subaru"
     zgrid = np.arange(0, 0.3, 0.001)
+    prior_volume_zid = np.linspace(0, len(zgrid) - 1, 10).astype(int)
+
     lines = {
         "OII": 3726.8,
         "OIII_1": 4959.0,
@@ -184,6 +186,7 @@ def test_bayevz():
         S["nb2bb"] = nb2bb
         S["norm_band"] = norm_band
         S["ref_mag"] = ref_mag
+        S["prior_volume_zid"] = prior_volume_zid
         df = df.append(S, ignore_index=True)
 
     ext_law = "SB_calzetti_bump2"
@@ -197,6 +200,7 @@ def test_bayevz():
             S["nb2bb"] = nb2bb
             S["norm_band"] = norm_band
             S["ref_mag"] = ref_mag
+            S["prior_volume_zid"] = prior_volume_zid
             df = df.append(S, ignore_index=True)
     # This applies to all configurations.
 

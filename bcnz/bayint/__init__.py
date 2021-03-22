@@ -13,4 +13,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with BCNz.  If not, see <http://www.gnu.org/licenses/>.
-from .bayevz_tools import photoz_batch
+from . import bayevz_tools
+from .bayevz_photoz import photoz_batch
+from .prior_volume import calculate_prior_volume
