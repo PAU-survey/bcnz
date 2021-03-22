@@ -183,12 +183,44 @@ def get_data_hack():
 
     galcat_inp = bcnz.calib.apply_zp(cat, zp, norm_bb=False)
 
+    galcat_inp = galcat_inp.rename(columns={"zspec": "zs"})
     return galcat_inp
 
 
-def run_photoz(output_dir, model_dir):
+def get_catalog(catalog_name, engine, memba_prod, field, coadd_file):
+
+    if catalog_name == "paus_calib_sample":
+        galcat = bcnz.data.paus_calib_sample(
+            engine, memba_prod, field, coadd_file=coadd_file
+        )
+    elif catalog_name == "paus_main_sample":
+        galcat = bcnz.data.paus_main_sample(
+            engine, memba_prod, field, coadd_file=coadd_file
+        )
+    elif catalog_name == "alarcon2020":
+        galcat = bcnz.data.alarcon2020(engine)
+
+    return galcat
+
+
+def get_input(
+    output_dir,
+    model_dir,
+    catalog_name,
+    memba_prod,
+    field,
+    fit_bands,
+    only_specz,
+    coadd_file,
+):
+    """Get the input to run the photo-z code."""
+
+    # The model.
     runs, modelD, model_calib = get_model(model_dir)
 
+    # And then estimate the catalogue.
+    # engine = bcnz.connect_db()
+    # galcat = get_catalog(catalog_name, engine, memba_prod, field, coadd_file)
     galcat = get_data_hack()
 
     for key in modelD.keys():
@@ -199,6 +231,27 @@ def run_photoz(output_dir, model_dir):
         output_dir, runs, modelD, model_calib, Nsteps=int(1e6)
     )
 
+    zp = bcnz.bayint.cache_zp(
+        output_dir, runs, galcat, modelD, model_calib, prior_vol, 10, zp_tot=None
+    )
+    galcat = bcnz.calib.apply_zp(galcat, zp, norm_bb=False)
+
+    return galcat, runs, modelD, model_calib, prior_vol
+
+
+def run_photoz(output_dir, model_dir, catalog_name):
+    memba_prod, field, fit_bands, only_specz, coadd_file = None, None, None, None, None
+    galcat, runs, modelD, model_calib, prior_vol = get_input(
+        output_dir,
+        model_dir,
+        catalog_name,
+        memba_prod,
+        field,
+        fit_bands,
+        only_specz,
+        coadd_file,
+    )
+
     result = bcnz.bayint.photoz_batch(runs, galcat, modelD, model_calib, prior_vol)
     breakpoint()
 
@@ -206,4 +259,5 @@ def run_photoz(output_dir, model_dir):
 if __name__ == "__main__":
     model_dir = "/Users/alarcon/Documents/tmp_bcnz/tmp_model/test1/"
     output_dir = "/Users/alarcon/Documents/tmp_bcnz/tmp_output/test1/"
-    run_photoz(output_dir, model_dir)
+    catalog_name = "alarcon2020"
+    run_photoz(output_dir, model_dir, catalog_name)

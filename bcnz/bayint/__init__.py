@@ -16,3 +16,4 @@
 from . import bayevz_tools
 from .bayevz_photoz import photoz_batch
 from .prior_volume import calculate_prior_volume
+from .calib_zp import cache_zp
