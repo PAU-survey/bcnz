@@ -42,6 +42,7 @@ def paus_fromfile(coadds_file,parentcat_file,min_nb=35,
     phot_cols = ['U','B','V','R','I','ZN','DU','DB','DV','DR','DI','DZN']
     cfg = [['U', 'DU', 'cfht_u'],
        ['B', 'DB', 'subaru_b'],
+       ['G','DG','cfht_g'],
        ['V', 'DV', 'subaru_v'],
        ['R', 'DR', 'subaru_r'],
        ['I', 'DI', 'subaru_i'],
