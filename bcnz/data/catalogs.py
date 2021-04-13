@@ -21,8 +21,15 @@ from IPython.core import debugger as ipdb
 
 def rband(field):
     """The rband name in different fields."""
-
-    return 'subaru_r' if field.lower() == 'cosmos' else 'cfht_r'
+    
+    if field.lower() == 'cosmos':
+        r_band = 'subaru_r'
+    elif field.lower() == 'w2':
+        r_band = 'kids_r'
+    else:
+        r_band = 'cfht_r'
+        
+    return r_band
 
 
 def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos',
@@ -58,7 +65,10 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos',
         specz = bcnz.specz.zcosmos(engine)
     elif field.lower() == 'w3':
         parent_cat = bcnz.data.paudm_cfhtlens(engine, 'w3')
-        specz = bcnz.specz.deep2(engine)
+        specz = bcnz.specz.sdss(engine)
+    elif field.lower() == 'w2':
+        parent_cat = bcnz.data.paudm_kids(engine, 'w2')
+        specz = bcnz.specz.sdss_gama(engine)
     else:
         raise ValueError(f'No spectroscopy defined for: {field}')
 
@@ -91,7 +101,7 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos',
     return data_scaled
 
 paus_calib_sample = functools.partial(
-    paus, min_nb=39, only_specz=True, has_bb=True, secure_spec=True)
+    paus, min_nb=40, only_specz=True, has_bb=True, secure_spec=False) 
 
 # The entries for which we run the photo-z.
 paus_main_sample = functools.partial(

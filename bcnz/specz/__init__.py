@@ -15,3 +15,6 @@
 # along with BCNz.  If not, see <http://www.gnu.org/licenses/>.
 from .zcosmos import zcosmos
 from .deep2 import deep2
+from .sdss import sdss
+from .sdss_gama import sdss_gama
+

@@ -13,7 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with BCNz.  If not, see <http://www.gnu.org/licenses/>.
-#!/usr/bin/env python
+# !/usr/bin/env python
 # encoding: UTF8
 
 # The galaxy selection. This code works with COSMOS and CFHTlens.
@@ -30,8 +30,9 @@ def set_other_fields(cat, other):
     # A bit of gluing together...
     cosmos_fields = ['type', 'conf', 'I_auto']
     cfht_fields = ['zquality', 'obj_type', 'imag', 'zspec']
+    kids_fields = ['zspec'] #'zquality', 'obj_type', 'imag',
     vipers_fields = ['zflg']
-    for field in cosmos_fields + cfht_fields + vipers_fields:
+    for field in cosmos_fields + cfht_fields + kids_fields + vipers_fields:
         if not field in other.columns:
             continue
 
@@ -77,6 +78,7 @@ def limit_spec(cat, only_specz, secure_spec):
     # Here we only make the selection for the COSMOS field. (WHY??)
     cat = cat[cat.zs != 0]
     cat = cat[~np.isnan(cat.zs)]
+    
     if secure_spec:
         if 'conf' in cat.columns:
             cat = cat[(3. <= cat.conf) & (cat.conf <= 5.)]
@@ -86,6 +88,12 @@ def limit_spec(cat, only_specz, secure_spec):
         elif 'zquality' in cat.columns:
             # Deep2 spectra.
             cat = cat[(3. <= cat.zquality) & (cat.zquality <= 4)]
+        elif 'z_quality' in cat.columns:
+            # SDSS spectra. 
+            cat = cat
+        elif 'z-quality' in cat.columns:
+            # SDSS and GAMA spectra. 
+            cat = cat[3. <= cat.zquality]
         else:
             raise NotImplementedError('Which field is this??')
 
@@ -103,7 +111,7 @@ def limit_isgal(sub, sel_gal):
     elif 'type' in sub.columns:
         sub = sub[sub.type == 0]
     else:
-        # W1 selection.
+        # W1 and W2 selection.
         sub = sub[sub.zspec != 0]
 
     return sub
