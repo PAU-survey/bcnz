@@ -186,6 +186,8 @@ def get_pzcat(chi2, odds_lim, width_frac):
     # The run which contribute most to the redshift peak ...
     iz = pz.argmin(dim='z')
     points = chi2.isel_points(ref_id=range(len(chi2.ref_id)), z=iz)
-    cat['best_run'] = points.argmin(dim='run')
+
+    # Since old xarray versions does not support idxmin...
+    cat['best_run'] = points.run[points.argmin(dim='run')]
 
     return cat, pz
