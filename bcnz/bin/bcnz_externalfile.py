@@ -39,7 +39,7 @@ def paus_fromfile(coadds_file,parentcat_file,min_nb=35,
     parent_cat =  pd.read_csv(parentcat_file)#.set_index('ref_id')   
     print(paudm_coadd, parent_cat) 
 
-    phot_cols = ['U','B','V','R','I','ZN','DU','DB','DV','DR','DI','DZN']
+    phot_cols = parent_cat.columns.values[:-1]#['U','B','V','R','I','ZN','DU','DB','DV','DR','DI','DZN']
     cfg = [['U', 'DU', 'cfht_u'],
        ['B', 'DB', 'subaru_b'],
        ['G','DG','cfht_g'],
@@ -48,8 +48,11 @@ def paus_fromfile(coadds_file,parentcat_file,min_nb=35,
        ['I', 'DI', 'subaru_i'],
        ['ZN', 'DZN', 'subaru_z']]
 
+    df_bands = pd.DataFrame(cfg,columns = ['band_name','band_error_name','band'])
+    bands_tofit =  df_bands[df_bands.band_name.isin(phot_cols)].values.tolist()
+
     specz = parent_cat[['ref_id','zspec']]
-    flux_cols, err_cols, names = zip(*cfg)
+    flux_cols, err_cols, names = zip(*bands_tofit)
     flux = parent_cat[list(flux_cols)].rename(columns=dict(zip(flux_cols, names)))
     flux_error = parent_cat[list(err_cols)].rename(columns=dict(zip(err_cols, names)))
     parent_cat = pd.concat({'flux': flux, 'flux_error': flux_error}, axis=1)
@@ -86,7 +89,7 @@ def get_bands(broad_bands):
     # The bands to fit.
     NB = [f'pau_nb{x}' for x in 455+10*np.arange(40)]
     BB = broad_bands
-
+    print(BB,NB)
     fit_bands = NB + BB
 
     return fit_bands
@@ -98,6 +101,8 @@ def get_input(output_dir, model_dir, fit_bands,coadds_file, parentcat_file):
 
     # The model.
     runs = bcnz.config.eriksen2019()
+    #runs = runs[runs.use_lines == 0]
+
     modelD = bcnz.model.cache_model(model_dir, runs)
 
     if not output_dir.exists():
