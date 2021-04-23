@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# encoding: UTF8
+
 # Copyright (C) 2020 Martin B. Eriksen
 # This file is part of BCNz <https://github.com/PAU-survey/bcnz>.
 #
@@ -13,8 +16,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with BCNz.  If not, see <http://www.gnu.org/licenses/>.
-#!/usr/bin/env python
-# encoding: UTF8
 
 # Starts an dask cluster and returns a prompt so one can
 # later adjust the number of workers.

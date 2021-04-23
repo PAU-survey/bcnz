@@ -27,7 +27,7 @@ from IPython.core import debugger as ipdb
 def extinction_laigle():
     """The extinction files used in the Laigle paper."""
 
-    d = '~/data/photoz/ext_laws'
+    d = '~/data/photoz/ext_laws' 
     g = os.path.join(os.path.expanduser(d), '*.csv')
 
     df = pd.DataFrame()

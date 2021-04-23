@@ -2,7 +2,7 @@
 # This should only be considered a template!
 #
 Executable = /cephfs/pic.es/astro/scratch/eriksen/miniconda3/envs/bcnz/bin/python
-arguments = /nfs/pic.es/user/e/eriksen/code/bcnz/bcnz/scripts/cache_model.py /cephfs/pic.es/astro/scratch/eriksen/cache/bcnz/5 $(model)
+arguments = /nfs/pic.es/user/e/eriksen/code/bcnz/bcnz/bin/cache_model.py /cephfs/pic.es/astro/scratch/eriksen/cache/bcnz/6 $(model)
 
 error   = err.$(Process)
 output  = out.$(Process)

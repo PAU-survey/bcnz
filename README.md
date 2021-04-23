@@ -21,7 +21,11 @@ after entering into the cloned directory.
 While intended to be integrated in PAUdm, one can also run the code from the command line. As an 
 example, one can run
 
+<<<<<<< HEAD
 ./bcnz_paudm.py /cephfs/pic.es/astro/scratch/eriksen/output/bcnz/v5_941 /cephfs/pic.es/astro/scratch/eriksen/cache/bcnz/2 941 w3 --ip_dask=tcp://193.109.175.131:45560
+=======
+./run_bcnz.py /cephfs/pic.es/astro/scratch/eriksen/output/bcnz/v5_941 /cephfs/pic.es/astro/scratch/eriksen/cache/bcnz/7 941 w3 --ip_dask=tcp://193.109.175.131:45560
+>>>>>>> 69e8d98e9e99ebe987348a9d1aee6a87d2f0b665
 
 where bcnz_paudm.py is a binary in the bcnz/bin directory. Here the photo-z code will run the code
 over MEMBA production 941, which is in the W3 field. Intermediate and final outputs are stored

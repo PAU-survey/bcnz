@@ -37,7 +37,7 @@ def paus_fromfile(coadds_file,parentcat_file,min_nb=35,
     ## loads the nnb photometry 
     paudm_coadd = bcnz.data.load_coadd_file(coadds_file)
     parent_cat =  pd.read_csv(parentcat_file)#.set_index('ref_id')   
-    print(paudm_coadd, parent_cat) 
+
 
     phot_cols = parent_cat.columns.values[:-1]#['U','B','V','R','I','ZN','DU','DB','DV','DR','DI','DZN']
     cfg = [['U', 'DU', 'cfht_u'],
@@ -89,7 +89,7 @@ def get_bands(broad_bands):
     # The bands to fit.
     NB = [f'pau_nb{x}' for x in 455+10*np.arange(40)]
     BB = broad_bands
-    print(BB,NB)
+    #print(BB,NB)
     fit_bands = NB + BB
 
     return fit_bands
