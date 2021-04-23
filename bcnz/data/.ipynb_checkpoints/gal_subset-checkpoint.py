@@ -30,7 +30,7 @@ def set_other_fields(cat, other):
     # A bit of gluing together...
     cosmos_fields = ['type', 'conf', 'I_auto']
     cfht_fields = ['zquality', 'obj_type', 'imag', 'zspec']
-    kids_fields = ['zspec'] #'zquality', 'obj_type', 'imag',
+    kids_fields = ['z_quality','zspec']#, 'obj_type', 'imag',
     vipers_fields = ['zflg']
     for field in cosmos_fields + cfht_fields + kids_fields + vipers_fields:
         if not field in other.columns:
@@ -89,11 +89,8 @@ def limit_spec(cat, only_specz, secure_spec):
             # Deep2 spectra.
             cat = cat[(3. <= cat.zquality) & (cat.zquality <= 4)]
         elif 'z_quality' in cat.columns:
-            # SDSS spectra. 
-            cat = cat
-        elif 'z-quality' in cat.columns:
             # SDSS and GAMA spectra. 
-            cat = cat[3. <= cat.zquality]
+            cat = cat[3. <= cat.z_quality]
         else:
             raise NotImplementedError('Which field is this??')
 

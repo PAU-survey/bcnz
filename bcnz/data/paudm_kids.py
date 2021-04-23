@@ -53,7 +53,8 @@ def change_format(cat_in):
     """Change format to be compatible with the rest of the pipeline."""
 
     fnameL = ['u', 'g', 'r', 'i', 'z', 'y', 'j', 'h', 'ks']
-    new_names = ['kids_'+x for x in fnameL]
+    #new_names = ['kids_'+x for x in fnameL]
+    new_names = ['kids_u', 'kids_g', 'kids_r', 'kids_i', 'kids_z', 'vista_y', 'vista_j', 'vista_h', 'vista_ks']
 
     # Convert the fluxes.
     F = list(map('mag_{}'.format, fnameL))

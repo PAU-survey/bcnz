@@ -65,7 +65,7 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos',
         specz = bcnz.specz.zcosmos(engine)
     elif field.lower() == 'w3':
         parent_cat = bcnz.data.paudm_cfhtlens(engine, 'w3')
-        specz = bcnz.specz.sdss(engine)
+        specz = bcnz.specz.deep2(engine)
     elif field.lower() == 'w2':
         parent_cat = bcnz.data.paudm_kids(engine, 'w2')
         specz = bcnz.specz.sdss_gama(engine)
@@ -101,7 +101,7 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos',
     return data_scaled
 
 paus_calib_sample = functools.partial(
-    paus, min_nb=40, only_specz=True, has_bb=True, secure_spec=False) 
+    paus, min_nb=39, only_specz=True, has_bb=True, secure_spec=False) 
 
 # The entries for which we run the photo-z.
 paus_main_sample = functools.partial(

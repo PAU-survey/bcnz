@@ -41,8 +41,8 @@ def get_bands(field):
               'subaru_r', 'subaru_i', 'subaru_z']
     elif field.lower() == 'w2':
         BB = ['kids_u', 'kids_g', 'kids_r',
-              'kids_i', 'kids_z', 'kids_y',
-              'kids_j', 'kids_h', 'kids_ks']
+              'kids_i', 'kids_z', 'vista_y',
+              'vista_j', 'vista_h', 'vista_ks']
     else:
         BB = ['cfht_u', 'cfht_g', 'cfht_r', 'cfht_i', 'cfht_z']
 
@@ -152,7 +152,7 @@ def validate(output_dir, field):
         comb = comb[comb.magi < 22.5]
     
     elif field.lower() == 'w2':
-        specz = bcnz.specz.sdss_w2(engine)
+        specz = bcnz.specz.sdss_gama(engine)
 
         comb = pzcat.join(specz)
         comb = comb[comb.magi < 22.5]
