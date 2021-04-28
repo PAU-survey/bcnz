@@ -36,12 +36,13 @@ setup(
         'xarray',
         'scipy',
         'sklearn',
-        'psycopg2',
+        'psycopg2-binary',
         'fire',
         'dask',
         'tables',
         'tqdm',
-        'argparse'
+        'argparse',
+        'pyarrow'
     ],
     author = name,
     author_email = email,

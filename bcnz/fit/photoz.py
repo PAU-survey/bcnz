@@ -229,7 +229,7 @@ def _find_iband(fit_bands):
     # This would prevent anyone from running the code without a i-band. If
     # you really want this, please modify the code. For creating randoms
     # we require the modelling in the i-band.
-    for iband in ['subaru_i', 'cfht_i']:
+    for iband in ['subaru_i', 'cfht_i','kids_i']:
         if iband in fit_bands:
             return iband
     

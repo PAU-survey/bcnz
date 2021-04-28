@@ -31,7 +31,7 @@ from dask.distributed import Client
 import dask.dataframe as dd
 
 
-def get_bands(field, fit_bands):
+def get_bands(field):
     """Bands used in fit."""
 
     # The bands to fit.
@@ -39,6 +39,10 @@ def get_bands(field, fit_bands):
     if field.lower() == 'cosmos':
         BB = ['cfht_u', 'subaru_b', 'subaru_v',
               'subaru_r', 'subaru_i', 'subaru_z']
+    elif field.lower() == 'w2':
+        BB = ['kids_u', 'kids_g', 'kids_r',
+              'kids_i', 'kids_z', 'vista_y',
+              'vista_j', 'vista_h', 'vista_ks']
     else:
         BB = ['cfht_u', 'cfht_g', 'cfht_r', 'cfht_i', 'cfht_z']
 
@@ -146,6 +150,12 @@ def validate(output_dir, field):
 
         comb = pzcat.join(specz)
         comb = comb[comb.magi < 22.5]
+    
+    elif field.lower() == 'w2':
+        specz = bcnz.specz.sdss_gama(engine)
+
+        comb = pzcat.join(specz)
+        comb = comb[comb.magi < 22.5]
 
     comb['dx'] = (comb.zb - comb.zspec) / (1 + comb.zspec)
 
@@ -175,7 +185,7 @@ def run_photoz(output_dir, model_dir, memba_prod, field, fit_bands=None, only_sp
 
     output_dir = Path(output_dir)
 
-    fit_bands = get_bands(field, fit_bands)
+    fit_bands = get_bands(field)
     runs, modelD, galcat = get_input(
         output_dir, model_dir, memba_prod, field, fit_bands, only_specz, coadd_file)
 

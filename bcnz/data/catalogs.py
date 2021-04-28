@@ -21,11 +21,19 @@ from IPython.core import debugger as ipdb
 
 def rband(field):
     """The rband name in different fields."""
+    
+    if field.lower() == 'cosmos':
+        r_band = 'subaru_r'
+    elif field.lower() == 'w2':
+        r_band = 'kids_r'
+    else:
+        r_band = 'cfht_r'
+        
+    return r_band
 
-    return 'subaru_r' if field.lower() == 'cosmos' else 'cfht_r'
 
-
-def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos', min_nb=35,
+def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos',
+         d_filters='~/data/photoz/all_filters/v3', min_nb=35,
          only_specz=False, secure_spec=False, has_bb=False, sel_gal=True,
          coadd_file=None):
     """Load the PAUS data from PAUdm and perform the required
@@ -36,6 +44,7 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos', min_nb=35,
            memba_prod (int): The MEMBA production.
            field (str): Field to download.
            d_cosmos (str): Directory with downloaded COSMOS files.
+           d_filters (str): Directory with filter curves.
            min_nb (int): Minimum number of narrow bands.
            only_specz (bool): Only selecting galaxy with spectroscopic redshifts.
            secure_spec (bool): Selecting secure spectroscopic redshifts.
@@ -57,6 +66,9 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos', min_nb=35,
     elif field.lower() == 'w3':
         parent_cat = bcnz.data.paudm_cfhtlens(engine, 'w3')
         specz = bcnz.specz.deep2(engine)
+    elif field.lower() == 'w2':
+        parent_cat = bcnz.data.paudm_kids(engine, 'w2')
+        specz = bcnz.specz.sdss_gama(engine)
     else:
         raise ValueError(f'No spectroscopy defined for: {field}')
 
@@ -80,7 +92,7 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos', min_nb=35,
 
     # Synthetic narrow band coefficients.
     synband = rband(field)
-    filters = bcnz.model.all_filters()
+    filters = bcnz.model.all_filters(d_filters=d_filters)
     coeff = bcnz.model.nb2bb(filters, synband)
 
     data_scaled = bcnz.data.synband_scale(nbsubset, coeff, synband=synband,
@@ -89,7 +101,7 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos', min_nb=35,
     return data_scaled
 
 paus_calib_sample = functools.partial(
-    paus, min_nb=39, only_specz=True, has_bb=True, secure_spec=True)
+    paus, min_nb=39, only_specz=True, has_bb=True, secure_spec=False) 
 
 # The entries for which we run the photo-z.
 paus_main_sample = functools.partial(
