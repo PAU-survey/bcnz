@@ -59,7 +59,7 @@ def query_kids(engine, prod_memba, ilim=25., run=1):
     """Query for a catalogue in KiDS W2 field."""
 
     sql = 'SELECT fac.* FROM forced_aperture_coadd AS fac JOIN kids AS refcat ON refcat.paudm_id=fac.ref_id \
-               WHERE fac.production_id={0} AND refcat."{1}"<{2} AND fac.run={3} AND fac.flux > 0'
+               WHERE fac.production_id={0} AND refcat."{1}"<{2} AND fac.run={3}'
     sql = sql.format(prod_memba, 'mag_gaap_i', ilim, run)
 
     cat = pd.read_sql_query(sql, engine)

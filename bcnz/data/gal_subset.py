@@ -13,7 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with BCNz.  If not, see <http://www.gnu.org/licenses/>.
-# !/usr/bin/env python
+#!/usr/bin/env python
 # encoding: UTF8
 
 # The galaxy selection. This code works with COSMOS and CFHTlens.
@@ -78,7 +78,7 @@ def limit_spec(cat, only_specz, secure_spec):
     # Here we only make the selection for the COSMOS field. (WHY??)
     cat = cat[cat.zs != 0]
     cat = cat[~np.isnan(cat.zs)]
-    
+
     if secure_spec:
         if 'conf' in cat.columns:
             cat = cat[(3. <= cat.conf) & (cat.conf <= 5.)]
