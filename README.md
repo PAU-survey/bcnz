@@ -37,3 +37,8 @@ be calculated and stored in
 For running in parallel, the code uses [Dask](https://dask.org/). By specifying Dask, one can
 run on an existing Dask cluster. For example, dask-jobqueue supports running Dask on HTCondor,
 which is used at the [PIC](www.pic.es) data center.
+
+# Acknowledgement
+This project has received funding from the European Union’s Horizon 2020 research
+and innovation programme under the grant agreement No
+776247 EWC.
