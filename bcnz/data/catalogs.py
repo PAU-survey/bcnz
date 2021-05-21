@@ -95,10 +95,10 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos',
     filters = bcnz.model.all_filters(d_filters=d_filters)
     coeff = bcnz.model.nb2bb(filters, synband)
 
-    data_scaled = bcnz.data.synband_scale(nbsubset, coeff, synband=synband,
-                                          scale_data=True)
+# Disabling this scaling by now. Some tests showed this scaling is not needed.
+#    data_scaled = bcnz.data.synband_scale(nbsubset, coeff, synband=synband, scale_data=True)
 
-    return data_scaled
+    return nbsubset 
 
 paus_calib_sample = functools.partial(
     paus, min_nb=39, only_specz=True, has_bb=True, secure_spec=False) 
