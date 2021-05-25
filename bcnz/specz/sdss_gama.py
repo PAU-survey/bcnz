@@ -23,12 +23,12 @@ import psycopg2
 from astropy.io import fits
 
 def _query_sdss_gama(engine):
-    """Open csv file to get the sdss catalogue. FOR W2 !!!!"""
+    """Open csv file to get the sdss catalogue. For W2/KiDS/G9!"""
     sdss_file = "/nfs/pic.es/user/a/awittje/src/bcnz/bcnz/specz/sdss_g9_nQ3.csv"
     
     cat = pd.read_csv(sdss_file) 
-    cat = cat.rename(columns = {'RA':'ra','DEC':'dec', 'Z':'zspec', 'zwarning':'z_quality'})#, 'class':'obj_type', 'i':'magi'}) 
-    cat = cat[cat.zspec > 0.01]    
+    cat = cat.rename(columns = {'RA':'ra','DEC':'dec', 'Z':'zspec', 'nQ':'z_quality'})
+    cat = cat[cat.zspec > 0.001]    
     cat = cat[3. <= cat.z_quality]
     cat.set_index('objid')
         
