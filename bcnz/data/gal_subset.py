@@ -70,8 +70,10 @@ def limit_nb(df, min_nb):
 
 def limit_spec(cat, only_specz, secure_spec):
     """Only return the galaxies with a spectroscopic redshift."""
-
-    if not only_specz:
+    #only_specz = False
+   
+    if only_specz == False:
+    
         return cat
 
     # Here we only make the selection for the COSMOS field. (WHY??)
