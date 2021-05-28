@@ -122,6 +122,15 @@ def get_input(output_dir, model_dir, fit_bands,coadds_file, parentcat_file):
     # And then estimate the catalogue.
     galcat_inp = paus_fromfile(coadds_file=coadds_file,parentcat_file = parentcat_file)
   
+    if calib == True:
+        #parentcat_zs = pd.read_csv(parentcat_file, sep =',', header = 0).set_index('ref_id').rename(columns = {'zspec':'zs'})[['zs']]
+        #print(parentcat_zs)
+        #galcat_specz = galcat_inp.join(parentcat_zs,how= 'inner')
+        #print(galcat_specz)
+        zp = bcnz.calib.cache_zp(output_dir, galcat_inp, modelD, fit_bands)
+        norm_filter = bcnz.data.catalogs.rband(field)
+        galcat_inp = bcnz.calib.apply_zp(galcat_inp, zp, norm_filter=norm_filter)
+
     # Temporary hack.... 
     galcat_inp = bcnz.fit.flatten_input(galcat_inp) 
     galcat_inp.to_parquet(str(path_galcat))
