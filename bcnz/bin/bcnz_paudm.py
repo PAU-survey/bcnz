@@ -49,6 +49,7 @@ def get_bands(field, fit_bands):
 def get_input(output_dir, model_dir, memba_prod, field, fit_bands,
               only_specz, coadd_file):
     """Get the input to run the photo-z code."""
+   
 
     path_galcat = output_dir / 'galcat_in.pq'
 
@@ -72,9 +73,11 @@ def get_input(output_dir, model_dir, memba_prod, field, fit_bands,
     zp = bcnz.calib.cache_zp(output_dir, galcat_specz, modelD, fit_bands)
 
     # This should not be the same. We need to modify this later.
+  
+ 
     if only_specz:
         galcat = galcat_specz
-    else:
+    else: 
         galcat = bcnz.data.paus_main_sample(engine, memba_prod, field, coadd_file=coadd_file)
 
     # Applying the zero-points.
@@ -175,6 +178,7 @@ def run_photoz(output_dir, model_dir, memba_prod, field, fit_bands=None, only_sp
            coadd_file (str): Path to file containing the coadds.
     """
 
+   
     output_dir = Path(output_dir)
 
     fit_bands = get_bands(field, fit_bands)
