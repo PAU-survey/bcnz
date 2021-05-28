@@ -102,6 +102,10 @@ def get_input(output_dir, model_dir, fit_bands,coadds_file, parentcat_file):
     # The model.
     runs = bcnz.config.eriksen2019()
     #runs = runs[runs.use_lines == 0]
+    #runs = runs[runs.EBV.isin([0., 0.05])]
+    #runs['EBV'] = 0.0
+    #runs['use_lines'] = 0.
+
 
     modelD = bcnz.model.cache_model(model_dir, runs)
 
