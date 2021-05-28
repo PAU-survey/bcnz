@@ -94,7 +94,7 @@ def get_bands(broad_bands):
 
     return fit_bands
 
-def get_input(output_dir, model_dir, fit_bands,coadds_file, parentcat_file):
+def get_input(output_dir, model_dir, fit_bands,coadds_file, parentcat_file,calib):
     """Get the input to run the photo-z code."""
 
     path_galcat = output_dir / 'galcat_in.pq'
@@ -122,11 +122,7 @@ def get_input(output_dir, model_dir, fit_bands,coadds_file, parentcat_file):
     # And then estimate the catalogue.
     galcat_inp = paus_fromfile(coadds_file=coadds_file,parentcat_file = parentcat_file)
   
-    if calib == True:
-        #parentcat_zs = pd.read_csv(parentcat_file, sep =',', header = 0).set_index('ref_id').rename(columns = {'zspec':'zs'})[['zs']]
-        #print(parentcat_zs)
-        #galcat_specz = galcat_inp.join(parentcat_zs,how= 'inner')
-        #print(galcat_specz)
+    if calib == True: 
         zp = bcnz.calib.cache_zp(output_dir, galcat_inp, modelD, fit_bands)
         norm_filter = bcnz.data.catalogs.rband(field)
         galcat_inp = bcnz.calib.apply_zp(galcat_inp, zp, norm_filter=norm_filter)
@@ -138,7 +134,7 @@ def get_input(output_dir, model_dir, fit_bands,coadds_file, parentcat_file):
     return runs, modelD, galcat_inp
 
 
-def run_photoz(coadds_file, parentcat_file,output_dir, model_dir, broad_bands= ['cfht_u','subaru_b','subaru_v','subaru_r','subaru_i','subaru_z'], ip_dask=None):
+def run_photoz(coadds_file, parentcat_file,output_dir, model_dir, broad_bands= ['cfht_u','subaru_b','subaru_v','subaru_r','subaru_i','subaru_z'], ip_dask=None,calib = False):
     """Run the photo-z over a external provided catalogue.
 
        Args:
@@ -155,7 +151,7 @@ def run_photoz(coadds_file, parentcat_file,output_dir, model_dir, broad_bands= [
     fit_bands = get_bands(broad_bands)
    
     runs, modelD, galcat = get_input(
-        output_dir, model_dir, fit_bands, coadds_file, parentcat_file)
+        output_dir, model_dir, fit_bands, coadds_file, parentcat_file, calib)
 
     bcnz_paudm.run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask)
 
