@@ -145,17 +145,25 @@ def validate(output_dir, field):
         comb = comb[(comb.I_auto < 22.5) & (comb.r50 > 0)
                     & (3 <= comb.conf) & (comb.conf <= 5)]
 
-    elif field.lower() == 'w3':
-        specz = bcnz.specz.deep2(engine)
+    elif field.lower() == 'w1':
+        specz = bcnz.specz.vipers(engine)
 
+        # Not actually sure if this later will fail because the magi not
+        # being available. If someone cares, please fix.
         comb = pzcat.join(specz)
         comb = comb[comb.magi < 22.5]
-    
+
     elif field.lower() == 'w2':
         specz = bcnz.specz.sdss_gama(engine)
 
         comb = pzcat.join(specz)
         comb = comb[comb.magi < 22.5]
+
+    elif field.lower() == 'w3':
+        specz = bcnz.specz.deep2(engine)
+        comb = pzcat.join(specz)
+        comb = comb[comb.magi < 22.5]
+    
 
     comb['dx'] = (comb.zb - comb.zspec) / (1 + comb.zspec)
 
