@@ -63,12 +63,15 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos',
 
         # In the parent catalogue, but needed if using other coadds.
         specz = bcnz.specz.zcosmos(engine)
-    elif field.lower() == 'w3':
-        parent_cat = bcnz.data.paudm_cfhtlens(engine, 'w3')
-        specz = bcnz.specz.deep2(engine)
+    elif field.lower() == 'w1':
+        parent_cat = bcnz.data.paudm_cfhtlens(engine, 'w1')
+        specz = bcnz.specz.vipers(engine)
     elif field.lower() == 'w2':
         parent_cat = bcnz.data.paudm_kids(engine, 'w2')
         specz = bcnz.specz.sdss_gama(engine)
+    elif field.lower() == 'w3':
+        parent_cat = bcnz.data.paudm_cfhtlens(engine, 'w3')
+        specz = bcnz.specz.deep2(engine)
     else:
         raise ValueError(f'No spectroscopy defined for: {field}')
 
