@@ -173,38 +173,55 @@ def single_photoz(z, f_obs, ef_obs, fmod, fmod_EL, ref_mag_ind, prior_vol):
     return p, max_postinf
 
 
-def photoz_batch(runs, galcat, fmod, fmod_EL, prior_vol):
+def photoz_batch(galcat, config, fmod, fmod_EL, prior_vol):
     """
     Calculate p(z) for a batch of galaxies.
     Args:
-       runs (df): Dataframe contaning the runs metadata.
        galcat (df): Dataframe contaning the galaxy data.
+       runs (df): Dataframe contaning the runs metadata.
        fmod (dict): dict with models, each with shape np.array((nz,nt,nf))
        fmod_EL (dict): dict with models for emission line priors
        prior_vol (nd.array): The prior volumes for each model and redshift.
     """
 
-    z = runs.loc[0].zgrid
+    z = config["zgrid"]
+
     pz_labels = ["Z%.3f" % x for x in np.round(z, 3)]
 
-    ref_mag = runs.loc[0].ref_mag
-    ref_mag_ind = int(np.argwhere(galcat.flux.columns.values == ref_mag))
+    ref_mag_ind = config["ref_mag_ind"]
+    fit_bands = config["fit_bands"]
+    flux_cols = [f"flux_{x}" for x in fit_bands]
+    flux_err_cols = [f"flux_error_{x}" for x in fit_bands]
 
     post_batch = []
     for index, row in galcat.iterrows():
-        f_obs = row.flux.values
-        ef_obs = row.flux_error.values
+        f_obs = row[flux_cols].values
+        ef_obs = row[flux_err_cols].values
 
         posterior, max_evidence = single_photoz(
             z, f_obs, ef_obs, fmod, fmod_EL, ref_mag_ind, prior_vol
         )
-
+        # breakpoint()
         posterior = np.einsum("tz->z", posterior)
+
         S = pd.Series(dict(zip(pz_labels, posterior)))
-        S["ref_id"] = int(row.ref_id)
+        S["ref_id"] = index
         S["max_evidence"] = max_evidence
         post_batch.append(S)
     post_batch = pd.DataFrame().append(post_batch)
     post_batch.loc[:, "ref_id"] = post_batch.loc[:, "ref_id"].astype(int)
 
     return post_batch
+
+
+def photoz_dask(galcat, *args, **kwds):
+    """When working with parallel processing frameworks which works simpler
+       having a flat hirarchy both in the input and output.
+
+       Args:
+           galcat (df): Galaxy catalogue in a hirarchical format.
+    """
+
+    pz = photoz_batch(galcat, *args)
+
+    return pz
