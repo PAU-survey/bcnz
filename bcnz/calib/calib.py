@@ -136,9 +136,14 @@ def _find_best_model(modelD, flux_model, flux, flux_error, chi2, fit_bands,
 
     # Ok, this is not the only possible assumption!
     best_part = chi2.argmin(dim='part')
-    best_flux = flux_model.isel_points(ref_id=range(len(flux)), part=best_part)
-    best_flux = xr.DataArray(best_flux, dims=('ref_id', 'band'),
-                             coords={'ref_id': flux.ref_id, 'band': flux.band})
+
+
+    best_flux = flux_model[best_part]
+
+    # Old code for isel_points.
+    #best_flux = flux_model.isel_points(ref_id=range(len(flux)), part=best_part)
+    #best_flux = xr.DataArray(best_flux, dims=('ref_id', 'band'),
+    #                         coords={'ref_id': flux.ref_id, 'band': flux.band})
 
     return best_flux
 
