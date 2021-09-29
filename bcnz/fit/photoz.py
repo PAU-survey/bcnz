@@ -71,7 +71,7 @@ def galcat_to_arrays(data_df, bands, scale_input=False):
     return flux, flux_error, var_inv
 
 
-def _core_allz(ref_id, f_mod, flux, var_inv, i_band, Niter, Nskip):
+def _core_allz(ref_id, f_mod, flux, var_inv, Niter, Nskip):
     """Minimize the chi2 expression."""
 
     # Normalizing the models to avoid too large numbers.
@@ -168,7 +168,7 @@ def minimize_all_z(data_df, modelD, **config): #fit_bands, Niter, Nskip):
         if isinstance(f_mod, dask.distributed.client.Future):
             f_mod = f_mod.result()
 
-        L.append(_core_allz(ref_id, f_mod, flux, var_inv, i_band, *args))
+        L.append(_core_allz(ref_id, f_mod, flux, var_inv, *args))
 
     dim = pd.Index([int(x) for x in keys], name='run')
     chi2L, normL = zip(*L)
@@ -198,10 +198,18 @@ def flatten_models(modelD):
 
 def get_model(name, model, norm, pzcat, z, scale_input=False):
     """Get the model magnitudes at a given redshift."""
-    
-    tmp_model = model.sel_points(z=z, run=pzcat.best_run.values, dim='ref_id')
-    tmp_norm = norm.sel_points(ref_id=pzcat.index, z=z, run=pzcat.best_run.values)
-    tmp_norm = tmp_norm.rename({'points': 'ref_id'})
+   
+    z_xr = xr.DataArray(z, coords={'ref_id': pzcat.index.values})
+    bestrun_xr = xr.DataArray(pzcat.best_run.values, coords={'ref_id': pzcat.index.values})
+
+    tmp_model = model.sel(z=z_xr, run=bestrun_xr)
+#    tmp_model = model.sel_points(z=z, run=pzcat.best_run.values, dim='ref_id')
+
+    tmp_norm = norm.sel(z=z_xr, run=bestrun_xr)
+#    tmp_norm = norm.sel_points(ref_id=pzcat.index, z=z, run=pzcat.best_run.values)
+#    tmp_norm = tmp_norm.rename({'points': 'ref_id'})
+
+
     best_model = (tmp_model * tmp_norm).sum(dim='model')
     
     columns = [f'{name}_{x}' for x in best_model.band.values]
@@ -210,6 +218,7 @@ def get_model(name, model, norm, pzcat, z, scale_input=False):
     if scale_input:
         best_model *= 10**(0.4*(26+48.6))
 
+
     return best_model 
 
 
@@ -217,16 +226,29 @@ def get_iband_model(model, norm, pzcat, scale_input=False, i_band=None):
     """The model i-band flux as a function of redshift."""
    
     assert i_band 
-    tmp_model = model.sel(band=i_band).sel_points(run=pzcat.best_run.values)
-    tmp_norm = norm.sel_points(ref_id=pzcat.index, run=pzcat.best_run.values)
 
-    data = (tmp_model * tmp_norm).rename({'points': 'ref_id'}).sum(dim='model')
+#    z_xr = xr.DataArray(z, coords={'z': pzcat.index.values})
+    bestrun_xr = xr.DataArray(pzcat.best_run.values, coords={'ref_id': pzcat.index.values})
+
+    tmp_model = model.sel(band=i_band)[bestrun_xr]
+    tmp_norm = norm.sel(run=bestrun_xr)
+
+#    ipdb.set_trace() 
+#    tmp_model = model.sel(band=i_band).sel_points(run=pzcat.best_run.values)
+#    tmp_norm = norm.sel_points(ref_id=pzcat.index, run=pzcat.best_run.values)
+
+    data = (tmp_norm * tmp_model).sum(dim='model')
+
+#    ipdb.set_trace() 
+#    data = (tmp_model * tmp_norm).rename({'points': 'ref_id'}).sum(dim='model')
     columns = [f'iflux_{x}' for x in range(len(tmp_model.z))]
 
     df = pd.DataFrame(data.values, columns=columns, index=pzcat.index)
     
     if scale_input:
         df *= 10**(0.4*(26+48.6))
+
+    ipdb.set_trace() 
 
     return df
 
