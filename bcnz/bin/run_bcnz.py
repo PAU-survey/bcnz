@@ -124,12 +124,9 @@ def run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask):
     ebvD = dict(runs.EBV)
 
 
-    # Test on a small catalogue... DEBUG!!!
-    sub = galcat.head(4)
-    pzcat = bcnz.fit.photoz_flatten(sub, xnew_modelD, ebvD, fit_bands)
-
-    print('Finished..')
-    return
+    # To disabled if you want to run a test on a few galaxies without Dask.
+#    sub = galcat.head(4)
+#    pzcat = bcnz.fit.photoz_flatten(sub, xnew_modelD, ebvD, fit_bands)
 
     pzcat = galcat.map_partitions(
         bcnz.fit.photoz_flatten, xnew_modelD, ebvD, fit_bands)
