@@ -30,8 +30,6 @@ import dask
 from dask.distributed import Client
 import dask.dataframe as dd
 
-dask.config.set(scheduler='threads')
-
 def get_bands(field):
     """Bands used in fit."""
 
@@ -128,10 +126,12 @@ def run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask):
 #    sub = galcat.head(4)
 #    pzcat = bcnz.fit.photoz_flatten(sub, xnew_modelD, ebvD, fit_bands)
 
+#    dask.config.set(scheduler='threads')
+
     pzcat = galcat.map_partitions(
         bcnz.fit.photoz_flatten, xnew_modelD, ebvD, fit_bands)
 
-    
+#    print('Finished...')
 
     pzcat = pzcat.repartition(npartitions=100)
     pzcat = dask.optimize(pzcat)[0]
