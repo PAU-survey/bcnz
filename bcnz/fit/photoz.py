@@ -79,20 +79,10 @@ def _core_allz(ref_id, f_mod, flux, var_inv, Niter, Nskip):
     """Minimize the chi2 expression."""
 
     # Normalizing the models to avoid too large numbers.
-#    print('Calling the core')
-
-    print(type(f_mod))
-    if isinstance(f_mod, str):
-        #X = f_mod.to_dataset('model')
-        #X.to_netcdf('/nfs/pic.es/user/e/eriksen/mymodel.nc')
-        with open('/nfs/pic.es/user/e/eriksen/mymodel.txt', mode='w') as fb:
-            print(f_mod, file=fb)
-
-
-#    f_mod = f_mod / f_mod.max(dim=('band', 'z'))
+    f_mod = f_mod / f_mod.max(dim=('band', 'z'))
 
     # To avoid very low numbers which would result in a large amplitude...
-#    f_mod = f_mod.where(f_mod > 1e-3, 0)
+    f_mod = f_mod.where(f_mod > 1e-3, 0)
 
 
     NBlist = list(filter(lambda x: x.startswith('pau_nb'), flux.band.values))
@@ -132,16 +122,9 @@ def _core_allz(ref_id, f_mod, flux, var_inv, Niter, Nskip):
         m0 = b / a
         m0 = np.nan_to_num(m0)
 
-        try:
-            vn = m0*v
-            v = vn
-        except FloatingPointError:
-            ipdb.set_trace()
+        vn = m0*v
+        v = vn
             
-#        print(
-#        ipdb.set_trace()
-
-
         # Extra step for the amplitude
         if 0 < i and i % Nskip == 0:
             # Testing a new form for scaling the amplitude...
@@ -226,7 +209,8 @@ def flatten_models(modelD):
 
 def get_model(name, model, norm, pzcat, z, scale_input=False):
     """Get the model magnitudes at a given redshift."""
-   
+  
+
     z_xr = xr.DataArray(z, coords={'ref_id': pzcat.index.values})
     bestrun_xr = xr.DataArray(pzcat.best_run.values, coords={'ref_id': pzcat.index.values})
 
@@ -314,15 +298,6 @@ def photoz(galcat, modelD, ebvD, fit_bands, Niter=1000, Nskip=10, odds_lim=0.01,
     # from the provided bands..
     i_band = i_band if i_band else _find_iband(fit_bands)
 
-    fb = open('/nfs/pic.es/user/e/eriksen/dask_debug', mode='a+')
-    for key, val in modelD.items():
-#        if isinstance(val, str):
-        print(key, type(val), val, file=fb)
-
-    fb.close()
-#        if isinstance(val, str):
-#            1 / 0
-
     chi2, norm = minimize_all_z(galcat, modelD, **config)
     pzcat, pz = libpzqual.get_pzcat(chi2, odds_lim, width_frac)
 
@@ -341,14 +316,6 @@ def photoz(galcat, modelD, ebvD, fit_bands, Niter=1000, Nskip=10, odds_lim=0.01,
     z0 = 0.01*np.ones_like(pzcat.zb) # yes, a hack.
     model_z0 = get_model('modelz0', model, norm, pzcat, z0)
     iband_model = get_iband_model(model, norm, pzcat, i_band=i_band)
-
-
-    fb = open('/nfs/pic.es/user/e/eriksen/dask_debug', mode='a+')
-    for key, val in modelD.items():
-#        if isinstance(val, str):
-        print(key, 'after', type(val), val, file=fb)
-
-    fb.close()
 
 
     if only_pz:
@@ -384,7 +351,7 @@ def photoz_flatten(galcat, *args, **kwds):
     pz = pd.DataFrame(pz.values, columns = [f'z{x}' for x in range(pz.shape[1])])
     pz.index = pzcat.index
 
-    df_out = pd.concat([pzcat, best_model, model_z0, iband_model, pz], 1)
+    df_out = pd.concat([pzcat, best_model, model_z0, iband_model, pz], axis=1)
     
     return df_out
 

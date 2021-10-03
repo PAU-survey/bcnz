@@ -106,10 +106,6 @@ def pz_width(pz, zb, width_frac):
 #    dy2 = (cumsum.isel_points(z=ind2+1, ref_id=igal) - y2_a) / \
 #          (cumsum.z[ind2+1].values - cumsum.z[ind2].values)
 
-    print(cumsum)
-    print(type(cumsum))
-#    ipdb.set_trace()
-
     y1_a = cumsum.values[igal, ind1]
     dy1 = (cumsum.values[igal, ind1+1] - y1_a) / \
           (cumsum.z[ind1+1].values - cumsum.z[ind1].values)
