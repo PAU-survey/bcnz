@@ -247,6 +247,12 @@ def zero_points(runs, galcat, fmod, fmod_EL, prior_vol, Nrounds, zp_tot=None):
     f_obs = galcat.flux.values
     ef_obs = galcat.flux_error.values
     zspec = galcat.zs.values
+
+    selection = zspec > 0.0
+    assert selection.sum() > 0.0, "No galaxies with spec-z"
+    f_obs = f_obs[selection]
+    ef_obs = ef_obs[selection]
+    zspec = zspec[selection]
     zspec_id = np.argmin(abs(np.add.outer(zspec, -z)), axis=1)
 
     nf = f_obs.shape[1]
