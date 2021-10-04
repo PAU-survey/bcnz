@@ -198,7 +198,7 @@ def sel_subset(galcat, fit_bands):
 
 
 def calib(galcat, modelD, fit_bands, SNR_min=-5, Nrounds=20, Niter=1001, cosmos_scale=True,
-          learn_rate=1.0, Nskip=10):
+          learn_rate=1.0, Nskip=10, return_details=False):
     """Calibrate zero-points by comparing the result at the spectroscopic redshift.
 
        Args:
@@ -222,4 +222,7 @@ def calib(galcat, modelD, fit_bands, SNR_min=-5, Nrounds=20, Niter=1001, cosmos_
     zp, zp_details, ratio_all = _zero_points(f_modD, galcat, **config)
     ratio_all = ratio_all.to_dataframe('ratio')
 
-    return zp
+    if not return_details:
+        return zp
+    else:
+        return zp, zp_details, ratio_all
