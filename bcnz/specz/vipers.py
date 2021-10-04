@@ -4,14 +4,16 @@
 import pandas as pd
 from pathlib import Path
 
-def vipers(engine):
+def vipers(engine, quality_cut=False):
     import bcnz
 
     # This data should have been available in PAUdm.
     d = Path('/cephfs/pic.es/astro/scratch/eriksen/data/vipers')
     df_in = pd.read_csv(d / 'vipers_full.csv', comment='#')
 
-    df = df_in[(3 <= df_in.zflg) & (df_in.zflg <= 4)]
+    if quality_cut:
+        df = df_in[(3 <= df_in.zflg) & (df_in.zflg <= 4)]
+
     df = df.rename(columns={'alpha': 'ra', 'delta': 'dec'})
 
     # Selecting W1 field.
