@@ -35,6 +35,14 @@ def model_at_z(zs, modelD, fit_bands):
     inds = ['band', 'sed', 'ext_law', 'EBV', 'z']
     for key, f_mod in modelD.items():
         f_mod = f_mod.sel(band=fit_bands)
+
+        # Normalizing the models to avoid too large numbers.
+        f_mod = f_mod / f_mod.max(dim=('band', 'z'))
+
+        # To avoid very low numbers which would result in a large amplitude...
+        f_mod = f_mod.where(f_mod > 1e-3, 0)
+
+
         f_mod = f_mod.sel(z=zs.values, method='nearest')
 
         if 'EBV' in f_mod.dims:
@@ -42,6 +50,7 @@ def model_at_z(zs, modelD, fit_bands):
 
         if 'ext_law' in f_mod.dims:
             f_mod = f_mod.squeeze('ext_law')
+
 
         f_modD[key] = f_mod.transpose('z', 'band', 'sed')
 
@@ -102,6 +111,8 @@ def minimize_at_z(f_mod, flux, flux_err, NBlist, BBlist, Niter, Nskip):
         a = np.einsum('gst,gt->gs', A, v)
 
         m0 = b / a
+        m0 = np.nan_to_num(m0)
+
         vn = m0*v
 
         v = vn
