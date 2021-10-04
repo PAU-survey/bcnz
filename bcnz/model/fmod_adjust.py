@@ -20,6 +20,9 @@ from IPython.core import debugger as ipdb
 import pandas as pd
 import xarray as xr
 import numpy as np
+from scipy.optimize import curve_fit
+from ..model.load_filters import load_filters
+from ..model.nb2bb import nb2bb
 
 
 def funky_hack(config, syn2real, sed, model_norm):
@@ -141,3 +144,51 @@ def fmod_adjust(
         out = out_cont
 
     return out
+
+
+def _line(x, a, b):
+    return a * x + b
+
+
+def scale_data(config, galcat):
+    """Scale data."""
+
+    ifnb2bb = config.nb2bb.values[0]
+
+    if not ifnb2bb:
+        return galcat
+    else:
+        norm_band = config["norm_band"].values[0]
+        filter_dir = config["filter_dir"].values[0]
+
+        filters = load_filters(filter_dir)
+
+        coeff = nb2bb(filters, norm_band)
+
+        coeff = coeff[coeff.bb == norm_band][["nb", "val"]]
+        coeff = coeff.set_index(["nb"]).to_xarray().val
+
+        pau_nb = ["pau_nb%s" % x for x in np.arange(455, 850, 10)]
+
+        pau_syn = galcat.flux.loc[:, pau_nb].values
+
+        pau_syn[pau_syn < 0.0] = np.nan
+        miss = np.arange(len(galcat))[np.sum(~np.isnan(pau_syn), axis=1) != 40]
+
+        for ms in miss:
+            sel = ~np.isnan(pau_syn[ms])
+            popt, pcov = curve_fit(
+                _line, np.arange(40)[sel], np.log10(pau_syn[miss[0]][sel])
+            )
+            pau_syn[ms][~sel] = 10 ** _line(np.arange(40)[~sel], *popt)
+
+        fsyn = np.einsum("ij,j->i", pau_syn, coeff)
+        syn2real = galcat.flux[f"{norm_band}"].values / fsyn
+
+        for x in pau_nb:
+            _name = ("flux", x)
+            galcat.loc[:, _name] *= syn2real
+            _name = ("flux_error", x)
+            galcat.loc[:, x] *= syn2real
+
+        return galcat
