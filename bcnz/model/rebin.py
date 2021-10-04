@@ -23,7 +23,7 @@ import pandas as pd
 from scipy.interpolate import splrep, splev, splint
 
 
-def rebin(model, zmin=0.01, zmax=1.2, dz=0.001):
+def rebin(model, zmin=0.01, zmax=2.0, dz=0.001):
     """Rebinning the redshift grid of the model.
 
        Args:
