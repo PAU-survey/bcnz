@@ -27,3 +27,4 @@ from .synband_scale import synband_scale
 from . import catalogs
 from .catalogs import paus, paus_calib_sample, paus_main_sample
 from .paper_catalogs import alarcon2020
+from .paucosmos import pauscosmos
