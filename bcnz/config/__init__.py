@@ -13,4 +13,4 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with BCNz.  If not, see <http://www.gnu.org/licenses/>.
-from .def_runs import eriksen2019, test_bayevz
+from .def_runs import eriksen2019, test_bayevz, pauscosmos_deep
