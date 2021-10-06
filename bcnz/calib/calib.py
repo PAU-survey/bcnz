@@ -197,7 +197,7 @@ def sel_subset(galcat, fit_bands):
     return cat
 
 
-def calib(galcat, modelD, fit_bands, SNR_min=-5, Nrounds=20, Niter=1001, cosmos_scale=True,
+def calib(galcat, modelD, fit_bands, SNR_min=-5, Nrounds=20, Niter=1001, cosmos_scale=False,
           learn_rate=1.0, Nskip=10, return_details=False):
     """Calibrate zero-points by comparing the result at the spectroscopic redshift.
 
