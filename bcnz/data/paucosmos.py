@@ -93,6 +93,38 @@ F_values = {
     "NB816.SuprimeCam": 1.787,
 }
 
+# Zero-point errors from Alarcon+20
+ZP_ERRORS_LAIGLE = {
+    "galex2500_nuv": 0.10,
+    "u_cfht": 0.02,
+    "B_Subaru": 0.02,
+    "V_Subaru": 0.02,
+    "r_Subaru": 0.02,
+    "i_Subaru": 0.02,
+    "suprime_FDCCD_z": 0.02,
+    "yHSC": 0.02,
+    "Y_uv": 0.05,
+    "J_uv": 0.05,
+    "H_uv": 0.05,
+    "K_uv": 0.05,
+    "IA427.SuprimeCam": 0.02,
+    "IA464.SuprimeCam": 0.02,
+    "IA484.SuprimeCam": 0.02,
+    "IA505.SuprimeCam": 0.02,
+    "IA527.SuprimeCam": 0.02,
+    "IA574.SuprimeCam": 0.02,
+    "IA624.SuprimeCam": 0.02,
+    "IA679.SuprimeCam": 0.02,
+    "IA709.SuprimeCam": 0.02,
+    "IA738.SuprimeCam": 0.02,
+    "IA767.SuprimeCam": 0.02,
+    "IA827.SuprimeCam": 0.02,
+    "NB711.SuprimeCam": 0.02,
+    "NB816.SuprimeCam": 0.02,
+}
+
+ZP_ERRORS_PAUS = {f"pau_nb{x}": 0.02 for x in np.arange(455, 850, 10)}
+
 
 def query_laigle(engine):
 
@@ -194,11 +226,28 @@ def laigle_apply_ebv_offset(cat):
     return cat
 
 
+def laigle_apply_extra_errors(cat, zp_error=ZP_ERRORS_LAIGLE):
+
+    for x in band_names:
+        _namef = "flux_%s" % x
+        _namefe = "flux_err_%s" % x
+
+        _flux = cat.loc[:, _namef].values
+        _fluxe = cat.loc[:, _namefe].values
+        new_fe = np.sqrt(_fluxe ** 2 + (zp_error[x] * abs(_flux)) ** 2)
+
+        cat.loc[:, _namefe] = new_fe
+
+    return cat
+
+
 def laigle_catalog(engine):
 
     laiglecat = query_laigle(engine)
     laiglecat = laigle_rename_columns(laiglecat)
     laiglecat = laigle_apply_ebv_offset(laiglecat)
+
+    laiglecat = laigle_apply_extra_errors(laiglecat)
 
     laiglecat = laiglecat.drop(columns=["offset", "ebv"])
 
@@ -218,6 +267,22 @@ def paus_apply_cosmos_scale(cat):
     return cat
 
 
+def paus_apply_extra_errors(cat, zp_error=ZP_ERRORS_PAUS):
+
+    for x in np.arange(455, 850, 10):
+        x = "pau_nb%s" % x
+
+        _namef = "flux_%s" % x
+        _namefe = "flux_err_%s" % x
+
+        _flux = cat.loc[:, _namef].values
+        _fluxe = cat.loc[:, _namefe].values
+        new_fe = np.sqrt(_fluxe ** 2 + (zp_error[x] * abs(_flux)) ** 2)
+
+        cat.loc[:, _namefe] = new_fe
+    return cat
+
+
 def paus_catalog(engine, prod_memba):
 
     pauscat = query_paus(engine, prod_memba)
@@ -227,6 +292,8 @@ def paus_catalog(engine, prod_memba):
     pauscat = pauscat.merge(cosmos, on="ref_id")
 
     pauscat = paus_apply_cosmos_scale(pauscat)
+
+    pauscat = paus_apply_extra_errors(pauscat)
 
     return pauscat
 
@@ -240,6 +307,7 @@ def pausdeep_catalog(engine, prod_memba):
     pauscat = pauscat.merge(cosmos, on="ref_id")
 
     pauscat = paus_apply_cosmos_scale(pauscat)
+    pauscat = paus_apply_extra_errors(pauscat)
 
     n_coadd_tab_above = np.sum(n_coadd_tab >= 10, axis=1)
     pauscat = pauscat.loc[n_coadd_tab_above.values >= 30]
@@ -254,6 +322,7 @@ def paus_catalog_matched_pausdeep(engine, prod_memba, prod_memba_deep):
     pauscat, n_coadd_tab = unpack_paus_catalog(pauscat)
     pauscat = pauscat.merge(cosmos, on="ref_id")
     pauscat = paus_apply_cosmos_scale(pauscat)
+    pauscat = paus_apply_extra_errors(pauscat)
 
     pauscat = pauscat.loc[pauscat.ref_id.isin(pausdeep.ref_id.values)]
     return pauscat
