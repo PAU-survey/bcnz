@@ -189,6 +189,6 @@ def scale_data(config, galcat):
             _name = ("flux", x)
             galcat.loc[:, _name] *= syn2real
             _name = ("flux_error", x)
-            galcat.loc[:, x] *= syn2real
+            galcat.loc[:, _name] *= syn2real
 
         return galcat
