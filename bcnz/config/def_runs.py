@@ -223,7 +223,14 @@ def pauscosmos_deep():
     nb2bb = True
     norm_band = "r_Subaru"
     ref_mag = "i_Subaru"
-    zgrid = np.arange(0, 0.3, 0.001)
+    # zgrid = np.arange(0, 0.3, 0.001)
+    zgrid = np.concatenate(
+        (
+            np.arange(0.0, 1.0, 0.001),
+            np.arange(1.0, 1.5, 0.002),
+            np.arange(1.5, 3.0, 0.01),
+        )
+    )
     prior_volume_zid = np.linspace(0, len(zgrid) - 1, 10).astype(int)
 
     lines = {
