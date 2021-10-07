@@ -96,6 +96,36 @@ old_filters = [
     "NB816.SuprimeCam",
 ]
 
+old_filters_2 = [
+    *["pau_nb%s" % x for x in np.arange(455, 850, 10)],
+    "galex2500_nuv",
+    "u_cfht",
+    "B_Subaru",
+    "V_Subaru",
+    "r_Subaru",
+    "i_Subaru",
+    "suprime_FDCCD_z",
+    "yHSC",
+    "Y_uv",
+    "J_uv",
+    "H_uv",
+    "K_uv",
+    "IA427.SuprimeCam",
+    "IA464.SuprimeCam",
+    "IA484.SuprimeCam",
+    "IA505.SuprimeCam",
+    "IA527.SuprimeCam",
+    "IA574.SuprimeCam",
+    "IA624.SuprimeCam",
+    "IA679.SuprimeCam",
+    "IA709.SuprimeCam",
+    "IA738.SuprimeCam",
+    "IA767.SuprimeCam",
+    "IA827.SuprimeCam",
+    "NB711.SuprimeCam",
+    "NB816.SuprimeCam",
+]
+
 
 def get_bands():
     """Bands used in fit."""
@@ -136,7 +166,9 @@ def get_bands():
 
 def get_model(model_dir):
 
-    runs = bcnz.config.test_bayevz()
+    # runs = bcnz.config.test_bayevz()
+    runs = bcnz.config.pauscosmos_deep()
+
     modelD = bcnz.model.cache_model_bayevz(model_dir, runs)
     model_calib = bcnz.model.cache_model_bayevz_calib(model_dir, runs)
 
@@ -202,8 +234,8 @@ def get_catalog(catalog_name, engine, memba_prod, field, coadd_file):
         galcat = bcnz.data.paus_main_sample(
             engine, memba_prod, field, coadd_file=coadd_file
         )
-    elif catalog_name == "alarcon2020":
-        galcat = bcnz.data.alarcon2020(engine)
+    elif catalog_name == "pauscosmos":
+        galcat = bcnz.data.pauscosmos(engine, memba_prod)
 
     return galcat
 
@@ -229,6 +261,8 @@ def get_input(
     only_specz,
     coadd_file,
 ):
+    from bcnz.model.fmod_adjust import scale_data
+
     """Get the input to run the photo-z code."""
 
     # The model.
@@ -254,22 +288,41 @@ def get_input(
         galcat = pd.read_parquet(str(path_galcat))
         return galcat, runs, modelD, model_calib, prior_vol
     # And then estimate the catalogue.
-    # engine = bcnz.connect_db_localhost(9000)
-    # galcat = get_catalog(catalog_name, engine, memba_prod, field, coadd_file)
-    galcat = get_data_hack()
+    engine = bcnz.connect_db_localhost(9000)
+    galcat = get_catalog(catalog_name, engine, memba_prod, field, coadd_file)
+
+    # hack
+    path = "/Users/alarcon/Dropbox/paucats/"
+    filename = "pau821_70bands_i23_min002_NB2BB_PUBLIC.csv"
+    df = pd.read_table(path + filename, sep=",", header=0)
+
+    df = df[df.zspec > 0.0][["ref_id", "zspec"]]
+    df = pd.DataFrame(
+        df.values, columns=pd.MultiIndex.from_arrays([["ref_id", "zs"], ["", ""]])
+    )
+    galcat = galcat.merge(df, on="ref_id", how="left",)
+
+    # galcat = galcat[(galcat.zs > 0.1) & (galcat.zs < 0.2)]
+
+    galcat = scale_data(runs, galcat)
+
+    # galcat = get_data_hack()
 
     # Calibrate the zero points.
     zp = bcnz.bayint.cache_zp(
-        output_dir, runs, galcat, modelD, model_calib, prior_vol, 10, zp_tot=None
+        output_dir, runs, galcat, modelD, model_calib, prior_vol, 100, zp_tot=None
     )
     # Do not normalize the zero points. In principle the zero points are
     # relative, but in practice the prior on p(UV,OII) is absolute,
     # so the absolute zero-points might carry meaning.
     # This also means the data must be calibrated to the AB system.
+    # breakpoint()
     galcat = bcnz.calib.apply_zp(galcat, zp, norm_bb=False)
 
     # Temporary hack....
     galcat = flatten_input(galcat)
+
+    galcat = galcat.iloc[np.arange(10)]
     galcat.to_parquet(str(path_galcat))
 
     return galcat, runs, modelD, model_calib, prior_vol
@@ -323,7 +376,7 @@ def run_photoz_dask(output_dir, model_dir, catalog_name, ip_dask=None):
     # result = bcnz.bayint.photoz_batch(runs, galcat, modelD, model_calib, prior_vol)
 
 
-def run_photoz_serial(output_dir, model_dir, catalog_name):
+def run_photoz_serial(output_dir, model_dir, catalog_name, memba_prod):
 
     output_dir = Path(output_dir)
 
@@ -332,7 +385,7 @@ def run_photoz_serial(output_dir, model_dir, catalog_name):
         print("Photo-z catalogue already exists.")
         return
 
-    memba_prod, field, fit_bands, only_specz, coadd_file = None, None, None, None, None
+    field, fit_bands, only_specz, coadd_file = None, None, None, None
     galcat, runs, modelD, model_calib, prior_vol = get_input(
         output_dir,
         model_dir,
@@ -357,7 +410,13 @@ def run_photoz_serial(output_dir, model_dir, catalog_name):
     pzcat.to_parquet(str(path_out))
 
 
-def run_photoz_schwimmbad(output_dir, model_dir, catalog_name, pool):
+def _run_photoz_schwimmbad(data):
+    galcat, config, modelD, model_calib, prior_vol = data
+    pzcat = bcnz.bayint.photoz_batch(galcat, config, modelD, model_calib, prior_vol)
+    return pzcat
+
+
+def run_photoz_schwimmbad(output_dir, model_dir, catalog_name, memba_prod, pool):
 
     output_dir = Path(output_dir)
 
@@ -366,7 +425,7 @@ def run_photoz_schwimmbad(output_dir, model_dir, catalog_name, pool):
         print("Photo-z catalogue already exists.")
         return
 
-    memba_prod, field, fit_bands, only_specz, coadd_file = None, None, None, None, None
+    field, fit_bands, only_specz, coadd_file = None, None, None, None
     galcat, runs, modelD, model_calib, prior_vol = get_input(
         output_dir,
         model_dir,
@@ -386,23 +445,32 @@ def run_photoz_schwimmbad(output_dir, model_dir, catalog_name, pool):
         "ref_mag_ind": ref_mag_ind,
     }
 
-    nbatch = 4
-    breakpoint()
-    # zips =
+    nranks = pool.comm.Get_size()
+    rank_ind = np.array_split(np.arange(len(galcat)), nranks)
 
-    pzcat = bcnz.bayint.photoz_batch(galcat, config, modelD, model_calib, prior_vol)
+    data_batches = []
+
+    for i in range(nranks):
+        _data = (galcat.iloc[rank_ind[i]], config, modelD, model_calib, prior_vol)
+        data_batches.append(_data)
+
+    result = pool.map(_run_photoz_schwimmbad, data_batches)
+    pzcat = pd.concat(result, ignore_index=True)
 
     pzcat.to_parquet(str(path_out))
 
 
 if __name__ == "__main__":
 
-    model_dir = "/Users/alarcon/Documents/tmp_bcnz/tmp_model/test1/"
-    output_dir = "/Users/alarcon/Documents/tmp_bcnz/tmp_output/test1/"
-    catalog_name = "alarcon2020"
+    model_dir = "/Users/alarcon/Documents/tmp_bcnz/tmp_model/pauscosmos_test2/"
+    # output_dir = "/Users/alarcon/Documents/tmp_bcnz/tmp_output/test1/"
+    output_dir = "/Users/alarcon/Documents/tmp_bcnz/tmp_output/pauscosmos_test3/"
+    catalog_name = "pauscosmos"
+    memba_prod = 984
     # run_photoz(output_dir, model_dir, catalog_name)
-    # run_photoz_serial(output_dir, model_dir, catalog_name)
+    # run_photoz_serial(output_dir, model_dir, catalog_name, memba_prod)
 
+    # """
     from schwimmbad import MPIPool
 
     pool = MPIPool()
@@ -410,4 +478,5 @@ if __name__ == "__main__":
         pool.wait()
         sys.exit(0)
 
-    run_photoz_schwimmbad(output_dir, model_dir, catalog_name, pool)
+    run_photoz_schwimmbad(output_dir, model_dir, catalog_name, memba_prod, pool)
+    # """
