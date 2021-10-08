@@ -205,9 +205,10 @@ def new_sigma68(L, cut_key='qz', ls=[':', '--', '-', ':'], q=[1.0, 0.8,0.5,0.2],
             _plot_panel(A[i,j], cum_bins, K, metric, xquantity)
 
 
-    A[0,0].set_ylabel('$\sigma_{68}\, /\, (1+z)$', size=14)
-    A[1,0].set_ylabel('Outlier fraction', size=14)
-    A[2,0].set_ylabel('Bias', size=14)
+    size = 16
+    A[0,0].set_ylabel('$\sigma_{68}\, /\, (1+z)$', size=size)
+    A[1,0].set_ylabel('Outlier fraction', size=size)
+    A[2,0].set_ylabel('Bias', size=size)
 
     for ax in A[0]:
         ax.axhline(0.0035, ls='--', color='k', alpha=0.5)
@@ -219,8 +220,8 @@ def new_sigma68(L, cut_key='qz', ls=[':', '--', '-', ':'], q=[1.0, 0.8,0.5,0.2],
     for ax in A.flatten():
         ax.grid(which='both')
 
-    A[-1,0].set_xlabel('$\mathrm{i_{AB} < i_{Auto}}$', size=14)
-    A[-1,1].set_xlabel('$z_{\\rm b}$', size=14)
-    A[-1,2].set_xlabel('$z_{\\rm spec}$', size=14)
+    A[-1,0].set_xlabel('$\mathrm{i_{AB} < i_{Auto}}$', size=size)
+    A[-1,1].set_xlabel('$z_{\\rm b}$', size=size)
+    A[-1,2].set_xlabel('$z_{\\rm spec}$', size=size)
 
     A[0,0].legend(prop={'size': 8})
