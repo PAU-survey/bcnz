@@ -218,8 +218,8 @@ def metrics(L, cut_key='qz', ls=[':', '--', '-', ':'], q=[1.0, 0.8,0.5,0.2], col
     for ax in A.flatten():
         ax.grid(which='both')
 
-    A[-1,0].set_xlabel('$\mathrm{i_{AB} < i_{Auto}}$', size=size)
-    A[-1,1].set_xlabel('$z_{\\rm b}$', size=size)
-    A[-1,2].set_xlabel('$z_{\\rm spec}$', size=size)
+    A[-1,0].set_xlabel('$i_{Auto}}$ [binned]', size=size)
+    A[-1,1].set_xlabel('$z_{\\rm b}$ [binned]', size=size)
+    A[-1,2].set_xlabel('$z_{\\rm spec}$ [binned]', size=size)
 
     A[0,0].legend(prop={'size': 8})
