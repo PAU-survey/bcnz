@@ -1,1 +1,2 @@
-from .sig68 import sigma68, metrics
+from .sig68 import metrics
+from .zbins import zbins
