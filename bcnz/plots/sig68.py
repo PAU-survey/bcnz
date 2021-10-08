@@ -25,12 +25,12 @@ def nmad(sub):
 
     return X
 
-def sig68(cat, key='qz'):
+def sig68(cat, cut_key):
     """Estimate sigma_68 for different magnitude cuts."""
 
     S = pd.Series()
     for q in [1.0, 0.8, 0.5, 0.2]:
-        sub = cat[cat[key] < cat[key].quantile(q)]
+        sub = cat[cat[cut_key] < cat[cut_key].quantile(q)]
         S[q] = get68(sub)
 
     return S
@@ -67,7 +67,7 @@ def _core_bins(sub, cut_key):
 
     return df 
 
-def cum_bins(cat, bins, quantity, cut_key='Qz'):
+def cum_bins(cat, bins, quantity, cut_key):
     """Estimates the quantities in cumulative bins."""
 
     df = pd.DataFrame()
@@ -115,57 +115,55 @@ def _add_key(cat, cut_key):
         print(cat)
         raise ValueError('Unknown error: {}'.format(cut_key))
 
-def sigma68(L, cut_key='qz', ls=[':', '--', '-', ':'], q=[1.0, 0.8,0.5,0.2], color=['g', 'k','r','b'],
-          yval='sig68', ax=None):
-    """Sigma-68 as a function of magnitude."""
-
-    if not isinstance(L, list):
-        L = [('PAU', L)]
-
-    if isinstance(ax, type(None)):
-        ax = plt.gca()
-
-
-    if not isinstance(cut_key, list):
-        cut_key = len(L)*[cut_key]
-
-    K = np.linspace(19., 22.55)
-    for i,(lbl1,cat) in enumerate(L):
-        _add_key(cat, cut_key[i])
-
-        df_new = cum_bins(cat, K, cut_key[i])
-
-        for col,qi in zip(color, q):
-            sub_new = df_new[df_new.q == qi]
-
-            lbl = '{}, {}%'.format(lbl1, 100*qi)
-            ax.plot(sub_new.mag, sub_new[yval], color=col, lw=1.2, ls=ls[i], label=lbl)
-
-    ax.axhline(0.0035, ls='--', color='k', alpha=0.5)
-    ax.set_xlabel('$\mathrm{i_{AB} < i_{Auto}}$', size=14)
-
-    
-    ylabelD = {'sig68': '$\sigma_{68}\, /\, (1+z)$', 
-               'nmad': 'NMAD'} #: $1.48 median(\frac{|\delta z - median(\delta z)}{1 + z_s}$'}
-
-    ax.set_ylabel(ylabelD[yval], size=12)
-
-    ax.set_yscale('log')
-    ax.grid(which='both')
-
-    ax.legend(prop={'size': 8})
-
-
-
-def new_sigma68(L, cut_key='qz', ls=[':', '--', '-', ':'], q=[1.0, 0.8,0.5,0.2], color=['g', 'k','r','b'],
-          yval='sig68', ax=None):
-    """Sigma-68 as a function of magnitude."""
-
-    if not isinstance(L, list):
-        L = [('PAU', L)]
-
+#
+# Single sigma68 plot. Should be fixed up!
+#
+#def sigma68(L, cut_key='qz', ls=[':', '--', '-', ':'], q=[1.0, 0.8,0.5,0.2], color=['g', 'k','r','b'],
+#          yval='sig68', ax=None):
+#    """Sigma-68 as a function of magnitude."""
+#
+#    if not isinstance(L, list):
+#        L = [('PAU', L)]
+#
 #    if isinstance(ax, type(None)):
 #        ax = plt.gca()
+#
+#
+#    if not isinstance(cut_key, list):
+#        cut_key = len(L)*[cut_key]
+#
+#    K = np.linspace(19., 22.55)
+#    for i,(lbl1,cat) in enumerate(L):
+#        _add_key(cat, cut_key[i])
+#
+#        df_new = cum_bins(cat, K, cut_key[i])
+#
+#        for col,qi in zip(color, q):
+#            sub_new = df_new[df_new.q == qi]
+#
+#            lbl = '{}, {}%'.format(lbl1, 100*qi)
+#            ax.plot(sub_new.mag, sub_new[yval], color=col, lw=1.2, ls=ls[i], label=lbl)
+#
+#    ax.axhline(0.0035, ls='--', color='k', alpha=0.5)
+#    ax.set_xlabel('$\mathrm{i_{AB} < i_{Auto}}$', size=14)
+#
+#    
+#    ylabelD = {'sig68': '$\sigma_{68}\, /\, (1+z)$', 
+#               'nmad': 'NMAD'} 
+#
+#    ax.set_ylabel(ylabelD[yval], size=12)
+#
+#    ax.set_yscale('log')
+#    ax.grid(which='both')
+#
+#    ax.legend(prop={'size': 8})
+#
+
+def metrics(L, cut_key='qz', ls=[':', '--', '-', ':'], q=[1.0, 0.8,0.5,0.2], color=['g', 'k','r','b']):
+    """Sigma-68, outlier rate and  as a function of magnitude, photo-z and spec-z."""
+
+    if not isinstance(L, list):
+        L = [('PAU', L)]
 
     if not isinstance(cut_key, list):
         cut_key = len(L)*[cut_key]
@@ -187,22 +185,22 @@ def new_sigma68(L, cut_key='qz', ls=[':', '--', '-', ':'], q=[1.0, 0.8,0.5,0.2],
     # Magnitude cut..
     print('Update', 5)
 
-    KD = {'I_auto': np.linspace(19., 22.55),
-           'zb': np.arange(0.1, 1.5, 0.1),
-           'zs': np.arange(0.1, 1.5, 0.1)}
+    KD = {'I_auto': np.linspace(19., 22.55, 15),
+          'zb': np.arange(0.1, 1.5, 0.1),
+          'zs': np.arange(0.1, 1.5, 0.1)}
 
-#    _plot_panel(ax, cum_bins, K, 'I_auto')
 
+    # Here one can be more fancy. However, having a static configuration makes the code much
+    # easier to read.
     fig, A = plt.subplots(nrows = 3, ncols = 3, sharex='col')
 
     k = 2.5
     fig.set_size_inches([k*6, k*4])
 
-    # All of this 
     for i,metric in enumerate(['sig68', 'outl', 'bias']):
         for j,xquantity in enumerate(['I_auto', 'zb', 'zs']):
             K = KD[xquantity]
-            _plot_panel(A[i,j], cum_bins, K, metric, xquantity)
+            _plot_panel(A[i,j], normal_bins, K, metric, xquantity)
 
 
     size = 16
@@ -215,7 +213,7 @@ def new_sigma68(L, cut_key='qz', ls=[':', '--', '-', ':'], q=[1.0, 0.8,0.5,0.2],
         ax.set_yscale('log')
 
     for ax in A[2]:
-        ax.set_ylim((-0.003, 0.003))
+        ax.set_ylim((-0.01, 0.01))
 
     for ax in A.flatten():
         ax.grid(which='both')
