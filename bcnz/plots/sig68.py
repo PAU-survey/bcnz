@@ -61,7 +61,8 @@ def _core_bins(sub, cut_key):
         S = pd.Series({'q': q, 'sig68': get68(sub2),
                        'nmad': nmad(sub2), 
                        'outl': outl(sub2),
-                       'bias': bias(sub2)})
+                       'bias': bias(sub2),
+                       'N': len(sub2)})
 
         df = df.append(S, ignore_index=True)
 
@@ -180,10 +181,8 @@ def metrics(L, cut_key='qz', ls=[':', '--', '-', ':'], q=[1.0, 0.8,0.5,0.2], col
                 sub_new = df_new[df_new.q == qi]
 
                 lbl = '{}, {}%'.format(lbl1, 100*qi)
-                ax.plot(sub_new.xbin_val, sub_new[metric], color=col, lw=1.2, ls=ls[i], label=lbl)
-
-    # Magnitude cut..
-    print('Update', 5)
+                marker = 'o' if metric == 'N' else ''
+                ax.plot(sub_new.xbin_val, sub_new[metric], color=col, lw=1.6, ls=ls[i], marker=marker, ms=3., label=lbl)
 
     KD = {'I_auto': np.linspace(19., 22.55, 15),
           'zb': np.arange(0.1, 1.5, 0.1),
@@ -192,12 +191,12 @@ def metrics(L, cut_key='qz', ls=[':', '--', '-', ':'], q=[1.0, 0.8,0.5,0.2], col
 
     # Here one can be more fancy. However, having a static configuration makes the code much
     # easier to read.
-    fig, A = plt.subplots(nrows = 3, ncols = 3, sharex='col')
+    fig, A = plt.subplots(nrows = 4, ncols = 3, sharex='col')
 
     k = 2.5
-    fig.set_size_inches([k*6, k*4])
+    fig.set_size_inches([k*6, 3.5*4])
 
-    for i,metric in enumerate(['sig68', 'outl', 'bias']):
+    for i,metric in enumerate(['sig68', 'outl', 'bias', 'N']):
         for j,xquantity in enumerate(['I_auto', 'zb', 'zs']):
             K = KD[xquantity]
             _plot_panel(A[i,j], normal_bins, K, metric, xquantity)
@@ -207,6 +206,7 @@ def metrics(L, cut_key='qz', ls=[':', '--', '-', ':'], q=[1.0, 0.8,0.5,0.2], col
     A[0,0].set_ylabel('$\sigma_{68}\, /\, (1+z)$', size=size)
     A[1,0].set_ylabel('Outlier fraction', size=size)
     A[2,0].set_ylabel('Bias', size=size)
+    A[3,0].set_ylabel('# Galaxies', size=size)
 
     for ax in A[0]:
         ax.axhline(0.0035, ls='--', color='k', alpha=0.5)
