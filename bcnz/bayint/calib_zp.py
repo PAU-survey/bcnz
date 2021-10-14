@@ -3,7 +3,7 @@ import pandas as pd
 from numpy.linalg import _umath_linalg
 import time
 from tqdm import tqdm
-import mc_genz_cython
+from . import mc_genz_cython
 from pathlib import Path
 from scipy.optimize import minimize
 from bcnz.bayint.bayevz_tools import flux2mag, max_OII_luminosity
