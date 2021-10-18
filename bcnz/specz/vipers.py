@@ -12,9 +12,9 @@ def vipers(engine, quality_cut=False):
     df_in = pd.read_csv(d / 'vipers_full.csv', comment='#')
 
     if quality_cut:
-        df = df_in[(3 <= df_in.zflg) & (df_in.zflg <= 4)]
+        df_in = df_in[(3 <= df_in.zflg) & (df_in.zflg <= 4)]
 
-    df = df.rename(columns={'alpha': 'ra', 'delta': 'dec'})
+    df = df_in.rename(columns={'alpha': 'ra', 'delta': 'dec'})
 
     # Selecting W1 field.
     df = df[df.ra < 50]
