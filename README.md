@@ -43,7 +43,10 @@ The BCNz2 code include different modules which can be used directly. For example
 
 all_filters = bcnz.model.all_filters()
 
-would give a Pandas dataframe with all the filter transmission curves.
+would give a Pandas dataframe with all the filter transmission curves. Connecting to the 
+PAUdm database can be done using:
+
+conn = bcnz.connect_db()
 
 # Acknowledgement
 This project has received funding from the European Union’s Horizon 2020 research
