@@ -30,8 +30,7 @@ import dask
 from dask.distributed import Client
 import dask.dataframe as dd
 
-
-def get_bands(field, fit_bands):
+def get_bands(field):
     """Bands used in fit."""
 
     # The bands to fit.
@@ -39,6 +38,10 @@ def get_bands(field, fit_bands):
     if field.lower() == 'cosmos':
         BB = ['cfht_u', 'subaru_b', 'subaru_v',
               'subaru_r', 'subaru_i', 'subaru_z']
+    elif field.lower() == 'w2':
+        BB = ['kids_u', 'kids_g', 'kids_r',
+              'kids_i', 'kids_z', 'vista_y',
+              'vista_j', 'vista_h', 'vista_ks']
     else:
         BB = ['cfht_u', 'cfht_g', 'cfht_r', 'cfht_i', 'cfht_z']
 
@@ -117,9 +120,18 @@ def run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask):
     galcat = galcat.reset_index().repartition(npartitions=npartitions).set_index('ref_id')
 
     ebvD = dict(runs.EBV)
+
+
+    # To disabled if you want to run a test on a few galaxies without Dask.
+#    sub = galcat.head(4)
+#    pzcat = bcnz.fit.photoz_flatten(sub, xnew_modelD, ebvD, fit_bands)
+
+#    dask.config.set(scheduler='threads')
+
     pzcat = galcat.map_partitions(
         bcnz.fit.photoz_flatten, xnew_modelD, ebvD, fit_bands)
 
+#    print('Finished...')
 
     pzcat = pzcat.repartition(npartitions=100)
     pzcat = dask.optimize(pzcat)[0]
@@ -141,11 +153,25 @@ def validate(output_dir, field):
         comb = comb[(comb.I_auto < 22.5) & (comb.r50 > 0)
                     & (3 <= comb.conf) & (comb.conf <= 5)]
 
-    elif field.lower() == 'w3':
-        specz = bcnz.specz.deep2(engine)
+    elif field.lower() == 'w1':
+        specz = bcnz.specz.vipers(engine)
+
+        # Not actually sure if this later will fail because the magi not
+        # being available. If someone cares, please fix.
+        comb = pzcat.join(specz)
+        comb = comb[comb.magi < 22.5]
+
+    elif field.lower() == 'w2':
+        specz = bcnz.specz.sdss_gama(engine)
 
         comb = pzcat.join(specz)
         comb = comb[comb.magi < 22.5]
+
+    elif field.lower() == 'w3':
+        specz = bcnz.specz.deep2(engine)
+        comb = pzcat.join(specz)
+        comb = comb[comb.magi < 22.5]
+    
 
     comb['dx'] = (comb.zb - comb.zspec) / (1 + comb.zspec)
 
@@ -175,7 +201,7 @@ def run_photoz(output_dir, model_dir, memba_prod, field, fit_bands=None, only_sp
 
     output_dir = Path(output_dir)
 
-    fit_bands = get_bands(field, fit_bands)
+    fit_bands = get_bands(field)
     runs, modelD, galcat = get_input(
         output_dir, model_dir, memba_prod, field, fit_bands, only_specz, coadd_file)
 

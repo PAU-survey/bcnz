@@ -70,7 +70,8 @@ def odds(pz, zbx, odds_lim):
     E = np.arange(len(pz))
 
     def C(zbins):
-        return cumsum.isel_points(ref_id=E, z=zbins).values
+        return cumsum.values[E, zbins]
+        #return cumsum.isel_points(ref_id=E, z=zbins).values
 
     cdf1 = db1*C(i1+1) + (1.-db1)*C(i1)
     cdf2 = db2*C(i2+1) + (1.-db2)*C(i2)
@@ -94,20 +95,32 @@ def pz_width(pz, zb, width_frac):
     ind2 = (cumsum > 1-frac).argmax(axis=1) -1
 
     igal = range(len(cumsum))
-    y1_a = cumsum.isel_points(z=ind1, ref_id=igal)
-    dy1 = (cumsum.isel_points(z=ind1+1, ref_id=igal) - y1_a) / \
+
+# Version that worked with isel_points...
+#
+#    y1_a = cumsum.isel_points(z=ind1, ref_id=igal)
+#    dy1 = (cumsum.isel_points(z=ind1+1, ref_id=igal) - y1_a) / \
+#          (cumsum.z[ind1+1].values - cumsum.z[ind1].values)
+#
+#    y2_a = cumsum.isel_points(z=ind2, ref_id=igal)
+#    dy2 = (cumsum.isel_points(z=ind2+1, ref_id=igal) - y2_a) / \
+#          (cumsum.z[ind2+1].values - cumsum.z[ind2].values)
+
+    y1_a = cumsum.values[igal, ind1]
+    dy1 = (cumsum.values[igal, ind1+1] - y1_a) / \
           (cumsum.z[ind1+1].values - cumsum.z[ind1].values)
 
-    y2_a = cumsum.isel_points(z=ind2, ref_id=igal)
-    dy2 = (cumsum.isel_points(z=ind2+1, ref_id=igal) - y2_a) / \
+    y2_a = cumsum.values[igal, ind2]
+    dy2 = (cumsum.values[igal, ind2+1] - y2_a) / \
           (cumsum.z[ind2+1].values - cumsum.z[ind2].values)
+
 
     dz1 = (frac - y1_a) / dy1
     dz2 = ((1-frac) - y2_a) / dy2
     pz_width = 0.5*(cumsum.z[(cumsum > 1-frac).argmax(axis=1)].values \
-                    + dz2.values \
+                    + dz2 \
                     - cumsum.z[(cumsum > frac).argmax(axis=1)].values \
-                    - dz1.values)
+                    - dz1)
 
     return pz_width
 
@@ -185,7 +198,12 @@ def get_pzcat(chi2, odds_lim, width_frac):
 
     # The run which contribute most to the redshift peak ...
     iz = pz.argmin(dim='z')
-    points = chi2.isel_points(ref_id=range(len(chi2.ref_id)), z=iz)
-    cat['best_run'] = points.argmin(dim='run')
+
+    points = chi2.isel(z=iz)
+#    ipdb.set_trace()
+#    points = chi2.isel_points(ref_id=range(len(chi2.ref_id)), z=iz)
+
+    # Since old xarray versions does not support idxmin...
+    cat['best_run'] = points.run[points.argmin(dim='run')]
 
     return cat, pz

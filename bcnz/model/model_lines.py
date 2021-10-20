@@ -138,7 +138,7 @@ def model_lines(ratios, filters, extinction, ext_law, EBV, dz=0.0005, ampl=1e-16
     filtersD, rconstD = _filter_spls(filters)
     ext_spl = create_ext_spl(config, extinction)
 
-    z = np.arange(0., 2., config['dz'])
+    z = np.arange(0., 2.05, config['dz'])
 
     df = pd.DataFrame()
     for band, f_spl in filtersD.items():

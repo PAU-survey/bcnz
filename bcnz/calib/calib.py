@@ -136,9 +136,14 @@ def _find_best_model(modelD, flux_model, flux, flux_error, chi2, fit_bands,
 
     # Ok, this is not the only possible assumption!
     best_part = chi2.argmin(dim='part')
-    best_flux = flux_model.isel_points(ref_id=range(len(flux)), part=best_part)
-    best_flux = xr.DataArray(best_flux, dims=('ref_id', 'band'),
-                             coords={'ref_id': flux.ref_id, 'band': flux.band})
+
+
+    best_flux = flux_model[best_part]
+
+    # Old code for isel_points.
+    #best_flux = flux_model.isel_points(ref_id=range(len(flux)), part=best_part)
+    #best_flux = xr.DataArray(best_flux, dims=('ref_id', 'band'),
+    #                         coords={'ref_id': flux.ref_id, 'band': flux.band})
 
     return best_flux
 
@@ -192,8 +197,8 @@ def sel_subset(galcat, fit_bands):
     return cat
 
 
-def calib(galcat, modelD, fit_bands, SNR_min=-5, Nrounds=20, Niter=1001, cosmos_scale=True,
-          learn_rate=1.0, Nskip=10):
+def calib(galcat, modelD, fit_bands, SNR_min=-5, Nrounds=20, Niter=1001, cosmos_scale=False,
+          learn_rate=1.0, Nskip=10, return_details=False):
     """Calibrate zero-points by comparing the result at the spectroscopic redshift.
 
        Args:
@@ -217,4 +222,7 @@ def calib(galcat, modelD, fit_bands, SNR_min=-5, Nrounds=20, Niter=1001, cosmos_
     zp, zp_details, ratio_all = _zero_points(f_modD, galcat, **config)
     ratio_all = ratio_all.to_dataframe('ratio')
 
-    return zp
+    if not return_details:
+        return zp
+    else:
+        return zp, zp_details, ratio_all

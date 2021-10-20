@@ -39,14 +39,11 @@ ext = [
     ),
 ]
 
+
 setup(
     name="bcnz",
     version="2",
     packages=find_packages(),
-    # packages=find_packages("bcnz"),  # include all packages under src
-    # package_dir={"": "bcnz"},  # tell distutils packages are under src
-    # package_data={"model": ["calib_filters/*.csv"]},
-    # include_package_data=True,
     install_requires=[
         "numpy",
         "pandas",
@@ -54,13 +51,13 @@ setup(
         "xarray",
         "scipy",
         "sklearn",
-        "psycopg2",
+        "psycopg2-binary",
         "fire",
         "dask",
         "tables",
         "tqdm",
         "argparse",
-        "wheel",
+        "pyarrow",
         "Cython",
     ],
     author=name,

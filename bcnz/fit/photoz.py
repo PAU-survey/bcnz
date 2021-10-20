@@ -26,7 +26,11 @@ from IPython.core import debugger as ipdb
 
 from . import libpzqual
 
-def galcat_to_arrays(data_df, bands, scale_input=True):
+
+#np.seterr(over='raise')
+
+
+def galcat_to_arrays(data_df, bands, scale_input=False):
     """Convert the galcat dataframe to arrays."""
 
     # Seperating this book keeping also makes it simpler to write
@@ -67,11 +71,19 @@ def galcat_to_arrays(data_df, bands, scale_input=True):
     var_inv.values = np.where(to_use, var_inv, 1e-100)
     flux_error.values = np.where(to_use, flux_error, 1e-100)
 
+
     return flux, flux_error, var_inv
 
 
 def _core_allz(ref_id, f_mod, flux, var_inv, Niter, Nskip):
     """Minimize the chi2 expression."""
+
+    # Normalizing the models to avoid too large numbers.
+    f_mod = f_mod / f_mod.max(dim=('band', 'z'))
+
+    # To avoid very low numbers which would result in a large amplitude...
+    f_mod = f_mod.where(f_mod > 1e-3, 0)
+
 
     NBlist = list(filter(lambda x: x.startswith('pau_nb'), flux.band.values))
     BBlist = list(filter(lambda x: not x.startswith('pau_nb'), flux.band.values))
@@ -108,9 +120,11 @@ def _core_allz(ref_id, f_mod, flux, var_inv, Niter, Nskip):
         a = np.einsum('gzst,gzt->gzs', A, v)
 
         m0 = b / a
-        vn = m0*v
+        m0 = np.nan_to_num(m0)
 
+        vn = m0*v
         v = vn
+            
         # Extra step for the amplitude
         if 0 < i and i % Nskip == 0:
             # Testing a new form for scaling the amplitude...
@@ -123,6 +137,7 @@ def _core_allz(ref_id, f_mod, flux, var_inv, Niter, Nskip):
             b = b_BB + k[:,:,np.newaxis]*b_NB
             A = A_BB + k[:,:,np.newaxis,np.newaxis]**2*A_NB
 
+    
     # I was comparing with the standard algorithm above...
     v_scaled = v
     k_scaled = k
@@ -161,6 +176,9 @@ def minimize_all_z(data_df, modelD, **config): #fit_bands, Niter, Nskip):
         if isinstance(f_mod, dask.distributed.client.Future):
             f_mod = f_mod.result()
 
+        if isinstance(f_mod, str):
+            1 / 0
+
         L.append(_core_allz(ref_id, f_mod, flux, var_inv, *args))
 
     dim = pd.Index([int(x) for x in keys], name='run')
@@ -189,31 +207,52 @@ def flatten_models(modelD):
 
     return model
 
-def get_model(name, model, norm, pzcat, z, scale_input=True):
+def get_model(name, model, norm, pzcat, z, scale_input=False):
     """Get the model magnitudes at a given redshift."""
-    
-    tmp_model = model.sel_points(z=z, run=pzcat.best_run.values, dim='ref_id')
-    tmp_norm = norm.sel_points(ref_id=pzcat.index, z=z, run=pzcat.best_run.values)
-    tmp_norm = tmp_norm.rename({'points': 'ref_id'})
+  
+
+    z_xr = xr.DataArray(z, coords={'ref_id': pzcat.index.values})
+    bestrun_xr = xr.DataArray(pzcat.best_run.values, coords={'ref_id': pzcat.index.values})
+
+    tmp_model = model.sel(z=z_xr, run=bestrun_xr)
+#    tmp_model = model.sel_points(z=z, run=pzcat.best_run.values, dim='ref_id')
+
+    tmp_norm = norm.sel(z=z_xr, run=bestrun_xr)
+#    tmp_norm = norm.sel_points(ref_id=pzcat.index, z=z, run=pzcat.best_run.values)
+#    tmp_norm = tmp_norm.rename({'points': 'ref_id'})
+
+
     best_model = (tmp_model * tmp_norm).sum(dim='model')
     
     columns = [f'{name}_{x}' for x in best_model.band.values]
     best_model = pd.DataFrame(best_model.values, columns=columns, index=pzcat.index)
-   
+  
     if scale_input:
         best_model *= 10**(0.4*(26+48.6))
+
 
     return best_model 
 
 
-def get_iband_model(model, norm, pzcat, scale_input=True, i_band=None):
+def get_iband_model(model, norm, pzcat, scale_input=False, i_band=None):
     """The model i-band flux as a function of redshift."""
    
     assert i_band 
-    tmp_model = model.sel(band=i_band).sel_points(run=pzcat.best_run.values)
-    tmp_norm = norm.sel_points(ref_id=pzcat.index, run=pzcat.best_run.values)
 
-    data = (tmp_model * tmp_norm).rename({'points': 'ref_id'}).sum(dim='model')
+#    z_xr = xr.DataArray(z, coords={'z': pzcat.index.values})
+    bestrun_xr = xr.DataArray(pzcat.best_run.values, coords={'ref_id': pzcat.index.values})
+
+    tmp_model = model.sel(band=i_band)[bestrun_xr]
+    tmp_norm = norm.sel(run=bestrun_xr)
+
+#    ipdb.set_trace() 
+#    tmp_model = model.sel(band=i_band).sel_points(run=pzcat.best_run.values)
+#    tmp_norm = norm.sel_points(ref_id=pzcat.index, run=pzcat.best_run.values)
+
+    data = (tmp_norm * tmp_model).sum(dim='model')
+
+#    ipdb.set_trace() 
+#    data = (tmp_model * tmp_norm).rename({'points': 'ref_id'}).sum(dim='model')
     columns = [f'iflux_{x}' for x in range(len(tmp_model.z))]
 
     df = pd.DataFrame(data.values, columns=columns, index=pzcat.index)
@@ -229,7 +268,7 @@ def _find_iband(fit_bands):
     # This would prevent anyone from running the code without a i-band. If
     # you really want this, please modify the code. For creating randoms
     # we require the modelling in the i-band.
-    for iband in ['subaru_i', 'cfht_i']:
+    for iband in ['subaru_i', 'cfht_i','kids_i']:
         if iband in fit_bands:
             return iband
     
@@ -261,6 +300,7 @@ def photoz(galcat, modelD, ebvD, fit_bands, Niter=1000, Nskip=10, odds_lim=0.01,
 
     chi2, norm = minimize_all_z(galcat, modelD, **config)
     pzcat, pz = libpzqual.get_pzcat(chi2, odds_lim, width_frac)
+
     model = flatten_models(modelD)
 
     # Set the number of bands. 
@@ -276,6 +316,7 @@ def photoz(galcat, modelD, ebvD, fit_bands, Niter=1000, Nskip=10, odds_lim=0.01,
     z0 = 0.01*np.ones_like(pzcat.zb) # yes, a hack.
     model_z0 = get_model('modelz0', model, norm, pzcat, z0)
     iband_model = get_iband_model(model, norm, pzcat, i_band=i_band)
+
 
     if only_pz:
         return pzcat
@@ -310,7 +351,7 @@ def photoz_flatten(galcat, *args, **kwds):
     pz = pd.DataFrame(pz.values, columns = [f'z{x}' for x in range(pz.shape[1])])
     pz.index = pzcat.index
 
-    df_out = pd.concat([pzcat, best_model, model_z0, iband_model, pz], 1)
+    df_out = pd.concat([pzcat, best_model, model_z0, iband_model, pz], axis=1)
     
     return df_out
 
