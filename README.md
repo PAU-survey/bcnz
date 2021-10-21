@@ -48,6 +48,11 @@ PAUdm database can be done using:
 
 conn = bcnz.connect_db()
 
+For seeing the emission line ratios used:
+
+bcnz.model.line_ratios()
+
+
 # Acknowledgement
 This project has received funding from the European Union’s Horizon 2020 research
 and innovation programme under the grant agreement No
