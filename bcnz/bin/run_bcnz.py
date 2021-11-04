@@ -76,6 +76,7 @@ def get_input(output_dir, model_dir, memba_prod, field, fit_bands,
 
     # This should not be the same. We need to modify this later.
     if only_specz:
+        print('only specz')
         galcat = galcat_specz
     else:
         galcat = bcnz.data.paus_main_sample(engine, memba_prod, field, coadd_file=coadd_file)

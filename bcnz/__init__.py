@@ -20,5 +20,6 @@ from . import data
 from . import fit
 from . import model
 from . import specz
+from . import plots
 
 from .connect_db import connect_db

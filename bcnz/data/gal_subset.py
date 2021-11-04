@@ -104,10 +104,13 @@ def limit_isgal(sub, sel_gal):
         return sub
 
     if 'obj_type' in sub.columns:
+        print('# 1')
         sub = sub[sub.obj_type == 'GALAXY']
     elif 'type' in sub.columns:
+        print('# 2')
         sub = sub[sub.type == 0]
     else:
+        print('# 3')
         # W1 and W2 selection.
         sub = sub[sub.zspec != 0]
 

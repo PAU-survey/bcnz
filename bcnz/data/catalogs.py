@@ -18,6 +18,15 @@
 import functools
 from IPython.core import debugger as ipdb
 
+<<<<<<< Updated upstream
+=======
+import pandas as pd
+from astropy.coordinates import SkyCoord
+from astropy import units as u
+from dustmaps.planck import PlanckQuery
+from dustmaps.config import config as dustmaps_config
+
+>>>>>>> Stashed changes
 
 def rband(field):
     """The rband name in different fields."""
@@ -31,6 +40,54 @@ def rband(field):
         
     return r_band
 
+<<<<<<< Updated upstream
+=======
+def deredden_fluxes(cat, in_place=False):
+    """Correct for the galaxtic extinction.
+
+       Args:
+           cat (dataframe): Catalogue with fluxes, errors and position.
+           in_place (bool): If the scaling is done in-place.
+    """
+
+
+    # Will only work a PIC! If running elsewhere, comment out this line and
+    # it will still work. I wanted to avoid all different jobs downloading
+    # their own dustmap.
+    dustmaps_config['data_dir'] = '/cephfs/pic.es/astro/scratch/eriksen/data/dust'
+
+    bands = cat.flux.columns.values
+    assert (bands == cat.flux_error.columns.values).all()
+
+    coeff = pd.read_csv('~/data/photoz/extinction_coeff/extinction_coeff_v1.csv')
+    coeff = coeff.set_index('band').loc[bands]
+
+    # Loookup the EBV based on the Planck maps. 
+    # This map will be cached in some
+    # location.....
+    planck = PlanckQuery()
+    coords = SkyCoord(ra=cat.ra.values*u.deg, dec=cat.dec.values*u.deg)
+    ebv_planck = pd.Series(planck(coords))
+
+    x = ebv_planck.values
+    c0 = coeff.c0.values
+    c1 = coeff.c1.values
+    c2 = coeff.c2.values
+
+    ext_frac = c2[None,:] + x[:,None]*c1[None,:] + (x**2)[:,None]*c0[None,:]
+    corr = 1. / ext_frac
+
+    # For using less memory within the pipeline we have an in_place option.
+    if not in_place:
+        res = pd.concat({'flux': corr*cat.flux, 'flux_error': corr*cat.flux_error}, axis=1)
+        for col in set(cat.columns.values) - set(['flux', 'flux_error']):
+            res[col] = cat[col]
+
+        return res
+    else:
+        cat['flux'] *= corr
+        cat['flux_error'] *= corr
+>>>>>>> Stashed changes
 
 def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos',
          d_filters='~/data/photoz/all_filters/v3', min_nb=35,
@@ -94,9 +151,15 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos',
     nbsubset = bcnz.data.gal_subset(data_noisy, specz, **conf)
 
     # Synthetic narrow band coefficients.
-    synband = rband(field)
-    filters = bcnz.model.all_filters(d_filters=d_filters)
-    coeff = bcnz.model.nb2bb(filters, synband)
+#    synband = rband(field)
+#    filters = bcnz.model.all_filters(d_filters=d_filters)
+#    data_scaled = bcnz.data.synband_scale(nbsubset, coeff, synband=synband, scale_data=True)
+
+    # Deredden the fluxes assuming *none* of the filters previously have been
+    # corrected. Assume an unchanged SNR.
+    if deredden:
+        deredden_fluxes(nbsubset, in_place=True)
+        #nbsubset = deredden_fluxes(nbsubset, in_place=False)
 
 # Disabling this scaling by now. Some tests showed this scaling is not needed.
 #    data_scaled = bcnz.data.synband_scale(nbsubset, coeff, synband=synband, scale_data=True)

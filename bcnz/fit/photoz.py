@@ -331,7 +331,7 @@ def flatten_input(df):
     flux = df.flux.rename(columns=lambda x: f'flux_{x}')
     flux_error = df.flux_error.rename(columns=lambda x: f'flux_error_{x}')
 
-    comb = pd.concat([flux, flux_error], 1)
+    comb = pd.concat([flux, flux_error], axis=1)
 
     return comb
 
