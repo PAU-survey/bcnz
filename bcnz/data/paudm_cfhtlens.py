@@ -48,6 +48,7 @@ def query(engine, field):
 def change_format(cat_in):
     """Change format to be compatible with the rest of the pipeline."""
 
+
     fnameL = ['u', 'g', 'r', 'i', 'z', 'y']
     new_names = ['cfht_'+x for x in fnameL]
 

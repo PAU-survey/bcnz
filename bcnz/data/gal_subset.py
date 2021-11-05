@@ -28,9 +28,9 @@ def set_other_fields(cat, other):
     cat['zs'] = other.zspec
 
     # A bit of gluing together...
-    cosmos_fields = ['type', 'conf', 'I_auto']
-    cfht_fields = ['zquality', 'obj_type', 'imag', 'zspec']
-    kids_fields = ['z_quality','zspec']#, 'obj_type', 'imag',
+    cosmos_fields = ['type', 'conf']
+    cfht_fields = ['zquality', 'obj_type', 'zspec']
+    kids_fields = ['z_quality','zspec']
     vipers_fields = ['zflg']
     for field in cosmos_fields + cfht_fields + kids_fields + vipers_fields:
         if not field in other.columns:
