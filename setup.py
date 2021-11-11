@@ -31,6 +31,7 @@ setup(
 
     install_requires = [
         'argparse',
+        'astropy',
         'dask',
         'fire',
         'numpy',
