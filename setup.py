@@ -30,19 +30,19 @@ setup(
     packages = find_packages(),
 
     install_requires = [
+        'argparse',
+        'dask',
+        'fire',
         'numpy',
+        'matplotlib',
         'pandas',
-        'tables',
-        'xarray',
+        'pyarrow',
         'scipy',
         'sklearn',
         'psycopg2-binary',
-        'fire',
-        'dask',
         'tables',
         'tqdm',
-        'argparse',
-        'pyarrow'
+        'xarray'
     ],
     author = name,
     author_email = email,
