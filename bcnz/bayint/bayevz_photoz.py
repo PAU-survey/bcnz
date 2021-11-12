@@ -4,10 +4,9 @@ from numpy.linalg import _umath_linalg
 import time
 import mc_genz_cython
 from bcnz.bayint.bayevz_tools import delta_function, flux2mag, max_OII_luminosity
-import cosmolopy.distance as cd
 
-cosmo = {"omega_M_0": 0.25, "omega_lambda_0": 0.75, "h": 0.7}
-cosmo = cd.set_omega_k_0(cosmo)
+from astropy.cosmology import w0waCDM
+cosmo = w0waCDM(H0=70, Om0=0.25, Ode0=0.75) 
 
 
 def get_pz(
@@ -41,7 +40,7 @@ def get_pz(
 
     z_DM = z.copy()
     z_DM = np.where(z_DM < 0.001, 0.001, z_DM,)
-    DM = 5 * np.log10(cd.luminosity_distance(z_DM, **cosmo) * 1e5)
+    DM = 5 * np.log10(np.array(cosmo.luminosity_distance(z_DM)) * 1e5)
 
     nz, Nmodels, Nbands = model.shape
 

@@ -7,10 +7,9 @@ import mc_genz_cython
 from pathlib import Path
 from scipy.optimize import minimize
 from bcnz.bayint.bayevz_tools import flux2mag, max_OII_luminosity
-import cosmolopy.distance as cd
 
-cosmo = {"omega_M_0": 0.25, "omega_lambda_0": 0.75, "h": 0.7}
-cosmo = cd.set_omega_k_0(cosmo)
+from astropy.cosmology import w0waCDM
+cosmo = w0waCDM(H0=70, Om0=0.25, Ode0=0.75) 
 
 
 def return_ratio_zp_calibration(f_obs_group, ef_obs_group, model_group, Niter):
@@ -89,7 +88,8 @@ def get_pz_at_specz(
 
     z_DM = zspec.copy()
     z_DM = np.where(z_DM < 0.001, 0.001, z_DM,)
-    DM = 5 * np.log10(cd.luminosity_distance(z_DM, **cosmo) * 1e5)
+    DM = 5 * np.log10(np.array(cosmo.luminosity_distance(z_DM)) * 1e5)
+
 
     model_z = model[zspec_id]
     nz, Nmodels, Nbands = model_z.shape

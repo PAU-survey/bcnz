@@ -8,11 +8,9 @@ from scipy.stats import norm
 from scipy.integrate import quad
 from scipy.interpolate import interp1d
 from bcnz.bayint.bayevz_tools import delta_function, flux2mag, max_OII_luminosity
-import cosmolopy.distance as cd
 
-cosmo = {"omega_M_0": 0.25, "omega_lambda_0": 0.75, "h": 0.7}
-cosmo = cd.set_omega_k_0(cosmo)
-
+from astropy.cosmology import w0waCDM
+cosmo = w0waCDM(H0=70, Om0=0.25, Ode0=0.75)
 
 def _calculate_prior_volume(
     zgrid, zid_eval, model, muv_model_0, max_OII_lum, ref_mag_ind, DM, Nsteps
@@ -62,7 +60,7 @@ def calculate_prior_volume(output_dir, runs, fmod, fmod_EL, Nsteps=int(1e6)):
     zgrid = runs.loc[0].zgrid
     z_DM = zgrid.copy()
     z_DM = np.where(z_DM < 0.001, 0.001, z_DM,)
-    DM = 5 * np.log10(cd.luminosity_distance(z_DM, **cosmo) * 1e5)
+    DM = 5 * np.log10(np.array(cosmo.luminosity_distance(z_DM)) * 1e5)
 
     ref_mag = runs.loc[0].ref_mag
     prior_volume_zid = runs.loc[0].prior_volume_zid
