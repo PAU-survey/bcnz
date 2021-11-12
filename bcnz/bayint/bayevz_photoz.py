@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from numpy.linalg import _umath_linalg
 import time
-import bcnz.bayint.mc_genz_cython as mc_genz_cython
+import mc_genz_cython
 from bcnz.bayint.bayevz_tools import delta_function, flux2mag, max_OII_luminosity
 import cosmolopy.distance as cd
 

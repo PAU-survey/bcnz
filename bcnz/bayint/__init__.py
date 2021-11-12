@@ -17,4 +17,3 @@ from . import bayevz_tools
 from .bayevz_photoz import photoz_batch, photoz_dask
 from .prior_volume import calculate_prior_volume
 from .calib_zp import cache_zp
-from . import mc_genz_cython
