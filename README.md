@@ -17,7 +17,7 @@ pip install -e .
 
 after entering into the cloned directory.
 
-## Example usage
+## Running over a galaxy catalgue.
 While intended to be integrated in PAUdm, one can also run the code from the command line. As an 
 example, one can run
 
@@ -41,3 +41,23 @@ be calculated and stored in
 For running in parallel, the code uses [Dask](https://dask.org/). By specifying Dask, one can
 run on an existing Dask cluster. For example, dask-jobqueue supports running Dask on HTCondor,
 which is used at the [PIC](www.pic.es) data center.
+
+## Other usages.
+The BCNz2 code include different modules which can be used directly. For example,
+
+all_filters = bcnz.model.all_filters()
+
+would give a Pandas dataframe with all the filter transmission curves. Connecting to the 
+PAUdm database can be done using:
+
+conn = bcnz.connect_db()
+
+For seeing the emission line ratios used:
+
+bcnz.model.line_ratios()
+
+
+# Acknowledgement
+This project has received funding from the European Union’s Horizon 2020 research
+and innovation programme under the grant agreement No
+776247 EWC.

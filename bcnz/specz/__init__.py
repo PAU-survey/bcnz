@@ -13,5 +13,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with BCNz.  If not, see <http://www.gnu.org/licenses/>.
-from .zcosmos import zcosmos
+
 from .deep2 import deep2
+from .sdss_gama import sdss_gama
+from .vipers import vipers
+from .zcosmos import zcosmos

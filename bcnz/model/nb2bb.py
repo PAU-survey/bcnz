@@ -22,7 +22,6 @@ from IPython.core import debugger as ipdb
 import time
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import os
 
 from scipy.interpolate import splrep, splev, interp1d
@@ -36,7 +35,6 @@ def _getcoef(WNB, WBB):
 
     return iNBNB.dot(BBNB)
 
-
 def nb2bb(filt, broad_band):
     """The coefficients between narrow and broad bands which Alex used.
 
@@ -47,9 +45,10 @@ def nb2bb(filt, broad_band):
 
     ll = np.arange(3000, 10000, 5)
 
-    NB_filt = np.array([[filt.loc['pau_nb%s' % str(x)].lmb.values, filt.loc['pau_nb%s' % str(
-        x)].response.values] for x in np.arange(455, 850, 10)])
-    WNB = np.array([interp1d(NB_filt[i, 0], NB_filt[i, 1]/NB_filt[i, 0],
+    # Yes, this part is ugly. Not my fault, tho.
+    NB_filt = [[filt.loc['pau_nb%s' % str(x)].lmb.values, filt.loc['pau_nb%s' % 
+                str(x)].response.values] for x in np.arange(455, 850, 10)]
+    WNB = np.array([interp1d(NB_filt[i][0], NB_filt[i][1]/NB_filt[i][0],
                              bounds_error=False, fill_value=(0, 0))(ll) for i in range(40)])
     WNB = np.array([x/np.sqrt(x.dot(x)) for x in WNB])  # Normalize
 

@@ -22,7 +22,7 @@
 from IPython import embed
 import dask_jobqueue
 
-cluster = dask_jobqueue.HTCondorCluster(cores=1, workers=50, memory='8 GB', disk='4 GB')
+cluster = dask_jobqueue.HTCondorCluster(cores=1, memory='8 GB', disk='4 GB')
 
 print('Scheduler:')
 print(cluster.scheduler_address)
