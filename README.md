@@ -66,18 +66,6 @@ Running the calbration is an option. By default, it is disabled, but it can be e
 
 Running using dask paralelisation is also possible specifying the ip_dask in the command line. 
 
-## Example on mock catalogues
-To run on mock catalogues, one needs to provide two catalgoues, one containing the narrowband fluxes and its uncertainties and another with 
-the broadband photometry and uncertainties. 
-These must be fluxes in PAUS units, which are obtained from from AB magnitudes as mAB = 26 - 2.5*np.log10(flux)
-
-To run on sims you need to run the following command line: 
-./bcnz_externalfile.py path_to_nbfiles path_bbfile path_output path_models --ip_dask=dask_ip
-
-The narrowband photometry file needs to be structured as in the PAUS database, with columns: ref_id,band,flux,flux_error	
-The narrowband photometry file needs to have the bands and its uncertainty named as (e.g. in the case of COSMOS) ref_id,U,G,R,I,ZN,DU,DG,DR,DI,DZN,
-where e.g. DU is the uncertainty in the U-band.
-
 # Acknowledgement
 This project has received funding from the European Union’s Horizon 2020 research
 and innovation programme under the grant agreement No
