@@ -37,7 +37,7 @@ def query(engine, field):
              FROM cfhtlens \
              WHERE alpha_j2000 > {ra_min} AND alpha_j2000 < {ra_max} \
              AND   delta_j2000 > {dec_min} AND delta_j2000 < {dec_max} \
-             AND   mag_i < 23
+             AND   mag_i < 23 
           """.format(**coords)
 
     cat = pd.read_sql_query(sql, engine)
@@ -47,6 +47,7 @@ def query(engine, field):
 
 def change_format(cat_in):
     """Change format to be compatible with the rest of the pipeline."""
+
 
     fnameL = ['u', 'g', 'r', 'i', 'z', 'y']
     new_names = ['cfht_'+x for x in fnameL]
@@ -76,19 +77,25 @@ def change_format(cat_in):
     return cat
 
 
-def select_i(cat_in):
+def select_i(cat, cat_down):
     """Select which of the columns to use."""
 
-    use_y = np.isnan(cat_in.flux.cfht_i)
-    cat_in[('flux', 'cfht_i')] = np.where(
-        use_y, cat_in.flux.cfht_y, cat_in.flux.cfht_i)
-    cat_in[('flux_error', 'cfht_i')] = np.where(
-        use_y, cat_in.flux_error.cfht_y, cat_in.flux_error.cfht_i)
+    use_y = np.isnan(cat.flux.cfht_i)
+    cat[('flux', 'cfht_i')] = np.where(
+        use_y, cat.flux.cfht_y, cat.flux.cfht_i)
+    cat[('flux_error', 'cfht_i')] = np.where(
+        use_y, cat.flux_error.cfht_y, cat.flux_error.cfht_i)
 
-    del cat_in[('flux', 'cfht_y')]
-    del cat_in[('flux_error', 'cfht_y')]
+    del cat[('flux', 'cfht_y')]
+    del cat[('flux_error', 'cfht_y')]
 
-    return cat_in
+    # Also add the i-band to later have this for plotting.
+    cat['use_y'] = use_y
+
+    cat['mag_i'] = np.where(use_y, cat_down.mag_y, cat_down.mag_i)
+    cat['mag_i'] = cat.mag_i.replace(-99, np.nan)
+
+    return cat
 
 
 def paudm_cfhtlens(engine, field):
@@ -98,8 +105,8 @@ def paudm_cfhtlens(engine, field):
            field (str): The observed field.
     """
 
-    cat_in = query(engine, field)
-    cat = change_format(cat_in)
-    cat = select_i(cat)
+    cat_down = query(engine, field)
+    cat = change_format(cat_down)
+    cat = select_i(cat, cat_down)
 
     return cat

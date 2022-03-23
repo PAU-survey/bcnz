@@ -30,7 +30,7 @@ def load_seds(input_dir):
            input_dir: Directory where the SEDs are stored.
     """
 
-    input_dir = os.path.expanduser(input_dir)
+    input_dir = os.path.expanduser(input_dir) 
     suf = 'sed'
     min_val = 0
 

@@ -8,7 +8,8 @@ def vipers(engine, quality_cut=False):
     import bcnz
 
     # This data should have been available in PAUdm.
-    d = Path('/cephfs/pic.es/astro/scratch/eriksen/data/vipers')
+    # Note: It looks like this actually is ingested by now...
+    d = Path('/data/astro/scratch/eriksen/data/vipers')
     df_in = pd.read_csv(d / 'vipers_full.csv', comment='#')
 
     if quality_cut:

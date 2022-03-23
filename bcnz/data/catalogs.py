@@ -61,6 +61,9 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos',
         cosmos_laigle = bcnz.data.cosmos_laigle(d_cosmos)
         parent_cat = bcnz.data.match_position(paudm_cosmos, cosmos_laigle)
 
+        # Since someone also use this catalogue when plotting the photo-z.
+        parent_cat['I_auto'] = paudm_cosmos.I_auto 
+
         # In the parent catalogue, but needed if using other coadds.
         specz = bcnz.specz.zcosmos(engine)
     elif field.lower() == 'w1':
@@ -90,6 +93,7 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos',
             'has_bb': has_bb, 'sel_gal': sel_gal}
 
     conf['test_band'] = rband(field)
+
 
     nbsubset = bcnz.data.gal_subset(data_noisy, specz, **conf)
 

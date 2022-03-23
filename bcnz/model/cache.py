@@ -46,8 +46,9 @@ def cache_model(model_dir, runs):
         sed = row.seds[0]
         fname = model_fname(sed, row.ext_law, row.EBV)
         path = model_dir / fname
-        
+     
         if path.exists():
+    
             continue
 
         print(f'Running model: {i}')
