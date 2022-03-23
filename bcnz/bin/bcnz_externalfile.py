@@ -17,7 +17,7 @@ import dask.dataframe as dd
 
 import bcnz_paudm
 
-def paus_fromfile(coadds_file,parentcat_file,min_nb=35,
+def paus_fromfile(mock_cat,bbnaming,bbfit,min_nb=35,
          only_specz=False, secure_spec=False, has_bb=False, sel_gal=True):
     """Load the PAUS data from PAUdm and perform the required
        transformation.
@@ -34,31 +34,46 @@ def paus_fromfile(coadds_file,parentcat_file,min_nb=35,
 
     import bcnz
 
-    ## loads the nnb photometry 
-    paudm_coadd = bcnz.data.load_coadd_file(coadds_file)
-    parent_cat =  pd.read_csv(parentcat_file)#.set_index('ref_id')   
+    ## loads the nnb photometry
+
+ 
+
+    paudm_coadd = bcnz.data.load_coadd_file(mock_cat)
+    parent_cat =  pd.read_csv(mock_cat)#.set_index('ref_id')   
+    specz = parent_cat[['ref_id','zspec']].drop_duplicates()
+    parent_cat = parent_cat[parent_cat.band.isin(bbnaming)]
+
+    
 
 
-    phot_cols = parent_cat.columns.values[:-1]#['U','B','V','R','I','ZN','DU','DB','DV','DR','DI','DZN']
-    cfg = [['U', 'DU', 'cfht_u'],
-       ['B', 'DB', 'subaru_b'],
-       ['G','DG','cfht_g'],
-       ['V', 'DV', 'subaru_v'],
-       ['R', 'DR', 'subaru_r'],
-       ['I', 'DI', 'subaru_i'],
-       ['ZN', 'DZN', 'subaru_z']]
+    bbnaming_error = ['D' + e for e in bbnaming]
+    parent_cat_df = parent_cat.pivot(index = 'ref_id', columns = 'band', values = 'flux_error').rename(columns=dict(zip(bbnaming,bbnaming_error))).reset_index()
+    parent_cat_f = parent_cat.pivot(index = 'ref_id', columns = 'band', values = 'flux').reset_index()
+    parent_cat = parent_cat_f.merge(parent_cat_df, on = 'ref_id')
+
+
+
+    
+    list_bands = []
+    list_bands.append(bbnaming)
+    list_bands.append(bbnaming_error)
+    list_bands.append(bbfit)
+  
+    cfg = np.array(list_bands).T.tolist()
 
     df_bands = pd.DataFrame(cfg,columns = ['band_name','band_error_name','band'])
-    bands_tofit =  df_bands[df_bands.band_name.isin(phot_cols)].values.tolist()
+  
+ 
+    flux_cols, err_cols, names = zip(*df_bands.values.tolist())
 
-    specz = parent_cat[['ref_id','zspec']]
-    flux_cols, err_cols, names = zip(*bands_tofit)
     flux = parent_cat[list(flux_cols)].rename(columns=dict(zip(flux_cols, names)))
+  
+
     flux_error = parent_cat[list(err_cols)].rename(columns=dict(zip(err_cols, names)))
     parent_cat = pd.concat({'flux': flux, 'flux_error': flux_error}, axis=1)
 
     data_in = paudm_coadd.join(parent_cat, how='inner')
-   
+ 
 
     # Add some minimum noise.
     #data_noisy = data_in
@@ -94,24 +109,20 @@ def get_bands(broad_bands):
 
     return fit_bands
 
-def get_input(output_dir, model_dir, fit_bands,coadds_file, parentcat_file,calib):
+def get_input(output_dir, model_dir,bbfit, fit_bands,mock_cat,bbnames,calib,field):
     """Get the input to run the photo-z code."""
+
 
     path_galcat = output_dir / 'galcat_in.pq'
 
     # The model.
-    runs = bcnz.config.eriksen2019()
-    #runs = runs[runs.use_lines == 0]
-    #runs = runs[runs.EBV.isin([0., 0.05])]
-    #runs['EBV'] = 0.0
-    #runs['use_lines'] = 0.
-
-
+    runs = bcnz.config.eriksen2019()  
     modelD = bcnz.model.cache_model(model_dir, runs)
-
+   
     if not output_dir.exists():
         output_dir.mkdir()
 
+   
     # In case it's already estimated.
     if path_galcat.exists():
         # Not actually being used...
@@ -120,7 +131,7 @@ def get_input(output_dir, model_dir, fit_bands,coadds_file, parentcat_file,calib
         return runs, modelD, galcat_inp
 
     # And then estimate the catalogue.
-    galcat_inp = paus_fromfile(coadds_file=coadds_file,parentcat_file = parentcat_file)
+    galcat_inp = paus_fromfile(mock_cat,bbnames,bbfit)
   
     if calib == True: 
         zp = bcnz.calib.cache_zp(output_dir, galcat_inp, modelD, fit_bands)
@@ -134,25 +145,26 @@ def get_input(output_dir, model_dir, fit_bands,coadds_file, parentcat_file,calib
     return runs, modelD, galcat_inp
 
 
-def run_photoz(coadds_file, parentcat_file,output_dir, model_dir, broad_bands= ['cfht_u','subaru_b','subaru_v','subaru_r','subaru_i','subaru_z'], ip_dask=None,calib = False):
+def run_photoz(mock_file,output_dir, model_dir, bb_fit= ['cfht_u','subaru_b','subaru_v','subaru_r','subaru_i','subaru_z'],bbnames = None, ip_dask=None,calib = False, field = 'COSMOS'):
     """Run the photo-z over a external provided catalogue.
 
        Args:
            output_dir (str): Directory to store the output.
            model_dir (str): Directory for storing flux models. 
            ip_dask (str): IP for Dask scheduler.
-           coadds_file (str): Path to file containing the nb fluxes. 
-           parentcat_file (str): Path to file containing the bb fluxes and the true redshifts
-           broad_bands (list): Which broad bands to fit.
+           mock_file (str): Path to file containing the nb fluxes.  
+           bb_fit (list): Which broad bands to fit.
+           bbnames (list): names of the bb in the input catalogue
     """
-    
+  
     output_dir = Path(output_dir)
 
-    fit_bands = get_bands(broad_bands)
+    fit_bands = get_bands(bb_fit)
    
     runs, modelD, galcat = get_input(
-        output_dir, model_dir, fit_bands, coadds_file, parentcat_file, calib)
+        output_dir, model_dir,bb_fit, fit_bands, mock_file,bbnames, calib,field)
 
+  
     bcnz_paudm.run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask)
 
 
