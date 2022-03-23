@@ -56,6 +56,20 @@ For seeing the emission line ratios used:
 
 bcnz.model.line_ratios()
 
+##BCNz on mock catalogues: 
+The bcnz_externalfile.p implements BCNz on galaxy mocks. An example of command line to run on mocks is:
+
+./bcnz_externalfile.py /data/astro/scratch/lcabayol/pmillenium/test_cat_bcnz.csv /data/astro/scratch/lcabayol/pmillenium/zcats /data/astro/scratch/eriksen/cache/bcnz/11 --bbnames=['U','B','V','R','I','ZN']
+=======
+
+The first argument is the path to the catalogue. This needs to contain the narrow-band fluxes in PAUS units named as NBXXX (e.g. NB455) and the broad bands. The broad-band naming needs to be specified in the argument --bbnames.
+
+The second argument is the path to the output directory. 
+The third argument is the path to the models. 
+
+Running the calbration is an option. By default, it is disabled, but it can be enabled by adding --calib=True in the command line.
+
+Running using dask paralelisation is also possible specifying the ip_dask in the command line. 
 
 # Acknowledgement
 This project has received funding from the European Union’s Horizon 2020 research
