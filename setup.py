@@ -50,7 +50,7 @@ setup(
     license = 'GPLv3',
     maintainer = name,
     maintainer_email = email,
-    scripts = ['bcnz/bin/bcnz_paudm.py'],
+    scripts = ['bcnz/bin/run_bcnz.py'],
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Topic :: Astronomy",
