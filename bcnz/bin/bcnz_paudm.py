@@ -52,6 +52,7 @@ def get_bands(field):
 def get_input(output_dir, model_dir, memba_prod, field, fit_bands,
               only_specz, coadd_file):
     """Get the input to run the photo-z code."""
+   
 
     path_galcat = output_dir / 'galcat_in.pq'
 
@@ -75,9 +76,11 @@ def get_input(output_dir, model_dir, memba_prod, field, fit_bands,
     zp = bcnz.calib.cache_zp(output_dir, galcat_specz, modelD, fit_bands)
 
     # This should not be the same. We need to modify this later.
+  
+ 
     if only_specz:
         galcat = galcat_specz
-    else:
+    else: 
         galcat = bcnz.data.paus_main_sample(engine, memba_prod, field, coadd_file=coadd_file)
 
     # Applying the zero-points.
@@ -85,7 +88,8 @@ def get_input(output_dir, model_dir, memba_prod, field, fit_bands,
     galcat_inp = bcnz.calib.apply_zp(galcat, zp, norm_filter=norm_filter)
 
     # Temporary hack.... 
-    galcat_inp = bcnz.fit.flatten_input(galcat_inp)
+    galcat_inp = bcnz.fit.flatten_input(galcat_inp) 
+    
     galcat_inp.to_parquet(str(path_galcat))
 
     return runs, modelD, galcat_inp
@@ -101,6 +105,7 @@ def fix_model(modelD, fit_bands):
 
 
 def run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask):
+
     """Run the photo-z on a Dask cluster."""
 
     path_out = Path(output_dir) / 'pzcat.pq'
@@ -135,7 +140,7 @@ def run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask):
 
     pzcat = pzcat.repartition(npartitions=100)
     pzcat = dask.optimize(pzcat)[0]
-
+ 
     pzcat.to_parquet(str(path_out))
 
 
@@ -199,6 +204,7 @@ def run_photoz(output_dir, model_dir, memba_prod, field, fit_bands=None, only_sp
            coadd_file (str): Path to file containing the coadds.
     """
 
+   
     output_dir = Path(output_dir)
 
     fit_bands = get_bands(field)
