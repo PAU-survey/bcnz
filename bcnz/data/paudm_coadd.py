@@ -142,6 +142,8 @@ def load_coadd_file(coadd_file):
     """
 
     coadd = pd.read_csv(coadd_file)
+    column_name = [f'NB{x}' for x in 455+10*np.arange(40)]
+    coadd = coadd[coadd.band.isin(column_name)]
 
     # Shouldn't be correct, but I want to test if it makes a difference.
     coadd['flux'] *= 0.625

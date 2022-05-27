@@ -39,7 +39,7 @@ def paus_fromfile(mock_cat,bbnaming,bbfit,min_nb=35,
  
 
     paudm_coadd = bcnz.data.load_coadd_file(mock_cat)
-    parent_cat =  pd.read_csv(mock_cat)#.set_index('ref_id')   
+    parent_cat =  pd.read_csv(mock_cat)   
     specz = parent_cat[['ref_id','zspec']].drop_duplicates()
     parent_cat = parent_cat[parent_cat.band.isin(bbnaming)]
 
@@ -50,6 +50,7 @@ def paus_fromfile(mock_cat,bbnaming,bbfit,min_nb=35,
     parent_cat_df = parent_cat.pivot(index = 'ref_id', columns = 'band', values = 'flux_error').rename(columns=dict(zip(bbnaming,bbnaming_error))).reset_index()
     parent_cat_f = parent_cat.pivot(index = 'ref_id', columns = 'band', values = 'flux').reset_index()
     parent_cat = parent_cat_f.merge(parent_cat_df, on = 'ref_id')
+    parent_cat.set_index('ref_id', inplace = True)
 
 
 
