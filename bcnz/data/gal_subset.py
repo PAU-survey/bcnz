@@ -99,19 +99,47 @@ def limit_spec(cat, only_specz, secure_spec):
     return cat
 
 
-def limit_isgal(sub, sel_gal):
+def limit_isgal(sub, sel_gal, sel_gal_parent):
     """If limiting ourself to only the galaxies."""
 
     if not sel_gal:
         return sub
+    
+    if sel_gal_parent:
+        if 'star_flag' in sub.columns:
+            sub = sub[sub.star_flag == 0]
+        elif 'sg_flag' in sub.columns:
+            sub = sub[sub.sg_flag == 1]
+            
+    elif not sel_gal_parent:
+        if 'obj_type' in sub.columns:
+            sub = sub[sub.obj_type == 'GALAXY']
+        elif 'type' in sub.columns:
+            sub = sub[sub.type == 0]
+        else:
+            # W1 and W2 selection.
+            sub = sub[sub.zspec != 0]
 
-    if 'obj_type' in sub.columns:
-        sub = sub[sub.obj_type == 'GALAXY']
-    elif 'type' in sub.columns:
-        sub = sub[sub.type == 0]
+    return sub
+
+
+def limit_mask(sub, apply_mask):
+    """If applying a mask"""
+    
+    if not apply_mask:
+        return sub
+    
+    if 'mask_w2' in sub.columns:
+        Mask = sub['mask_w2']
+        masked_index = (Mask & 32764)>0
+        Mask[masked_index]=1.
+        Mask[Mask>1.]=0.
+        sub['new_mask']=Mask
+        sub = sub[sub.new_mask == 0]
+    elif 'mask' in sub.columns:
+        sub = sub[sub['mask'] <= 1]
     else:
-        # W1 and W2 selection.
-        sub = sub[sub.zspec != 0]
+        raise NotImplementedError('Which mask do I use?')
 
     return sub
 
@@ -152,7 +180,7 @@ def limit_zmax(cat, zmax):
 
 
 def gal_subset(galcat, ref_cat, min_nb=39, only_specz=True, ngal=0, has_bb=False,
-               secure_spec=True, sel_gal=True, zmax=0., test_band='subaru_r'):
+               secure_spec=True, sel_gal=True, sel_gal_parent=False, apply_mask = False, zmax=0., test_band='subaru_r'):
     """Selects a subset of galaxies, either for calibration or running the photoz.
        Args:
            galcat (df): Galaxy catalogue.
@@ -176,8 +204,11 @@ def gal_subset(galcat, ref_cat, min_nb=39, only_specz=True, ngal=0, has_bb=False
     set_other_fields(galcat, ref_cat)
 
     print('Total', len(galcat))
-    sub = limit_isgal(galcat, sel_gal)
+    sub = limit_isgal(galcat, sel_gal, sel_gal_parent)
     print('Limit galaxies', len(sub))
+    
+    sub = limit_mask(sub, apply_mask)
+    print('Limit mask', len(sub))
 
     sub = limit_nb(sub, min_nb)
     print('Limit #NB', len(sub))
