@@ -33,7 +33,8 @@ def query(engine, field):
     # Here we directly select W3 to save time!
     sql = """SELECT paudm_id as ref_id, alpha_j2000 as ra, delta_j2000 as dec, \
                     mag_u, mag_g, mag_r, mag_i, mag_z, mag_y,  \
-                    magerr_u, magerr_g, magerr_r, magerr_i, magerr_z, magerr_y \
+                    magerr_u, magerr_g, magerr_r, magerr_i, magerr_z, magerr_y, \
+                    star_flag, mask as mask_cfhtlens \
              FROM cfhtlens \
              WHERE alpha_j2000 > {ra_min} AND alpha_j2000 < {ra_max} \
              AND   delta_j2000 > {dec_min} AND delta_j2000 < {dec_max} \
@@ -69,7 +70,7 @@ def change_format(cat_in):
     flux_error = flux / SN
 
     cat = pd.concat({'flux': flux, 'flux_error': flux_error}, axis=1)
-    for field in ['ref_id', 'ra', 'dec']:
+    for field in ['ref_id', 'ra', 'dec', 'star_flag', 'mask_cfhtlens']:
         cat[field] = cat_in[field]
 
     cat = cat.set_index('ref_id')
