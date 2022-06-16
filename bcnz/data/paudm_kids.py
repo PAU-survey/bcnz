@@ -38,7 +38,7 @@ def query(engine, field):
                     magerr_gaap_z as magerr_z, magerr_gaap_y as magerr_y, \
                     magerr_gaap_j as magerr_j, magerr_gaap_h as magerr_h, \
                     magerr_gaap_ks as magerr_ks, \
-                    sg_flag, mask as mask_w2 \
+                    sg_flag, mask as mask_kids \
              FROM kids \
              WHERE alpha_j2000 > {ra_min} AND alpha_j2000 < {ra_max} \
              AND   delta_j2000 > {dec_min} AND delta_j2000 < {dec_max} \
@@ -74,7 +74,7 @@ def change_format(cat_in):
     flux_error = flux / SN
 
     cat = pd.concat({'flux': flux, 'flux_error': flux_error}, axis=1)
-    for field in ['ref_id', 'ra', 'dec', 'sg_flag', 'mask_w2']:
+    for field in ['ref_id', 'ra', 'dec', 'sg_flag', 'mask_kids']:
         cat[field] = cat_in[field]
 
     cat = cat.set_index('ref_id')

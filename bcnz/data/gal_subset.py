@@ -99,19 +99,13 @@ def limit_spec(cat, only_specz, secure_spec):
     return cat
 
 
-def limit_isgal(sub, sel_gal, sel_gal_parent):
+def limit_isgal(sub, field, sel_gal, sel_gal_specz):
     """If limiting ourself to only the galaxies."""
 
     if not sel_gal:
         return sub
     
-    if sel_gal_parent:
-        if 'star_flag' in sub.columns:
-            sub = sub[sub.star_flag == 0]
-        elif 'sg_flag' in sub.columns:
-            sub = sub[sub.sg_flag == 1]
-            
-    elif not sel_gal_parent:
+    if sel_gal_specz:
         if 'obj_type' in sub.columns:
             sub = sub[sub.obj_type == 'GALAXY']
         elif 'type' in sub.columns:
@@ -119,25 +113,33 @@ def limit_isgal(sub, sel_gal, sel_gal_parent):
         else:
             # W1 and W2 selection.
             sub = sub[sub.zspec != 0]
+    
+    elif not sel_gal_specz:
+        if field.lower() == 'w1' or field.lower() == 'w3':
+            sub = sub[sub.star_flag == 0]
+        elif field.lower() == 'w2':
+            sub = sub[sub.sg_flag == 1]
+        else:
+            raise NotImplementedError('Which flag do I use?')
 
     return sub
 
 
-def limit_mask(sub, apply_mask):
+def limit_mask(sub, field, apply_mask):
     """If applying a mask"""
     
     if not apply_mask:
         return sub
     
-    if 'mask_w2' in sub.columns:
-        Mask = sub['mask_w2']
+    if field.lower() == 'w1' or field.lower() == 'w3':
+        sub = sub[sub['mask_cfhtlens'] <= 1]
+    elif field.lower() == 'w2':
+        Mask = sub['mask_kids']
         masked_index = (Mask & 32764)>0
         Mask[masked_index]=1.
         Mask[Mask>1.]=0.
         sub['new_mask']=Mask
         sub = sub[sub.new_mask == 0]
-    elif 'mask' in sub.columns:
-        sub = sub[sub['mask'] <= 1]
     else:
         raise NotImplementedError('Which mask do I use?')
 
@@ -179,18 +181,21 @@ def limit_zmax(cat, zmax):
     return cat
 
 
-def gal_subset(galcat, ref_cat, min_nb=39, only_specz=True, ngal=0, has_bb=False,
-               secure_spec=True, sel_gal=True, sel_gal_parent=False, apply_mask = False, zmax=0., test_band='subaru_r'):
+def gal_subset(galcat, ref_cat, field = 'COSMOS', min_nb=39, only_specz=True, ngal=0, has_bb=False,
+               secure_spec=True, sel_gal=True, sel_gal_specz=True, apply_mask = False, zmax=0., test_band='subaru_r'):
     """Selects a subset of galaxies, either for calibration or running the photoz.
        Args:
            galcat (df): Galaxy catalogue.
            ref_cat (df): Reference catalogue including specz.
+           field (str): Field to download.
            min_nb (int): Minimum number of narrow bands.
            only_specz (bool): If only using galaxies with spectra.
            ngal (int): Random selection of ngal galaxies.
            has_bb (bool): Ensure the galaxy has a broad band.
            secure_spec (bool): Restrict to secure spectra.
            sel_gal (bool): Select galaxies.
+           sel_gal_specz (bool): Select galaxies from the specz or the parent catalogue.
+           apply_mask (bool): Apply mask from the parent catalogue.
            zmax (float): Maximum reshift.
            test_band (str): Band to test if broad bands are available.
     """
@@ -204,10 +209,10 @@ def gal_subset(galcat, ref_cat, min_nb=39, only_specz=True, ngal=0, has_bb=False
     set_other_fields(galcat, ref_cat)
 
     print('Total', len(galcat))
-    sub = limit_isgal(galcat, sel_gal, sel_gal_parent)
+    sub = limit_isgal(galcat, field, sel_gal, sel_gal_specz)
     print('Limit galaxies', len(sub))
     
-    sub = limit_mask(sub, apply_mask)
+    sub = limit_mask(sub, field, apply_mask)
     print('Limit mask', len(sub))
 
     sub = limit_nb(sub, min_nb)
