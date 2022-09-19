@@ -103,6 +103,19 @@ def fix_model(modelD, fit_bands):
 
     return new_modelD
 
+class DummyObject:
+    # When scattering a dictionary, Dask ends up doing some weird things..
+    def __init__(self):
+        self.data = {}
+
+    def __getitem__(self, x):
+        return self.data[x]
+
+    def __setitem__(self, x, y):
+        self.data[x] = y
+
+    def keys(self):
+        return self.data.keys()
 
 def run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask):
 
@@ -115,8 +128,15 @@ def run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask):
 
     # If not specified, we start up a local cluster.
     client = Client(ip_dask) if not ip_dask is None else Client()
-    xnew_modelD = client.scatter(fix_model(modelD, fit_bands))
-    #xnew_modelD = fix_model(modelD, fit_bands)
+
+    # Scatter the model to avoid too much data on the graph. Creating an
+    # object is a hack around a weird Dask error.
+    tmpD = fix_model(modelD, fit_bands)
+    xnew_modelD = DummyObject()
+    for key,val in tmpD.items():
+        xnew_modelD[key] = val
+
+    xnew_modelD = client.scatter(xnew_modelD)
 
     galcat = dd.read_parquet(str(output_dir / 'galcat_in.pq'))
 
