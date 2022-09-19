@@ -53,14 +53,13 @@ def eriksen2019():
                 (True, 'SB_calzetti_bump2', sb)]
 #                (True, 'SMC_prevot', mix)]
 
-    df = pd.DataFrame()
+    L = []
     # Here the no-extinction runs use the Calzetti law with EBV=0.
     for use_lines, seds in noext:
         S = pd.Series({'ext_law': 'SB_calzetti', 'EBV': 0.})
         S['use_lines'] = use_lines
         S['seds'] = seds
-
-        df = df.append(S, ignore_index=True)
+        L.append(S)
 
     EBV_values = np.arange(0.05, 0.501, 0.05)
     for use_lines, ext_law, seds in with_ext:
@@ -68,12 +67,14 @@ def eriksen2019():
             S = pd.Series({'ext_law': ext_law, 'EBV': EBV})
             S['use_lines'] = use_lines
             S['seds'] = seds
+            L.append(S)
 
-            df = df.append(S, ignore_index=True)
+    df = pd.concat(L, axis=1).T
 
     # This applies to all configurations.
     sed_dir = '~/data/photoz/seds/cosmos_noext'
     df['sep_OIII'] = True
     df['sed_dir'] = sed_dir
+
 
     return df
