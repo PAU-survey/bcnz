@@ -26,7 +26,6 @@ from IPython.core import debugger as ipdb
 
 from . import libpzqual
 
-
 #np.seterr(over='raise')
 
 
@@ -169,16 +168,13 @@ def minimize_all_z(data_df, modelD, **config): #fit_bands, Niter, Nskip):
 
     L = []
     args = (config['Niter'], config['Nskip'])
+    if hasattr(modelD, 'result'):
+        modelD = modelD.result()
+
     keys = list(modelD.keys())
     for key in keys:
         # Supporting both interfaces.
         f_mod = modelD[key]
-        if isinstance(f_mod, dask.distributed.client.Future):
-            f_mod = f_mod.result()
-
-        if isinstance(f_mod, str):
-            1 / 0
-
         L.append(_core_allz(ref_id, f_mod, flux, var_inv, *args))
 
     dim = pd.Index([int(x) for x in keys], name='run')
@@ -194,14 +190,12 @@ def flatten_models(modelD):
     """Combines all the models into a flat structure."""
 
     # Convert the model into a single xarray!
-    keys = list(modelD.keys())
-    vals = []
-    for x in keys:
-        part = modelD[x]
-        if isinstance(part, dask.distributed.client.Future):
-            part = part.result()
-        vals.append(part)
+    if hasattr(modelD, 'result'):
+        modelD = modelD.result()
 
+    keys = list(modelD.keys())
+    vals = [modelD[x] for x in keys]
+    
     model = xr.concat(vals, dim='run')
     model.coords['run'] = keys
 
@@ -310,6 +304,7 @@ def photoz(galcat, modelD, ebvD, fit_bands, Niter=1000, Nskip=10, odds_lim=0.01,
     pzcat['n_narrow'] = (~np.isnan(galcat[cols_nbflux])).sum(1)
 
     pzcat['ebv'] = pzcat.best_run.replace(ebvD)
+    pzcat['ebv'] = pzcat.ebv.astype('float') # Just because of a weird issue.
 
     # Model magnitudes at the best fit redshift and z=0.
     best_model = get_model('model', model, norm, pzcat, pzcat.zb.values)

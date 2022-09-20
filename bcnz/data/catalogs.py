@@ -35,7 +35,7 @@ def rband(field):
 def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos',
          d_filters='~/data/photoz/all_filters/v3', min_nb=35,
          only_specz=False, secure_spec=False, has_bb=False, sel_gal=True,
-         coadd_file=None):
+         coadd_file=None, sel_gal_specz = True, apply_mask = False):
     """Load the PAUS data from PAUdm and perform the required
        transformation.
 
@@ -50,7 +50,9 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos',
            secure_spec (bool): Selecting secure spectroscopic redshifts.
            has_bb (bool): Select galaxies with broad bands data.
            sel_gal (bool): Select galaxies.
-           coadd_file (str): Path to file containing the coadds.'
+           coadd_file (str): Path to file containing the coadds.
+           sel_gal_specz (bool): Select galaxies from the specz or the parent catalogue.
+           apply_mask (bool): Apply mask from the parent catalogue.'
     """
 
     import bcnz
@@ -89,8 +91,9 @@ def paus(engine, memba_prod, field, d_cosmos='~/data/cosmos',
     data_noisy = bcnz.data.fix_noise(data_in)
 
     # Select a subset of the galaxies.
-    conf = {'min_nb': min_nb, 'only_specz': only_specz, 'secure_spec': secure_spec,
-            'has_bb': has_bb, 'sel_gal': sel_gal}
+    conf = {'field': field, 'min_nb': min_nb, 'only_specz': only_specz, 'secure_spec': secure_spec,
+            'has_bb': has_bb, 'sel_gal': sel_gal, 'sel_gal_specz': sel_gal_specz,
+            'apply_mask': apply_mask}
 
     conf['test_band'] = rband(field)
 
