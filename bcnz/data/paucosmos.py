@@ -4,6 +4,8 @@ import numpy as np
 from astropy.coordinates import SkyCoord, match_coordinates_sky
 from astropy import units as u
 
+# This catalogue is only used by the Bayesian code. One might want to
+# integrate the two versions better.
 
 bands = [
     "u",

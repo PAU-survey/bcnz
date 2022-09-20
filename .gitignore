@@ -8,3 +8,4 @@ bcnz.egg-info/
 build/
 dist/
 .ipynb_checkpoints/*
+.DS_Store
