@@ -304,6 +304,7 @@ def photoz(galcat, modelD, ebvD, fit_bands, Niter=1000, Nskip=10, odds_lim=0.01,
     pzcat['n_narrow'] = (~np.isnan(galcat[cols_nbflux])).sum(1)
 
     pzcat['ebv'] = pzcat.best_run.replace(ebvD)
+    pzcat['ebv'] = pzcat.ebv.astype('float') # Just because of a weird issue.
 
     # Model magnitudes at the best fit redshift and z=0.
     best_model = get_model('model', model, norm, pzcat, pzcat.zb.values)
