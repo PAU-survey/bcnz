@@ -38,6 +38,8 @@ import os
 import numpy as np
 import pkg_resources
 
+# Something from Alex. To be integrated.
+
 
 def model_fname(sed, ext_law, EBV):
     """File name when caching the model."""

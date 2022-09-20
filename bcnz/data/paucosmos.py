@@ -7,6 +7,8 @@ from astropy import units as u
 # This catalogue is only used by the Bayesian code. One might want to
 # integrate the two versions better.
 
+# Something from Alex. To be integrated.
+
 bands = [
     "u",
     "b",

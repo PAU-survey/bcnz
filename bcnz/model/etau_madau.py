@@ -1,6 +1,9 @@
 import numpy as np
 
 
+# Also something from Alex...
+
+
 def etau_madau(wl, z):
     """
     Madau 1995 extinction for a galaxy spectrum at

@@ -16,6 +16,7 @@
 #!/usr/bin/env python
 # encoding: UTF8
 
+# Also something from Alex?
 
 def combine_lines(model_lines, line_ratios):
     """Combine several individual line fluxes together given

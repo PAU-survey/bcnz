@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import psycopg2
 
+# Something from Alex. To be integrated.
 
 def query_alarcon2020(engine):
     """Query for the catalog from Alarcon2020."""
