@@ -18,20 +18,36 @@
 
 import glob
 import pdb
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Extension
+import numpy as np
+from Cython.Build import cythonize
 
 # Same author and maintainer.
-name = 'Martin B. Eriksen'
-email = 'eriksen@pic.es'
+name = "Martin B. Eriksen"
+email = "eriksen@pic.es"
+
+ext = [
+    Extension(
+        "mc_genz_cython",
+        ["bcnz/bayint/mc_genz_cython.pyx"],
+        include_dirs=[np.get_include(), ".", "bcnz/bayint/"],
+    ),
+    Extension(
+        "prior_volume_integral",
+        ["bcnz/bayint/prior_volume_integral.pyx"],
+        include_dirs=[np.get_include(), ".", "bcnz/bayint/"],
+    ),
+]
+
 
 setup(
-    name = 'bcnz',
-    version = '2',
-    packages = find_packages(),
-
+    name="bcnz",
+    version="2",
+    packages=find_packages(),
     install_requires = [
         'argparse',
         'astropy',
+        'Cython',
         'dask',
         'fire',
         'numpy',
@@ -45,15 +61,18 @@ setup(
         'tqdm',
         'xarray'
     ],
-    author = name,
-    author_email = email,
-    license = 'GPLv3',
-    maintainer = name,
-    maintainer_email = email,
-    scripts = ['bcnz/bin/run_bcnz.py'],
+    author=name,
+    author_email=email,
+    license="GPLv3",
+    maintainer=name,
+    maintainer_email=email,
+    scripts=["bcnz/bin/run_bcnz.py"],
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 6 - Mature",
         "Topic :: Astronomy",
-        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     ],
+    ext_modules=cythonize(ext),
+    include_dirs=[np.get_include(), "."],
+    zip_safe=False,
 )

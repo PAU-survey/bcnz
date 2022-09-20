@@ -1,4 +1,4 @@
-# Copyright (C) 2012 Martin B. Eriksen
+# Copyright (C) 2020 Martin B. Eriksen
 # This file is part of BCNz <https://github.com/PAU-survey/bcnz>.
 #
 # BCNz is free software: you can redistribute it and/or modify
@@ -13,4 +13,30 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with BCNz.  If not, see <http://www.gnu.org/licenses/>.
-from .def_runs import eriksen2019, test_bayevz, pauscosmos_deep
+#!/usr/bin/env python
+# encoding: UTF8
+
+import os
+from pathlib import Path
+import pandas as pd
+from glob import glob
+
+
+def load_filters(dfilters):
+    """Create a dataframe joining all filters."""
+
+    L = []
+    for x in glob(str(Path(dfilters) / "*")):
+        path = Path(x)
+
+        sep = "," if path.suffix == ".csv" else " "
+        part = pd.read_csv(x, names=["lmb", "response"], comment="#", sep=sep)
+        part["band"] = path.with_suffix("").name
+
+        L.append(part)
+
+    assert len(L), "Filters not found."
+    df = pd.concat(L, ignore_index=True)
+    df = df.set_index("band")
+
+    return df

@@ -21,5 +21,6 @@ from . import fit
 from . import model
 from . import plots
 from . import specz
+from . import bayint
 
-from .connect_db import connect_db
+from .connect_db import connect_db, connect_db_localhost
