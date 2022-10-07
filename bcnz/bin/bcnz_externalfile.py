@@ -45,36 +45,34 @@ def paus_fromfile(mock_cat,bbnaming,bbfit,min_nb=35,
 
     
 
-
     bbnaming_error = ['D' + e for e in bbnaming]
     parent_cat_df = parent_cat.pivot(index = 'ref_id', columns = 'band', values = 'flux_error').rename(columns=dict(zip(bbnaming,bbnaming_error))).reset_index()
     parent_cat_f = parent_cat.pivot(index = 'ref_id', columns = 'band', values = 'flux').reset_index()
+
     parent_cat = parent_cat_f.merge(parent_cat_df, on = 'ref_id')
     parent_cat.set_index('ref_id', inplace = True)
 
 
-
-    
     list_bands = []
     list_bands.append(bbnaming)
     list_bands.append(bbnaming_error)
     list_bands.append(bbfit)
-  
-    cfg = np.array(list_bands).T.tolist()
-
+    
+    cfg = np.array(list_bands).T.tolist() 
     df_bands = pd.DataFrame(cfg,columns = ['band_name','band_error_name','band'])
   
- 
+    
     flux_cols, err_cols, names = zip(*df_bands.values.tolist())
-
+   
     flux = parent_cat[list(flux_cols)].rename(columns=dict(zip(flux_cols, names)))
-  
-
     flux_error = parent_cat[list(err_cols)].rename(columns=dict(zip(err_cols, names)))
     parent_cat = pd.concat({'flux': flux, 'flux_error': flux_error}, axis=1)
 
+    print(parent_cat)
+    print(paudm_coadd)
+
     data_in = paudm_coadd.join(parent_cat, how='inner')
- 
+    print(data_in)
 
     # Add some minimum noise.
     #data_noisy = data_in
@@ -139,6 +137,7 @@ def get_input(output_dir, model_dir,bbfit, fit_bands,mock_cat,bbnames,calib,fiel
         norm_filter = bcnz.data.catalogs.rband(field)
         galcat_inp = bcnz.calib.apply_zp(galcat_inp, zp, norm_filter=norm_filter)
 
+
     # Temporary hack.... 
     galcat_inp = bcnz.fit.flatten_input(galcat_inp) 
     galcat_inp.to_parquet(str(path_galcat))
@@ -146,7 +145,7 @@ def get_input(output_dir, model_dir,bbfit, fit_bands,mock_cat,bbnames,calib,fiel
     return runs, modelD, galcat_inp
 
 
-def run_photoz(mock_file,output_dir, model_dir, bb_fit= ['cfht_u','subaru_b','subaru_v','subaru_r','subaru_i','subaru_z'],bbnames = None, ip_dask=None,calib = False, field = 'COSMOS'):
+def run_photoz(mock_file,output_dir, model_dir, bb_fit=None, bbnames = None, ip_dask=None,calib = False, field = 'COSMOS'):
     """Run the photo-z over a external provided catalogue.
 
        Args:
