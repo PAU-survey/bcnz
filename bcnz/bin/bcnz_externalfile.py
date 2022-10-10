@@ -15,7 +15,7 @@ import dask
 from dask.distributed import Client
 import dask.dataframe as dd
 
-import bcnz_paudm
+from bcnz.bin import DummyObject, run_photoz_dask
 
 def paus_fromfile(mock_cat,bbnaming,bbfit,min_nb=35,
          only_specz=False, secure_spec=False, has_bb=False, sel_gal=True):
@@ -165,7 +165,7 @@ def run_photoz(mock_file,output_dir, model_dir, bb_fit=None, bbnames = None, ip_
         output_dir, model_dir,bb_fit, fit_bands, mock_file,bbnames, calib,field)
 
   
-    bcnz_paudm.run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask)
+    run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask)
 
 
 if __name__ == '__main__':
