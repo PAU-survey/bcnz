@@ -1,3 +1,9 @@
+from pathlib import Path
+import dask
+from dask.distributed import Client
+import dask.dataframe as dd
+
+import bcnz
 
 class DummyObject:
     # When scattering a dictionary, Dask ends up doing some weird things..
@@ -12,6 +18,14 @@ class DummyObject:
 
     def keys(self):
         return self.data.keys()
+
+def fix_model(modelD, fit_bands):
+    # Here only the renaming seems needed.
+    new_modelD = {}
+    for i, v in modelD.items():
+        new_modelD[i] = v.sel(band=fit_bands).rename(sed='model')
+
+    return new_modelD
 
 def run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask):
 
@@ -36,8 +50,8 @@ def run_photoz_dask(runs, modelD, galcat, output_dir, fit_bands, ip_dask):
 
     galcat = dd.read_parquet(str(output_dir / 'galcat_in.pq'))
 
-    #npartitions = int(302138 / 10) + 1
-    npartitions = int(9900 / 10) + 1
+    npartitions = int(302138 / 20) + 1
+    #npartitions = int(9900 / 10) + 1
     galcat = galcat.reset_index().repartition(npartitions=npartitions).set_index('ref_id')
 
     ebvD = dict(runs.EBV)
