@@ -55,6 +55,6 @@ def match_position(parent_cat, to_match, max_dist=0.9, drop_duplicates=True):
 
     # Double matches (found one..). Drop both.
     if drop_duplicates:
-        to_match = to_match.loc[to_match.index.drop_duplicates(False)]
+        to_match = to_match.loc[to_match.index.drop_duplicates(keep=False)]
 
     return to_match
