@@ -42,10 +42,10 @@ def set_other_fields(cat, other):
 def change_format(cat_in):
     """The photo-z code expects a different format."""
 
-    flux = cat_in.pivot('ref_id', 'band', 'flux')
-    flux_err = cat_in.pivot('ref_id', 'band', 'flux_err')
+    flux = cat_in.pivot(index='ref_id', columns='band', values='flux')
+    flux_err = cat_in.pivot(index='ref_id', columns='band', values='flux_err')
 
-    nexp = cat_in.pivot('ref_id', 'band', 'nexp')
+    nexp = cat_in.pivot(index='ref_id', columns='band', values='nexp')
     cat = pd.concat({'flux': flux, 'flux_err': flux_err, 'nexp': nexp}, axis=1)
 
     return cat

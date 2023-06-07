@@ -61,7 +61,7 @@ def find_synbb(pau_syn, bbsyn_coeff, synband):
     bbsyn_coeff = bbsyn_coeff[bbsyn_coeff.bb == synband]
     NB = list(map('pau_nb{}'.format, 455 + 10*np.arange(40)))
 
-    vec = bbsyn_coeff.pivot('bb', 'nb', 'val')[NB].values[0]
+    vec = bbsyn_coeff.pivot(index='bb', columns='nb', values='val')[NB].values[0]
     synbb = np.dot(pau_syn, vec)
 
     return synbb

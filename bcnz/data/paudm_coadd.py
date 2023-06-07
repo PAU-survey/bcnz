@@ -71,8 +71,8 @@ def to_dense(cat_in):
     """Convert the input to a dense catalogue."""
 
     # Makes more sense for how we use the catalogue later
-    flux = cat_in.pivot('ref_id', 'band', 'flux')
-    flux_error = cat_in.pivot('ref_id', 'band', 'flux_error')
+    flux = cat_in.pivot(index='ref_id', columns='band', values='flux')
+    flux_error = cat_in.pivot(index='ref_id', columns='band', values='flux_error')
     cat = pd.concat({'flux': flux, 'flux_error': flux_error}, axis=1)
 
     return cat
