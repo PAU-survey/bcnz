@@ -26,18 +26,18 @@ from Cython.Build import cythonize
 name = "Martin B. Eriksen"
 email = "eriksen@pic.es"
 
-ext = [
-    Extension(
-        "mc_genz_cython",
-        ["bcnz/bayint/mc_genz_cython.pyx"],
-        include_dirs=[np.get_include(), ".", "bcnz/bayint/"],
-    ),
-    Extension(
-        "prior_volume_integral",
-        ["bcnz/bayint/prior_volume_integral.pyx"],
-        include_dirs=[np.get_include(), ".", "bcnz/bayint/"],
-    ),
-]
+#ext = [
+#    Extension(
+#        "mc_genz_cython",
+#        ["bcnz/bayint/mc_genz_cython.pyx"],
+#        include_dirs=[np.get_include(), ".", "bcnz/bayint/"],
+#    ),
+#    Extension(
+#        "prior_volume_integral",
+#        ["bcnz/bayint/prior_volume_integral.pyx"],
+#        include_dirs=[np.get_include(), ".", "bcnz/bayint/"],
+#    ),
+#]
 
 
 setup(
@@ -47,7 +47,7 @@ setup(
     install_requires = [
         'argparse',
         'astropy',
-        'Cython',
+#        'Cython',
         'dask',
         'fire',
         'numpy',
@@ -55,7 +55,7 @@ setup(
         'pandas',
         'pyarrow',
         'scipy',
-        'sklearn',
+        'scikit-learn',
         'psycopg2-binary',
         'tables',
         'tqdm',
@@ -64,7 +64,7 @@ setup(
     author=name,
     author_email=email,
     license="GPLv3",
-    maintainer=name,
+    aintainer=name,
     maintainer_email=email,
     scripts=["bcnz/bin/run_bcnz.py"],
     classifiers=[
@@ -72,7 +72,7 @@ setup(
         "Topic :: Astronomy",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     ],
-    ext_modules=cythonize(ext),
+#    ext_modules=cythonize(ext),
     include_dirs=[np.get_include(), "."],
     zip_safe=False,
 )
